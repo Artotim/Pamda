@@ -1,5 +1,6 @@
 from src.color_log import log
 import subprocess
+from os import listdir
 from time import sleep
 
 
@@ -57,27 +58,25 @@ def run_chimera(out, init, last, cci, dir_path):
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def start_scoring(out, sci, init, last, dir_path):
-    count = int(init) + int(sci)
-    final = int(last)
-    path = dir_path + 'rosetta/main/source/bin/relax.static.linuxgccrelease'
+def start_scoring(out, dir_path):
+    score_path = out + "score"
+    bin_path = dir_path + 'rosetta/main/source/bin/relax.static.linuxgccrelease'
 
-    while count <= final:
-        count_str = str(count)
+    for file_name in listdir(score_path):
 
-        model = out + 'score/score_model_' + count_str + '.pdb'
+        model = out + 'score/' + file_name
 
-        cmd = [path, '-s', model, '-out:suffix', '_relaxed', '-nstruct', '2', '-relax:default_repeats', '5']
+        cmd = [bin_path, '-s', model, '-out:suffix', '_relaxed', '-nstruct', '2', '-relax:default_repeats', '5']
 
         log_file = out + 'score/score.log'
         err_file = out + 'score/score.err'
 
         try:
-            with open(log_file, 'w') as log_f, open(err_file, "w") as err_f:
+            with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
                 process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f)
                 while process.poll() is None:
                     sleep(300)
-                else:
-                    return
+
         except (PermissionError, FileNotFoundError):
             log('error', 'Scoring error.')
+            break
