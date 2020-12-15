@@ -162,7 +162,7 @@ def check_last(last_frame, dcd, dir_path):
     else:
         make_executable(path)
         if os.access(path, os.X_OK):
-            check_last(last_frame, dcd)
+            check_last(last_frame, dcd, dir_path)
         else:
             log('error', 'Could not found last frame.')
             return False
