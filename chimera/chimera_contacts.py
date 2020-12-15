@@ -7,8 +7,8 @@ from chimera import runCommand as rc
 
 
 def create_output_files(out):
-    map_file = out + "contact/contact_map.txt"
-    count_file = out + "contact/contact_count.txt"
+    map_file = out + "contact/contact_map.csv"
+    count_file = out + "contact/contact_count.csv"
 
     with open(map_file, "w") as all_contacts:
         all_contacts.write("frame;atom1;atom2;overlap;distance\n")
@@ -39,7 +39,7 @@ def read_contacts(contact_map):
 
 
 def get_contact_number(out, contact_file, count):
-    count_file = out + "contact/contact_count.txt"
+    count_file = out + "contact/contact_count.csv"
     contact_number = re.findall(r'\d+', contact_file[6])
 
     with open(count_file, "a") as contacts_count:
@@ -48,7 +48,7 @@ def get_contact_number(out, contact_file, count):
 
 
 def get_contact_list(out, contact_file, count):
-    map_file = out + "contact/contact_map.txt"
+    map_file = out + "contact/contact_map.csv"
     line = 8
 
     while line < len(contact_file):
