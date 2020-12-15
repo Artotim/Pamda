@@ -2,6 +2,7 @@ from src.arguments_parser import make_parser
 from src.checkers import *
 from src.tcl_writer import prepare_bigdcd, prepare_energies
 from src.run_analysis import start_bigdcd, start_energies, start_scoring
+from src.finish_and_clean import finisher
 
 
 class DynamicAnalysis:
@@ -106,9 +107,11 @@ class DynamicAnalysis:
 
         # run scoring
         # if self.score_analysis:
-            # start_scoring(self.output, self.scoring_interval, self.init_frame, self.last_frame, self.analysis_path)
+            # start_scoring(self.output, self.analysis_path)
 
         # delete temps and make out files
+        finisher(self.chimera_analysis, self.score_analysis, self.energies_analysis, self.rmsd_analysis, self.output, self.name)
+
 
         # run R plots and analysis
 
