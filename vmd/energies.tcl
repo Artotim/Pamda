@@ -21,7 +21,7 @@ proc energies {first last interaction} {
 
         set sel_a [atomselect top "chain $main_chain"]
         set sel_b [atomselect top "chain $peptide"]
-        namdenergy -sel $sel_a $sel_b -exe ${namd_path}namd -par ${namd_path}params/par_all36_prot.prm -par ${namd_path}params/par_all36_na.prm -par ${namd_path}params/toppar_water_ions.str -vdw -elec- -nonb -tempname $temp -ofile $out
+        namdenergy -sel $sel_a $sel_b -exe ${namd_path}namd2 -par ${namd_path}params/par_all36_prot.prm -par ${namd_path}params/par_all36_na.prm -par ${namd_path}params/toppar_water_ions.str -vdw -elec- -nonb -tempname $temp -ofile $out
     }
 }
 
@@ -29,6 +29,7 @@ proc get_energies {} {
     global init last interaction
 
 	package require namdenergy
+	package require pbctools
 
 	puts "Preparing to get energy"
 
@@ -38,9 +39,9 @@ proc get_energies {} {
 	set count $init
 
     while {$count < $total_frames} {
-        energies $count [expr {$count + 10000}] $interaction
+        energies $count [expr {$count + 5000}] $interaction
         mol delete top
 
-        set count [expr {$count + 10000}]
+        set count [expr {$count + 5000}]
     }
 }

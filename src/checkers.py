@@ -57,47 +57,56 @@ def check_output(path, name):
     return path
 
 
-def check_exe(program, *usage):
-    if True not in usage:
-        return True
+def check_vmd(vmd):
+    log('info', 'Looking for vmd.')
 
-    log('info', 'Looking for ' + program + '.')
     try:
-        subprocess.Popen(program, subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        vmd_test = subprocess.Popen(vmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        vmd_test.communicate(input=b'quit')
+        return vmd
 
     except (PermissionError, FileNotFoundError):
-        log('error', 'Program not found: ' + program + '.')
+        log('error', 'Vmd not found.')
+        return False
 
 
-def check_chimera(run_chimera, dir_path):
+def check_chimera(run_chimera, out_path):
     if not run_chimera:
         return True
 
     log('info', 'Looking for chimera.')
 
-    path = dir_path + 'chimera/chimera_test.py'
+    path = out_path + 'chimera_test.py'
     chimera_test = open(path, 'w')
     chimera_test.write('import chimera')
 
     cmd = ['python', '-m', 'pychimera', path]
 
-    run_test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-
-    os.remove(path)
-
-    if run_test[1].decode("utf-8") != '':
+    try:
+        run_test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if run_test[1].decode("utf-8") != '':
+            log('error', 'Chimera not found.')
+            finish_test(chimera_test, path)
+            return False
+        else:
+            finish_test(chimera_test, path)
+            return True
+    except (PermissionError, FileNotFoundError):
         log('error', 'Chimera not found.')
+        finish_test(chimera_test, path)
         return False
+
+
+def check_bin(run_program, dir_path, program):
+    if not run_program:
+        return True
+
+    if program == "rosetta":
+        log('info', 'Looking for rosetta.')
+        path = dir_path + 'rosetta/main/source/bin/relax.static.linuxgccrelease'
     else:
-        return True
-
-
-def check_rosetta(run_rosetta, dir_path):
-    if not run_rosetta:
-        return True
-
-    log('info', 'Looking for rosetta.')
-    path = dir_path + 'rosetta/main/source/bin/relax.static.linuxgccrelease'
+        log('info', 'Looking for namd.')
+        path = dir_path + 'namd/namd2'
 
     if os.access(path, os.X_OK):
         return True
@@ -106,41 +115,43 @@ def check_rosetta(run_rosetta, dir_path):
         if os.access(path, os.X_OK):
             return True
         else:
-            log('error', 'Rosetta not found.')
+            log('error', 'Program not found: ' + program + '.')
             return False
 
 
-def check_r(run_r):
+def check_r(run_r, out_path):
     if not run_r:
         return True
 
     log('info', 'Looking for R.')
 
+    path = out_path + 'r_test.r'
+    r_test = open(path, 'w')
+    r_test.write('print("test")')
+
+    cmd = ['Rscript', '--vanilla', path]
+
     try:
-        import rpy2.robjecsts as ro
+        run_test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-    except OSError:
-        log('error', 'R not found.')
-        return False
+        if run_test[1].decode("utf-8") != '':
 
-    except ModuleNotFoundError:
-        try:
-            log('info', 'Installing "rpy2"')
-            install_package('rpy2')
-            check_r(run_r)
-
-        except PermissionError:
-            log('error', 'Could not install python module "rpy2". Permission denied.')
+            log('error', 'R not found.')
+            finish_test(r_test, path)
             return False
 
+        else:
+            finish_test(r_test, path)
+            return True
+    except (PermissionError, FileNotFoundError):
+        log('error', 'R not found.')
+        finish_test(r_test, path)
+        return False
 
-def install_package(package):
-    import pip
 
-    if hasattr(pip, 'main'):
-        pip.main(['install', package])
-    else:
-        pip._internal.main(['install', package])
+def finish_test(file, path):
+    file.close()
+    os.remove(path)
 
 
 def check_last(last_frame, dcd, dir_path):
@@ -157,6 +168,7 @@ def check_last(last_frame, dcd, dir_path):
         new_line = run_test[0][frames:].decode("utf-8").find('\n')
 
         total_frames = run_test[0][(frames + 14):(frames + new_line)].decode("utf-8")
+        print(total_frames)
         return int(total_frames)
 
     else:
@@ -164,7 +176,7 @@ def check_last(last_frame, dcd, dir_path):
         if os.access(path, os.X_OK):
             check_last(last_frame, dcd, dir_path)
         else:
-            log('error', 'Could not found last frame.')
+            log('error', 'Could not find last frame.')
             return False
 
 
@@ -186,11 +198,17 @@ def check_interval(module, interval, total_frames):
 
 def make_executable(path):
     mode = os.stat(path).st_mode
-    mode |= (mode & 0o444) >> 2    # copy R bits to X
+    mode |= (mode & 0o444) >> 2  # copy R bits to X
     os.chmod(path, mode)
 
 
 def create_outputs_dir(out, chimera, energies, rmsd, score):
+    path = out + 'logs'
+    os.makedirs(path)
+
+    path = out + 'models'
+    os.makedirs(path)
+
     if chimera:
         path = out + 'contact'
         os.makedirs(path)

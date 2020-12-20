@@ -21,13 +21,16 @@ def check_for_model(model, count):
     if not os.path.exists(model):
         print("Model not found! Awaiting...")
         time.sleep(2)
+        return check_for_model(model, count)
     else:
         print("Computing model", count, end=".")
 
 
-def create_contact_map(count):
-    file_name = "contact/overlaps_" + count + ".txt"
-    rc("findclash :.A test :.B overlap -0.4 hbond 0.0 namingStyle simple save " + file_name)
+def create_contact_map(out, count, main_chain, peptide):
+    file_name = out + "contact/overlaps_" + count + ".txt"
+    cmd = "findclash :." + main_chain + " test :." + peptide + \
+          " overlap -0.4 hbond 0.0 namingStyle simple save " + file_name
+    rc(cmd)
     return file_name
 
 
@@ -65,7 +68,9 @@ def finnish(model, contact_map):
     os.remove(contact_map)
 
 
-def look_for_models(count, final, out):
+def look_for_models(init, final, out, cci, main_chain, peptide):
+    count = init + cci
+
     while count <= final:
         count_str = str(count)
 
@@ -77,7 +82,7 @@ def look_for_models(count, final, out):
         rc("open " + model)
 
         # Create contact map
-        contact_map = create_contact_map(count_str)
+        contact_map = create_contact_map(out, count_str, main_chain, peptide)
 
         # Read contact maps file
         contact_file = read_contacts(contact_map)
@@ -91,7 +96,7 @@ def look_for_models(count, final, out):
         # Close pdb and remove files
         finnish(model, contact_map)
 
-        count += 100
+        count += cci
 
     print("Finished!")
 
@@ -101,7 +106,7 @@ def main():
     out = sys.argv[1]
     create_output_files(out)
 
-    look_for_models(int(sys.argv[2]), int(sys.argv[3]), out)
+    look_for_models(int(sys.argv[2]), int(sys.argv[3]), out, int(sys.argv[4]), sys.argv[5], sys.argv[6])
 
 
 if __name__ == '__main__':

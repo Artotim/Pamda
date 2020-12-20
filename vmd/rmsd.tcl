@@ -39,11 +39,15 @@ proc create_rmsf_out_file {} {
     puts $rmsf_out ""
 }
 
-proc rmsd_rmsf {frame} {
-    global all_atoms atoms_selected atoms_reference residue_list compare_dict reference_dict rmsf_out rmsd_out main_chain
+proc close_rmsd_files {} {
+    global rmsf_out rmsd_out
 
-    pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
-    pbc wrap -center com -centersel "protein" -compound residue -all
+    close $rmsf_out
+    close $rmsd_out
+}
+
+proc rmsd_rmsf {frame} {
+    global all_atoms atoms_selected atoms_reference residue_list compare_dict reference_dict rmsf_out rmsd_out
 
     puts "Analysing frame $frame ..."
 
@@ -57,8 +61,6 @@ proc rmsd_rmsf {frame} {
         puts -nonewline $rmsf_out "[format "%.4f" $resid_rmsd];"
     }
     puts $rmsf_out ""
-
-    write_pdb $frame
 }
 
 proc prepare_rmsd {} {
@@ -67,11 +69,4 @@ proc prepare_rmsd {} {
     retrieve_mol_info $init
     create_res_dic $init
     create_rmsf_out_file
-}
-
-proc close_rmsd_files {} {
-    global rmsf_out rmsd_out
-
-    close $rmsf_out
-    close $rmsd_out
 }

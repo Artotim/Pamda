@@ -12,11 +12,11 @@ def make_parser():
     required = parser.add_argument_group('Required')
     optional = parser.add_argument_group('Optional')
 
-    required.add_argument('-d', '--dcd', metavar='', #required=True,
+    required.add_argument('-d', '--dcd', metavar='', required=True,
                           help='Dcd file')
-    required.add_argument('-pdb', metavar='', #required=True,
+    required.add_argument('-pdb', metavar='', required=True,
                           help='Pdb file')
-    required.add_argument('-psf', metavar='', #required=True,
+    required.add_argument('-psf', metavar='', required=True,
                           help='Psf file')
     optional.add_argument("-h", "--help", action="help",
                           help="Show this help message and exit")
@@ -31,20 +31,20 @@ def make_parser():
     optional.add_argument('-vmd', '--vmd-exe', default='vmd', metavar='',
                           help='Path to vmd executable')
 
-    optional.add_argument('-S', '--score', action='store_false',
+    optional.add_argument('-S', '--score', action='store_true',
                           help='Allows contact map analysis with rosetta')
     optional.add_argument('-sci', '--scoring-interval', type=int, metavar='',
                           help='Run score function each frame interval')
 
-    optional.add_argument('-C', '--chimera', action='store_false',
+    optional.add_argument('-C', '--chimera', action='store_true',
                           help='Allows contact map analysis with chimera')
     optional.add_argument('-cti', '--contact-interval', type=int, metavar='',
                           help='Run contact analysis each frame interval')
 
-    optional.add_argument('-R', '--rmsd', action='store_false',
+    optional.add_argument('-R', '--rmsd', action='store_true',
                           help='Allows rmsd and rmsf analysis with vmd')
 
-    optional.add_argument('-E', '--energies', action='store_false',
+    optional.add_argument('-E', '--energies', action='store_true',
                           help='Allows energies analysis with namd and vmd')
 
     optional.add_argument('-G', '--graphs', action='store_true',
