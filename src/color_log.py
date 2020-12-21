@@ -10,14 +10,15 @@ class CustomFormatter(logging.Formatter):
     red = "\033[31m"
     bold_red = "\033[31;1m"
     reset = "\033[0m"
-    format = "[%(levelname)s] %(message)s"
+    level = "[%(levelname)s]"
+    msg = "%(message)s"
 
     FORMATS = {
-        logging.DEBUG: white + format + reset,
-        logging.INFO: cyan + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
+        logging.DEBUG: white + level + msg + reset,
+        logging.INFO: cyan + level + white + msg + reset,
+        logging.WARNING: yellow + level + white + msg + reset,
+        logging.ERROR: red + level + msg + reset,
+        logging.CRITICAL: bold_red + level + msg + reset
     }
 
     def format(self, record):

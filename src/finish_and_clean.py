@@ -1,8 +1,11 @@
+from src.color_log import log
 import os
 import re
 
 
-def finisher(chimera, score, energies, rmsd, out, name):
+def finish_analysis(chimera, score, energies, rmsd, out, name):
+    """Rename outputs and remove temps"""
+
     if rmsd:
         finish_rmsd(out, name)
 
@@ -17,10 +20,15 @@ def finisher(chimera, score, energies, rmsd, out, name):
 
     rename_models(out, name)
 
+    log('info', 'Excluding temp.')
     remove(F'{out}temp*analysis.tcl')
 
 
 def finish_rmsd(out, name):
+    """Rename rmsd outputs and remove temps"""
+
+    log('info', 'Adjusting rmsd output.')
+
     old_rmsd = out + 'rmsd/all_rmsd.csv'
     new_rmsd = out + 'rmsd/' + name + '_all_rmsd.csv'
     rename(old_rmsd, new_rmsd)
@@ -31,6 +39,10 @@ def finish_rmsd(out, name):
 
 
 def finish_chimera(out, name):
+    """Rename contact outputs and remove temps"""
+
+    log('info', 'Adjusting contact output.')
+
     old_map = out + 'contact/contact_map.csv'
     new_map = out + 'contact/' + name + '_contact_map.csv'
     rename(old_map, new_map)
@@ -41,6 +53,10 @@ def finish_chimera(out, name):
 
 
 def finish_score(out, name):
+    """Rename score outputs and remove temps"""
+
+    log('info', 'Adjusting score output.')
+
     old_score_path = out + 'score/score_relaxed.sc'
     new_score_path = out + 'score/' + name + '_score.csv'
 
@@ -60,6 +76,10 @@ def finish_score(out, name):
 
 
 def finish_energies(out, name):
+    """Merge energies outputs and remove temps"""
+
+    log('info', 'Adjusting energies output.')
+
     energies_path = out + "energies"
     all_name = out + "energies/" + name + '_all_energies.csv'
     inter_name = out + "energies/" + name + '_interaction_energies.csv'
@@ -79,6 +99,8 @@ def finish_energies(out, name):
 
 
 def write_energies(file_to_write, file_to_merge, file_to_merge_name):
+    """Write energies to new output"""
+
     with open(file_to_write, "r") as file_now:
         if os.path.getsize(file_to_merge_name) == 0:
             line = file_now.readline().strip()
@@ -97,6 +119,8 @@ def write_energies(file_to_write, file_to_merge, file_to_merge_name):
 
 
 def rename_models(out, name):
+    """Rename pdb models"""
+
     old_first = out + 'models/first_model.pdb'
     new_first = out + 'models/' + name + '_first_model.pdb'
     rename(old_first, new_first)
@@ -107,16 +131,33 @@ def rename_models(out, name):
 
 
 def rename(old, new):
-    os.rename(old, new)
+    """Rename file"""
+
+    try:
+        os.rename(old, new)
+    except FileNotFoundError:
+        log('warning', 'Missing file ' + old + '.')
 
 
 def remove(pattern):
+    """Remove files with pattern"""
+
     import glob
-    for file in glob.glob(pattern):
-        os.remove(file)
+    file_list = glob.glob(pattern)
+    if len(file_list) >= 1:
+        for file in glob.glob(pattern):
+
+            try:
+                os.remove(file)
+            except FileNotFoundError:
+                log('warning', 'Missing file ' + file + '.')
+    else:
+        log('warning', 'Could not find files with pattern: ' + pattern + '.')
 
 
 def natural_sort(file_list):
+    """Sort list of files ascending"""
+
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
     return sorted(file_list, key=alphanum_key)

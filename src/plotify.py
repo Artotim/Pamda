@@ -3,59 +3,79 @@ import subprocess
 from time import sleep
 
 
-def make_plots(chimera, score, energies, rmsd, dir_path, out, name, init, last):
+def create_plots(chimera, score, energies, rmsd, program_path, out, name, init, last):
+    """Create plots for each analysis"""
+
     if chimera:
-        plot_contacts(dir_path, out, name)
+        plot_contacts(program_path, out, name)
 
     if score:
-        plot_score(dir_path, out, name, init, last)
+        plot_score(program_path, out, name, init, last)
 
     if energies:
-        plot_energies(dir_path, out, name)
+        plot_energies(program_path, out, name)
 
     if rmsd:
-        plot_rmsd(dir_path, out, name)
+        plot_rmsd(program_path, out, name)
 
 
-def plot_contacts(dir_path, out, name):
-    script = dir_path + 'plots/plot_contact_map.r'
+def plot_contacts(program_path, out, name):
+    """Create plots for contact analysis"""
 
-    cmd = ['Rscript', '--vanilla', script, out, name]
-    run_plot(cmd, 'contact map')
-
-    script = dir_path + 'plots/plot_contact_count.r'
+    script = program_path + 'plots/plot_contact_map.r'
 
     cmd = ['Rscript', '--vanilla', script, out, name]
-    run_plot(cmd, 'contact count')
+    run_plot(cmd, 'contact map', out, name)
+
+    script = program_path + 'plots/plot_contact_count.r'
+
+    cmd = ['Rscript', '--vanilla', script, out, name]
+    run_plot(cmd, 'contact count', out, name)
 
 
-def plot_score(dir_path, out, name, init, last):
-    script = dir_path + 'plots/plot_score.r'
+def plot_score(program_path, out, name, init, last):
+    """Create plots for score analysis"""
+
+    script = program_path + 'plots/plot_score.r'
     cmd = ['Rscript', '--vanilla', script, out, name, str(init), str(last)]
-    run_plot(cmd, 'score')
+    run_plot(cmd, 'score', out, name)
 
 
-def plot_energies(dir_path, out, name):
-    script = dir_path + 'plots/plot_energy.r'
+def plot_energies(program_path, out, name):
+    """Create plots for energies analysis"""
 
-    cmd = ['Rscript', '--vanilla', script, out, name]
-    run_plot(cmd, 'energies')
-
-
-def plot_rmsd(dir_path, out, name):
-    script = dir_path + 'plots/plot_rmsd_rmsf.r'
+    script = program_path + 'plots/plot_energy.r'
 
     cmd = ['Rscript', '--vanilla', script, out, name]
-    run_plot(cmd, 'rmsd')
+    run_plot(cmd, 'energies', out, name)
 
 
-def run_plot(cmd, plot):
+def plot_rmsd(program_path, out, name):
+    """Create plots for rmsd analysis"""
+
+    script = program_path + 'plots/plot_rmsd_rmsf.r'
+
+    cmd = ['Rscript', '--vanilla', script, out, name]
+    run_plot(cmd, 'rmsd', out, name)
+
+
+def run_plot(cmd, plot, out, name):
+    """Run command on Rscript"""
+
+    log('info', 'Creating plots for ' + plot + '.')
+
+    log_file = out + 'logs/' + name + '_plots.log'
+    err_file = out + 'logs/' + name + '_plots.err'
+    log('info', 'Logging plot info to ' + log_file + '.')
+
     try:
-        print(cmd)
-        process = subprocess.Popen(cmd)#, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        while process.poll() is None:
-            sleep(1)
-        else:
-            return
+        with open(log_file, 'w') as log_f, open(err_file, "w") as err_f:
+            process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f)
+
+            while process.poll() is None:
+                sleep(60)
+            else:
+                return
+
     except (PermissionError, FileNotFoundError):
         log('error', 'Failed to plot ' + plot + '.')
