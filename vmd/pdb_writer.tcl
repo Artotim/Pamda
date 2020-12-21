@@ -15,6 +15,7 @@ proc pdb_writer_interval {dcd_path} {
 
 			set writePdb [ atomselect $mol all frame last ]
 			set fileName "${out_path}score/score_model_$frame.pdb"
+			puts "Writing pdb $frame"
 			$writePdb writepdb $fileName
 
 			set reset [expr $reset + 1]
@@ -39,6 +40,7 @@ proc pdb_writer_interval {dcd_path} {
 
 			set writePdb [ atomselect $mol all frame last ]
 			set fileName "${out_path}score/score_model_$frame.pdb"
+			puts "Writing pdb $frame"
 			$writePdb writepdb $fileName
 
 			set reset [expr $reset + 1]

@@ -1,4 +1,4 @@
-proc pdb_writer {frame} {
+proc get_pdb {frame} {
     global mol init last sci cci out_path
 
     if {[expr $frame % $sci] == 0} {

@@ -1,20 +1,22 @@
-proc bigdcd_analysis {frame} {
+proc frame_analysis {frame} {
     global main_chain
+    puts "Analysing frame $frame ..."
+
     pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
     pbc wrap -center com -centersel "protein" -compound residue -all
 
     rmsd_rmsf $frame
-	pdb_writer $frame
+	get_pdb $frame
 }
 
-proc main {dcd_path} {
+proc bigdcd_analyser {dcd_path} {
 	package require pbctools
 
     mol delete all
     create_mol
     prepare_rmsd
 
-    bigdcd bigdcd_analysis auto $dcd_path
+    bigdcd frame_analysis auto $dcd_path
     bigdcd_wait
 
     close_rmsd_files

@@ -49,8 +49,6 @@ proc close_rmsd_files {} {
 proc rmsd_rmsf {frame} {
     global all_atoms atoms_selected atoms_reference residue_list compare_dict reference_dict rmsf_out rmsd_out
 
-    puts "Analysing frame $frame ..."
-
     $all_atoms move [measure fit $atoms_selected $atoms_reference]
 
     set rmsd  [measure rmsd $atoms_selected $atoms_reference]
