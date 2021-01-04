@@ -29,10 +29,89 @@ out.path <- paste0(out.path, "rmsd/")
 name <- args[2]
 
 
+# Load all rmsd
+file.name <- paste0(out.path, name, "_all_rmsd.csv")
+if (!file.exists(file.name)) {
+    stop("Missing file ", file.name)
+}
+
+rmsd.all <- read.table(file.name,
+                       header = TRUE,
+                       sep = ";",
+                       dec = ".",
+)
+
+
+# Get chains
+chain.names <- tail(colnames(rmsd.all), 2)
+
+
+# Loop through table
+for (i in 2:ncol(rmsd.all)) {
+    colname <- colnames(rmsd.all)[i]
+
+    # Choose file name
+    if (colname %in% chain.names) {
+        chain.indx <- match(colname, chain.names)
+        png.name <- paste0("_rmsd_frame_chain_", chain.indx, ".png")
+        out.name <- paste0(out.path, name, png.name)
+        plot.title <- paste0("RMSD chain ", colname)
+    } else {
+        out.name <- paste0(out.path, name, "_rmsd_frame_all.png")
+        plot.title <- "RMSD All"
+    }
+
+
+    # Plot rmsd graph
+    cat("Ploting selection", colname, "rmsd graph.\n")
+    plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
+        geom_line(color = "#e6e6e6") +
+        geom_smooth(color = "#000033", size = 2) +
+        labs(title = plot.title, x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20))
+
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+
+
+    # Remove outliers
+    outliers <- boxplot(rmsd.all[[colname]], plot = FALSE)$out
+    if (length(outliers) != 0) {
+        rmsd.trim <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
+    } else {
+        rmsd.trim <- rmsd.all
+    }
+
+
+    # Plot rmsd graph without outliers
+    out.name <- str_replace(out.name, '.png', '_trim.png')
+
+    cat("Ploting selection", colname, "rmsd graph without outliers.\n")
+    plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
+        geom_line(color = "#e6e6e6") +
+        geom_smooth(color = "#000033", size = 2) +
+        labs(title = plot.title, x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20))
+
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+}
+rm(rmsd.all)
+rm(rmsd.trim)
+
+
 # Load residue rmsd
 file.name <- paste0(out.path, name, "_residue_rmsd.csv")
 if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
+    stop("Missing file ", file.name)
 }
 
 rmsd.table <- read.table(file.name,
@@ -69,27 +148,39 @@ for (r in residues) {
 rm(rmsd.table)
 
 
-# Detect chain number
-residue_ind <- 0
-previous <- residues[1]
+# Detect chain splits
+distance <- 1
 chains.sep <- NULL
-for (now in (residues)) {
-    if (abs(previous - now) > 1) {
-        chains.sep <- c(chains.sep, residue_ind)
-        residue_ind <- 0
-    } else {
-        residue_ind <- residue_ind + 1
+while (length(chains.sep) != length(chain.names) - 1) {
+    residue_ind <- 0
+    previous <- residues[1]
+    chains.sep <- NULL
+
+    for (now in (residues)) {
+        if (abs(previous - now) > distance || previous > now) {
+            chains.sep <- c(chains.sep, residue_ind)
+            residue_ind <- 0
+        } else {
+            residue_ind <- residue_ind + 1
+        }
+        previous <- now
     }
-    previous <- now
+    distance <- distance + 1
+
+    if (distance == 1001) {
+        stop("Could not split rediues in chains.")
+    }
 }
 
-chain <- 1
+
+# Split residues acccording to chains
+chain.number <- 1
 residue.chains <- NULL
 for (i in chains.sep) {
-    residue.chains <- c(residue.chains, rep(chain, i))
-    chain <- chain + 1
+    residue.chains <- c(residue.chains, rep(chain.number, i))
+    chain.number <- chain.number + 1
 }
-residue.chains <- c(residue.chains, rep(chain, (residue_ind + 1)))
+residue.chains <- c(residue.chains, rep(chain.number, (residue_ind + 1)))
 
 
 # Split stat in chains
@@ -101,7 +192,7 @@ axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Fi
 
 
 # For each chain
-for (i in 1:chain) {
+for (i in 1:chain.number) {
     # For each stat
     for (j in 2:ncol(chains.stat[[i]])) {
         colname <- colnames(chains.stat[[i]])[j]
@@ -110,11 +201,11 @@ for (i in 1:chain) {
         png.name <- paste0("_rmsf_chain_", i, "_", colname, ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "for chain", i)
+        cat("Ploting", colname, "for chain", i, '\n')
         plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
             geom_line(color = "#000033") +
-            labs(title = paste("RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
-            scale_x_continuous(breaks = pretty_breaks()) +
+            labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
+            scale_x_continuous(breaks = breaks_pretty()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -134,11 +225,11 @@ for (i in 1:chain) {
     png.name <- paste0("_rmsf_chain_", i, "_sd_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
-    cat("Ploting standar deviation for chain", i)
+    cat("Ploting standar deviation for chain", i, '\n')
     plot <- ggplot(rmsf.chain.sd, aes_string(x = "residue", y = "value", group = "sd")) +
         geom_line(aes(color = sd)) +
-        labs(title = "RMSD SD Steps", x = "Residue", y = "Standard Deviation") +
-        scale_x_continuous(breaks = pretty_breaks()) +
+        labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
+        scale_x_continuous(breaks = breaks_pretty()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -148,63 +239,4 @@ for (i in 1:chain) {
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
-
-
-# Load all rmsd
-file.name <- paste0(out.path, name, "_all_rmsd.csv")
-if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
-}
-
-rmsd.all <- read.table(file.name,
-                       header = TRUE,
-                       sep = ";",
-                       dec = ".",
-)
-
-
-# Format rmsd table
-colnames(rmsd.all) <- c("Frame", "RMSD")
-rmsd.all$Frame = seq_along(rmsd.all$Frame)
-
-
-# Plot rmsd graph
-out.name <- paste0(out.path, name, "_rmsd_frames.png")
-
-print("Ploting rmsd graph.")
-plot <- ggplot(rmsd.all, aes(x = Frame, y = RMSD, group = 1)) +
-    geom_line(color = "#e6e6e6") +
-    geom_smooth(color = "#000033", size = 2) +
-    labs(title = "RMSD", x = "Frame", y = "RMSD Value") +
-    scale_x_continuous(labels = scales::comma_format()) +
-    theme_minimal() +
-    theme(text = element_text(family = "Times New Roman")) +
-    theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-    theme(axis.title = element_text(size = 24)) +
-    theme(axis.text = element_text(size = 20))
-
-ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-
-
-# Remove outliers
-outliers <- boxplot(rmsd.all$RMSD, plot = FALSE)$out
-rmsd.trim <- rmsd.all[-which(rmsd.all$RMSD %in% outliers),]
-
-
-# Plot rmsd graph without outliers
-out.name <- paste0(out.path, name, "_rmsd_frames_trim.png")
-
-print("Ploting rmsd graph without outliers.")
-plot <- ggplot(rmsd.trim, aes(x = Frame, y = RMSD, group = 1)) +
-    geom_line(color = "#e6e6e6") +
-    geom_smooth(color = "#000033", size = 2) +
-    labs(title = "RMSD", x = "Frame", y = "RMSD Value") +
-    scale_x_continuous(labels = scales::comma_format()) +
-    theme_minimal() +
-    theme(text = element_text(family = "Times New Roman")) +
-    theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-    theme(axis.title = element_text(size = 24)) +
-    theme(axis.text = element_text(size = 20))
-
-ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-print("Done.")
+cat("Done.\n")

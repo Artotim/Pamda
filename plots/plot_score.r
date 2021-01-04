@@ -22,7 +22,7 @@ name <- args[2]
 # Load contact map
 file.name <- paste0(out.path, name, "_score.csv")
 if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
+    stop("Missing file ", file.name)
 }
 
 score.table <- read.table(file.name,
@@ -41,7 +41,7 @@ score.table$description = as.numeric(c(args[3], steps, args[4]))
 # Plot rmsd graph
 out.name <- paste0(out.path, name, "_score.png")
 
-print("Ploting score.")
+cat("Ploting score.\n")
 plot <- ggplot(score.table, aes(x = description, y = total_score, group = 1)) +
     geom_line(color = "#e6e600", size = 2) +
     labs(title = "Score", x = "Frame", y = "Score") +
@@ -53,4 +53,4 @@ plot <- ggplot(score.table, aes(x = description, y = total_score, group = 1)) +
     theme(axis.text = element_text(size = 20))
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-print("Done.")
+cat("Done.\n")

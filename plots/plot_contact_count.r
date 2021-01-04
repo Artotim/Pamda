@@ -24,13 +24,13 @@ name <- args[2]
 # Load table
 file.name <- paste0(out.path, name, "_contact_count.csv")
 if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
+    stop("Missing file ", file.name)
 }
 
 contact.count <- read.table(file.name,
                             header = TRUE,
                             sep = ";",
-                            dec = ",",
+                            dec = ".",
 )
 
 
@@ -41,7 +41,7 @@ contact.count <- contact.count[!(contact.count$contacts == 0),]
 # Plot graph
 out.name <- paste0(out.path, name, "_contact_count.png")
 
-print("Ploting contact count.")
+cat("Ploting contact count.\n")
 plot <- ggplot(contact.count, aes(x = frame, y = contacts, group = 1)) +
     geom_line(color = "#e6e6e6") +
     geom_smooth(color = "#cc0000", size = 2) +
@@ -55,4 +55,4 @@ plot <- ggplot(contact.count, aes(x = frame, y = contacts, group = 1)) +
     theme(axis.text = element_text(size = 20))
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-print("Done")
+cat("Done.\n")

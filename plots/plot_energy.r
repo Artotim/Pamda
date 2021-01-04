@@ -24,7 +24,7 @@ name <- args[2]
 # Load table
 file.name <- paste0(out.path, name, "_all_energies.csv")
 if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
+    stop("Missing file ", file.name)
 }
 
 energy.all <- read.table(file.name,
@@ -48,7 +48,7 @@ for (i in 2:ncol(energy.all)) {
     png.name <- paste0("_all_", colname, "_energy", ".png")
     out.name <- paste0(out.path, name, png.name)
 
-    cat("Ploting", colname, "energy.")
+    cat("Ploting", colname, "energy.", '\n')
     plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
         geom_line(color = "#e6e6e6") +
         geom_smooth(color = "#0072B2", size = 2) +
@@ -65,18 +65,22 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Iterate over each column to plot whithout ouliers
+# Iterate over each column to plot whisthout outliers
 for (i in 2:ncol(energy.all)) {
     colname <- colnames(energy.all)[i]
 
     outliers <- boxplot(energy.all[[colname]], plot = FALSE)$out
-    energy.trim <- energy.all[-which(energy.all[[colname]] %in% outliers),]
+    if (length(outliers) != 0) {
+        energy.trim <- energy.all[-which(energy.all[[colname]] %in% outliers),]
+    } else {
+        energy.trim <- energy.all
+    }
 
     # Plot graphs
     png.name <- paste0("_all_", colname, "_energy_trim", ".png")
     out.name <- paste0(out.path, name, png.name)
 
-    cat("Ploting", colname, "energy without outliers.")
+    cat("Ploting", colname, "energy without outliers.", '\n')
     plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
         geom_line(color = "#e6e6e6") +
         geom_smooth(color = "#0072B2", size = 2) +
@@ -121,7 +125,7 @@ if (file.exists(file.name)) {
         png.name <- paste0("_interaction_", colname, "_energy", ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "interaction energy.")
+        cat("Ploting", colname, "interaction energy.", '\n')
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
             geom_smooth(color = "#0072B2", size = 2) +
@@ -142,13 +146,17 @@ if (file.exists(file.name)) {
         colname <- colnames(energy.interaction)[i]
 
         outliers <- boxplot(energy.interaction[[colname]], plot = FALSE)$out
-        energy.trim <- energy.interaction[-which(energy.interaction[[colname]] %in% outliers),]
+        if (length(outliers) != 0) {
+            energy.trim <- energy.interaction[-which(energy.interaction[[colname]] %in% outliers),]
+        } else {
+            energy.trim <- energy.interaction
+        }
 
         # Plot graphs
         png.name <- paste0("_interaction_", colname, "_energy_trim", ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "interaction energy without outliers.")
+        cat("Ploting", colname, "interaction energy without outliers.", '\n')
         plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
             geom_smooth(color = "#0072B2", size = 2) +
@@ -164,4 +172,4 @@ if (file.exists(file.name)) {
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
 }
-print("Done")
+cat("Done.\n")

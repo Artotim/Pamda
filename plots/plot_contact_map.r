@@ -26,7 +26,7 @@ name <- args[2]
 # Load contact map
 file.name <- paste0(out.path, name, "_contact_map.csv")
 if (!file.exists(file.name)) {
-    stop(cat("Missing file", file.name))
+    stop("Missing file ", file.name)
 }
 
 contacts.map <- read.table(file.name,
@@ -113,13 +113,13 @@ all.subset <- contact.all.hits[!(contact.all.hits$count == 0),]
 # Plot all graph
 out.name <- paste0(out.path, name, "_contact_map_all.png")
 
-print("Ploting contact map.")
+cat("Ploting contact map.\n")
 plot <- ggplot(all.subset, aes(peptide, protein, fill = count)) +
     geom_raster() +
     scale_fill_gradient(low = "white", high = "red") +
     scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
     scale_x_discrete(breaks = 1:peptide.length, labels = str_split(peptide.chain, " ")) +
-    labs(title = "Contact per residue", x = "Chain B", y = "Chain A") +
+    labs(title = "Contact per residue", x = "Peptide", y = "Convertase") +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
     theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -138,9 +138,9 @@ if (frames > 50000) {
     step <- 10000
 } else if (frames > 10000) {
     step <- 5000
-}else if (frames > 1000) {
+} else if (frames > 1000) {
     step <- 500
-}else {
+} else {
     step <- 100
 }
 iter <- frames / step
@@ -149,13 +149,12 @@ iter <- frames / step
 # Create matrix for residue contact every step
 contact.hits <- list()
 for (i in 1:iter) {
-    print(i)
+    cat("Preparing step", i, '\n')
     value <- i * step
 
     if (i != 1) {
         step.contact <- subset(contact.residues, frame > (value - step) & frame <= value)
-    }
-    else {
+    } else {
         step.contact <- subset(contact.residues, frame >= (value - step) & frame <= value)
     }
 
@@ -201,13 +200,13 @@ for (i in seq_along(contact.hits)) {
     step.subset <- contact.hits[[i]][contact.hits[[i]]$protein %in% all.subset$protein,]
     step.subset$count[step.subset$count == 0] = NA
 
-    cat("Ploting contact map for step", i)
+    cat("Ploting contact map for step", i, '\n')
     plot <- ggplot(step.subset, aes(peptide, protein, fill = count)) +
         geom_raster() +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
         scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
         scale_x_discrete(breaks = 1:peptide.length, labels = str_split(peptide.chain, " ")) +
-        labs(title = plot.title, x = "Chain B", y = "Chain A") +
+        labs(title = "Contact per residue", x = "Peptide", y = "Convertase") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -219,4 +218,4 @@ for (i in seq_along(contact.hits)) {
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
-print("Done")
+cat("Done.\n")
