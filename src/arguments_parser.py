@@ -4,7 +4,6 @@ import argparse
 def make_parser():
     """Return parser with arguments for program"""
 
-    # noinspection PyTypeChecker
     parser = argparse.ArgumentParser(description='Make dynamics analysis.',
                                      epilog="Made by artotim",
                                      usage='%(prog)s -d <dcd_file.dcd> -m <path/to/models/> -C -E -R -S -G',
