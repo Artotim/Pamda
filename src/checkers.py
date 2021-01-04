@@ -203,7 +203,7 @@ def check_last_frame(last_frame, dcd, dir_path):
                 log('error', 'Catdcd failed. Specify last frame with "-l".')
                 return False
 
-    log('info', 'Last frame set to: ' + last_frame + '.')
+    log('info', 'Last frame set to: ' + str(last_frame) + '.')
     return last_frame
 
 
