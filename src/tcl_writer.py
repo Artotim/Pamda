@@ -58,7 +58,7 @@ def prepare_energies(psf, pdb, dcd, out, init, final, program_path):
 def write_get_chain(script, program_path, pdb_path):
     """Append get_chain routine to script"""
 
-    with open(F'{program_path}vmd/get_chain.tcl', 'r') as get_chain:
+    with open(F'{program_path}tcl/get_chain.tcl', 'r') as get_chain:
         file = get_chain.readlines()
         file[-1] = file[-1].replace('*pdb_path*', pdb_path)
         script.extend(file)
@@ -68,7 +68,7 @@ def write_get_chain(script, program_path, pdb_path):
 def write_get_models(script, program_path, psf, pdb, dcd, out, init, last):
     """Append get_models routine to script"""
 
-    with open(F'{program_path}vmd/get_models.tcl', 'r') as get_chain:
+    with open(F'{program_path}tcl/get_models.tcl', 'r') as get_chain:
         file = get_chain.readlines()
         file[-1] = file[-1].replace('*psf_path*', psf)
         file[-1] = file[-1].replace('*pdb_path*', pdb)
@@ -83,7 +83,7 @@ def write_get_models(script, program_path, psf, pdb, dcd, out, init, last):
 def write_mol_create(script, program_path):
     """Append mol_create routine to script"""
 
-    with open(F'{program_path}vmd/prepare_mol.tcl', 'r') as create:
+    with open(F'{program_path}tcl/prepare_mol.tcl', 'r') as create:
         script.extend(create.readlines())
     return script
 
@@ -91,7 +91,7 @@ def write_mol_create(script, program_path):
 def write_bigdcd(script, program_path):
     """Append bigdcd routine to script"""
 
-    with open(F'{program_path}vmd/bigdcd.tcl', 'r') as energies:
+    with open(F'{program_path}tcl/bigdcd.tcl', 'r') as energies:
         script.extend(energies.readlines())
     return script
 
@@ -99,7 +99,7 @@ def write_bigdcd(script, program_path):
 def write_rmsd(script, program_path):
     """Append rmsd_rmsf routine to script"""
 
-    with open(F'{program_path}vmd/rmsd_rmsf.tcl', 'r') as rmsd:
+    with open(F'{program_path}tcl/rmsd_rmsf.tcl', 'r') as rmsd:
         script.extend(rmsd.readlines())
     return script
 
@@ -107,7 +107,7 @@ def write_rmsd(script, program_path):
 def write_get_pdb(script, program_path, contact, score):
     """Append get_frame_pdb routine to script"""
 
-    with open(F'{program_path}vmd/get_frame_pdb.tcl', 'r') as pdb_writer:
+    with open(F'{program_path}tcl/get_frame_pdb.tcl', 'r') as pdb_writer:
         file = pdb_writer.readlines()
         if not contact:
             file[10:16] = ''
@@ -121,7 +121,7 @@ def write_get_pdb(script, program_path, contact, score):
 def write_bigdcd_main(script, program_path, contact, score):
     """Append bigdcd_main routine to script"""
 
-    with open(F'{program_path}vmd/bigdcd_main.tcl', 'r') as main:
+    with open(F'{program_path}tcl/bigdcd_main.tcl', 'r') as main:
         file = main.readlines()
 
         if not contact and not score:
@@ -135,7 +135,7 @@ def write_bigdcd_main(script, program_path, contact, score):
 def write_pdb_writer(script, program_path, score, contact):
     """Append pdb_writer routine to script"""
 
-    with open(F'{program_path}vmd/pdb_writer.tcl', 'r') as pdb_writer:
+    with open(F'{program_path}tcl/pdb_writer.tcl', 'r') as pdb_writer:
         file = pdb_writer.readlines()
         if not contact:
             file[7:31] = ''
@@ -149,7 +149,7 @@ def write_pdb_writer(script, program_path, score, contact):
 def write_energies(script, program_path):
     """Append energies_analysis routine to script"""
 
-    with open(F'{program_path}vmd/energies_analysis.tcl', 'r') as energies:
+    with open(F'{program_path}tcl/energies_analysis.tcl', 'r') as energies:
         script.extend(energies.readlines())
     return script
 
