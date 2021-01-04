@@ -51,7 +51,7 @@ class DynamicAnalysis:
             log('error', 'No analyze requested')
             return
 
-        # prepare files
+        # Prepare files
         if not check_files(self.dcd_path, file_type="dcd") or \
                 not check_files(self.pdb_path, file_type="pdb") or \
                 not check_files(self.psf_path, file_type="psf"):
@@ -84,7 +84,8 @@ class DynamicAnalysis:
 
         self.chimera_contact_interval = check_interval('contact', self.chimera_contact_interval, total)
         self.scoring_interval = check_interval('score', self.scoring_interval, total)
-
+        print()
+        
         # Frame analysis
         if self.rmsd_analysis or self.score_analysis or self.chimera_analysis:
             prepare_frame_analysis(
@@ -114,6 +115,7 @@ class DynamicAnalysis:
                 program_path=self.analysis_path,
                 pdb_path=self.pdb_path
             )
+            print()
 
         # Energy analysis
         if self.energies_analysis:
@@ -133,16 +135,19 @@ class DynamicAnalysis:
                 name=self.name,
                 vmd=self.vmd_exe
             )
+            print()
 
-        # Run score analysis
+        # Score analysis
         if self.score_analysis:
             start_score_analysis(
                 out=self.output,
+                name=self.name,
                 program_path=self.analysis_path,
                 init=self.init_frame,
                 final=self.last_frame,
                 sci=self.scoring_interval
             )
+            print()
 
         # Delete temp files and rename
         finish_analysis(
@@ -153,6 +158,7 @@ class DynamicAnalysis:
             out=self.output,
             name=self.name
         )
+        print()
 
         # run R plots and analysis
         if self.plot_graphs:
@@ -167,6 +173,9 @@ class DynamicAnalysis:
                 init=self.init_frame,
                 last=self.last_frame
             )
+            print()
+
+        log('info', 'Finished.')
 
 
 if __name__ == '__main__':
