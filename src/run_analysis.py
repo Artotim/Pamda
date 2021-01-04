@@ -116,11 +116,16 @@ def start_energies_analysis(out, name, vmd):
     log('info', 'Frame analysis done.')
 
 
-def start_score_analysis(out, program_path, init, final, sci):
+def start_score_analysis(out, name, program_path, init, final, sci):
     """Prepare models score analysis"""
 
     log('info', 'Starting score analysis.')
+    
+    log_file = out + 'logs/' + name + '_score.log'
+    err_file = out + 'logs/' + name + '_score.err'
 
+    log('info', 'Logging score analysis info to ' + log_file + '.')
+    
     models = [F"{out}models/first_model.pdb"]
     count = init + sci
 
@@ -132,23 +137,19 @@ def start_score_analysis(out, program_path, init, final, sci):
 
     for file_name in models:
         if os.path.isfile(file_name):
-            log('info', 'Running score for model ' + file_name + '.')
-            run_score_clean(program_path, out, file_name)
-            run_score_minimize(program_path, out, file_name)
+            run_score_clean(program_path, file_name, log_file, err_file)
+            run_score_minimize(program_path, out, file_name, log_file, err_file)
         else:
             log('error', 'Score error. Missing file ' + file_name + '.')
 
     log('info', 'Score analysis done.')
 
 
-def run_score_clean(dir_path, out, model):
+def run_score_clean(program_path, model, log_file, err_file):
     """Run rosetta clean routine"""
 
-    script_path = dir_path + "rosetta/tools/protein_tools/scripts/clean_pdb.py"
+    script_path = program_path + "rosetta/tools/protein_tools/scripts/clean_pdb.py"
     cmd = ['python', script_path, model, 'ignorechain']
-
-    log_file = out + 'logs/' + 'score_clean.log'
-    err_file = out + 'logs/' + 'score_clean.err'
 
     try:
         with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
@@ -161,7 +162,7 @@ def run_score_clean(dir_path, out, model):
         return
 
 
-def run_score_minimize(program_path, out, model):
+def run_score_minimize(program_path, out, model, log_file, err_file):
     """Run rosetta minimize score analysis"""
 
     score_path = out + "score/"
@@ -170,11 +171,6 @@ def run_score_minimize(program_path, out, model):
 
     cmd = [bin_path, '-s', model, '-out:path:all', score_path, '-out:suffix',
            '_relaxed', '-nstruct', '1', '-relax:default_repeats', '5']
-
-    log_file = out + 'logs/' + 'score_minimize.log'
-    err_file = out + 'logs/' + 'score_minimize.err'
-
-    log('info', 'Logging score analysis info to ' + log_file + '.')
 
     try:
         with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
