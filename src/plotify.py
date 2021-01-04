@@ -69,7 +69,7 @@ def run_plot(cmd, plot, out, name):
     log('info', 'Logging plot info to ' + log_file + '.')
 
     try:
-        with open(log_file, 'w') as log_f, open(err_file, "w") as err_f:
+        with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
             process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f)
 
             while process.poll() is None:
