@@ -10,7 +10,7 @@ class CustomFormatter(logging.Formatter):
     red = "\033[31m"
     bold_red = "\033[31;1m"
     reset = "\033[0m"
-    level = "[%(levelname)s]"
+    level = "[%(levelname)s]   "
     msg = "%(message)s"
 
     FORMATS = {
