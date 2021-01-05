@@ -88,6 +88,7 @@ Optional:
 ## Disclaimer
 
 This product comes with no warranty whatsoever.  
+
 This product is not an official VMD release or has any affiliation to it.  
 This product is not an official NAMD release or has any affiliation to it.  
 This product is not an official pychimera release or has any affiliation to it.  
