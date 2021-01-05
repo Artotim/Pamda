@@ -94,7 +94,7 @@ This product is not an official NAMD release or has any affiliation to it.
 This product is not an official pychimera release or has any affiliation to it.  
 This product is not an official Rosetta release or has any affiliation to it.  
 
-This software includes code developed by the Theoretical Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.
+This software includes code developed by the Theoretical Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.  
 This software includes code developed by the Theoretical and Computational Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.
  
 Third party licenses not obtained by the user are provided with its software. 
