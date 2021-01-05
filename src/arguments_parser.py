@@ -4,10 +4,13 @@ import argparse
 def make_parser():
     """Return parser with arguments for program"""
 
-    parser = argparse.ArgumentParser(description='Make dynamics analysis.',
+    parser = argparse.ArgumentParser(description='This software generates analysis data from a dynamic run between '
+                                                 'protein-peptide interaction or single protein.',
                                      epilog="Made by artotim",
-                                     usage='%(prog)s -d <dcd_file.dcd> -m <path/to/models/> -C -E -R -S -G',
+                                     usage='%(prog)s -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> '
+                                           '-C -S -R -E -G',
                                      add_help=False)
+
     required = parser.add_argument_group('Required')
     optional = parser.add_argument_group('Optional')
 
@@ -17,16 +20,20 @@ def make_parser():
                           help='Path to pdb file')
     required.add_argument('-psf', metavar='', required=True,
                           help='Path to psf file')
+
     optional.add_argument("-h", "--help", action="help",
                           help="Show this help message and exit")
+
     optional.add_argument("-n", "--name", metavar='',
                           help="Output name")
     optional.add_argument('-o', '--output', metavar='',
                           help='Output folder path')
+
     optional.add_argument('-i', '--init', default=0, type=int, metavar='',
                           help='Start analysis frame (default: first)')
     optional.add_argument('-l', '--last', type=int, metavar='',
                           help='End analysis frame (default: last)')
+
     optional.add_argument('-vmd', '--vmd-exe', default='vmd', metavar='',
                           help='Path to vmd executable')
 
