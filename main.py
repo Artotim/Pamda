@@ -14,7 +14,7 @@ class DynamicAnalysis:
         self.pdb_path = os.path.abspath(kwargs['pdb'])
         self.psf_path = os.path.abspath(kwargs['psf'])
 
-        self.analysis_path = os.path.dirname(os.path.abspath(__file__)) + '/'
+        self.analysis_path = check_analysis_path(__file__)
 
         self.name = kwargs['name']
         self.output = kwargs['output']
@@ -74,6 +74,7 @@ class DynamicAnalysis:
                 not check_bin(self.score_analysis, self.analysis_path, 'rosetta') or \
                 not check_bin(self.energies_analysis, self.analysis_path, 'namd') or \
                 not check_r(self.plot_graphs, self.output):
+
             return
 
         self.last_frame = check_last_frame(self.last_frame, self.dcd_path, self.analysis_path)
@@ -82,10 +83,16 @@ class DynamicAnalysis:
 
         total = (self.last_frame - self.init_frame)
 
-        self.chimera_contact_interval = check_interval('contact', self.chimera_contact_interval, total)
-        self.scoring_interval = check_interval('score', self.scoring_interval, total)
+        self.chimera_contact_interval = check_interval(self.chimera_analysis,
+                                                       'contact',
+                                                       self.chimera_contact_interval,
+                                                       total)
+        self.scoring_interval = check_interval(self.score_analysis,
+                                               'score',
+                                               self.scoring_interval,
+                                               total)
         print()
-        
+
         # Frame analysis
         if self.rmsd_analysis or self.score_analysis or self.chimera_analysis:
             prepare_frame_analysis(

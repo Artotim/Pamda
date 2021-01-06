@@ -3,6 +3,17 @@ from src.color_log import log
 import subprocess
 
 
+def check_analysis_path(main_file):
+    import sys
+
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    else:
+        application_path = os.path.dirname(os.path.abspath(main_file))
+
+    return application_path + '/'
+
+
 def check_files(path, file_type):
     """Check if required files exist and are right"""
 
@@ -207,8 +218,11 @@ def check_last_frame(last_frame, dcd, dir_path):
     return last_frame
 
 
-def check_interval(module, interval, total_frames):
+def check_interval(analysis, module, interval, total_frames):
     """Resolves analysis interval for contact and score"""
+
+    if analysis:
+        return 0
 
     if not interval:
         if module == 'score':
