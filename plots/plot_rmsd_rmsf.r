@@ -104,6 +104,7 @@ for (i in 2:ncol(rmsd.all)) {
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
+cat("Done rmsd.\n")
 rm(rmsd.all)
 rm(rmsd.trim)
 
