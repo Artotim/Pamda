@@ -221,7 +221,7 @@ def check_last_frame(last_frame, dcd, dir_path):
 def check_interval(analysis, module, interval, total_frames):
     """Resolves analysis interval for contact and score"""
 
-    if analysis:
+    if not analysis:
         return 0
 
     if not interval:

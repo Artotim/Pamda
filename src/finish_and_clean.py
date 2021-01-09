@@ -145,8 +145,7 @@ def remove(pattern):
     import glob
     file_list = glob.glob(pattern)
     if len(file_list) >= 1:
-        for file in glob.glob(pattern):
-
+        for file in file_list:
             try:
                 os.remove(file)
             except FileNotFoundError:
