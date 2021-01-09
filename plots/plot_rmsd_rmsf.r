@@ -206,7 +206,7 @@ for (i in 1:chain.number) {
         plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
             geom_line(color = "#000033") +
             labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
-            scale_x_continuous(breaks = breaks_pretty()) +
+            scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -230,7 +230,7 @@ for (i in 1:chain.number) {
     plot <- ggplot(rmsf.chain.sd, aes_string(x = "residue", y = "value", group = "sd")) +
         geom_line(aes(color = sd)) +
         labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
-        scale_x_continuous(breaks = breaks_pretty()) +
+        scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +

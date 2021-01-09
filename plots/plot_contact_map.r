@@ -118,7 +118,7 @@ plot <- ggplot(all.subset, aes(peptide, protein, fill = count)) +
     geom_raster() +
     scale_fill_gradient(low = "white", high = "red") +
     scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
-    scale_x_discrete(breaks = 1:peptide.length, labels = str_split(peptide.chain, " ")) +
+    scale_x_discrete(breaks = peptide.first:peptide.last, labels = str_split(peptide.chain, " ")) +
     labs(title = "Contact per residue", x = "Peptide", y = "Convertase") +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
@@ -205,8 +205,8 @@ for (i in seq_along(contact.hits)) {
         geom_raster() +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
         scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
-        scale_x_discrete(breaks = 1:peptide.length, labels = str_split(peptide.chain, " ")) +
-        labs(title = "Contact per residue", x = "Peptide", y = "Convertase") +
+        scale_x_discrete(breaks = peptide.first:peptide.last, labels = str_split(peptide.chain, " ")) +
+        labs(title = plot.title, x = "Peptide", y = "Convertase") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +

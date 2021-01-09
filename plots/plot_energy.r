@@ -129,7 +129,7 @@ if (file.exists(file.name)) {
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
             geom_smooth(color = "#0072B2", size = 2) +
-            labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
+            labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
             scale_x_continuous(labels = scales::comma_format()) +
             theme_minimal() +
@@ -160,7 +160,7 @@ if (file.exists(file.name)) {
         plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
             geom_smooth(color = "#0072B2", size = 2) +
-            labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
+            labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
             scale_x_continuous(labels = scales::comma_format()) +
             theme_minimal() +
