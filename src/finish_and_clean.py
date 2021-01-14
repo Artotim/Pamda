@@ -89,11 +89,11 @@ def finish_energies(out, name):
     for file_name in file_list:
         file_to_write = out + 'energies/' + file_name
 
-        if "all_" in file_name:
+        if file_name.startswith("all_"):
             with open(all_name, 'a+') as all_en:
                 write_energies(file_to_write, all_en, all_name)
 
-        elif "interaction_" in file_name:
+        elif file_name.startswith("interaction_"):
             with open(inter_name, 'a+') as inter_en:
                 write_energies(file_to_write, inter_en, inter_name)
 
