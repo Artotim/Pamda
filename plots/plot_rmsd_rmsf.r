@@ -169,7 +169,8 @@ while (length(chains.sep) != length(chain.names) - 1) {
     distance <- distance + 1
 
     if (distance == 1001) {
-        stop("Could not split rediues in chains.")
+        warning("Could not split rediues in chains. Using single chain!")
+        break
     }
 }
 
@@ -185,7 +186,7 @@ residue.chains <- c(residue.chains, rep(chain.number, (residue_ind + 1)))
 
 
 # Split stat in chains
-chains.stat <- split(rmsd.stats, residue.chains)
+chains.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list(rmsd.stats)
 
 
 # Create names for plot
@@ -194,6 +195,18 @@ axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Fi
 
 # For each chain
 for (i in 1:chain.number) {
+
+    steps.min_max <- c(+Inf, -Inf)
+    for (col_step in c("sd_first", "sd_middle", "sd_last")) {
+        range <- range(chains.stat[[i]][[col_step]])
+        if (range[2] > steps.min_max[2]) {
+            steps.min_max[2] <- range[2]
+        }
+        if (range[1] < steps.min_max[1]) {
+            steps.min_max[1] <- range[1]
+        }
+    }
+
     # For each stat
     for (j in 2:ncol(chains.stat[[i]])) {
         colname <- colnames(chains.stat[[i]])[j]
@@ -204,9 +217,10 @@ for (i in 1:chain.number) {
 
         cat("Ploting", colname, "for chain", i, '\n')
         plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
-            geom_line(color = "#000033") +
+            geom_line(color = "#000033", size = 1) +
             labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
             scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
+            scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -226,7 +240,7 @@ for (i in 1:chain.number) {
     png.name <- paste0("_rmsf_chain_", i, "_sd_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
-    cat("Ploting standar deviation for chain", i, '\n')
+    cat("Ploting standard deviation for chain", i, '\n')
     plot <- ggplot(rmsf.chain.sd, aes_string(x = "residue", y = "value", group = "sd")) +
         geom_line(aes(color = sd)) +
         labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +

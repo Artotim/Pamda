@@ -65,7 +65,7 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Iterate over each column to plot whisthout outliers
+# Iterate over each column to plot whithout outliers
 for (i in 2:ncol(energy.all)) {
     colname <- colnames(energy.all)[i]
 
