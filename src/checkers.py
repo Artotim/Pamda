@@ -270,3 +270,68 @@ def create_outputs_dir(out, chimera, energies, rmsd, score):
     if score:
         path = out + 'score'
         os.makedirs(path)
+
+
+def check_alone_files(alone_rmsd, alone_energies):
+    """Resolves alone files path"""
+
+    log('info', 'Analyzing alone path to compare.')
+    alone_files = dict()
+
+    if alone_rmsd is not None:
+        for rmsd_file in alone_rmsd:
+            rmsd_file = os.path.abspath(rmsd_file)
+            if not os.path.exists(rmsd_file) or not rmsd_file.endswith(".csv"):
+                log('error', 'Invalid csv path: ' + rmsd_file)
+                return False
+
+        with open(alone_rmsd[0], 'r') as first, open(alone_rmsd[1], 'r') as second:
+            fisrt_size = len(first.readline().split(';'))
+            second_size = len(second.readline().split(';'))
+            alone_rmsd = alone_rmsd[::-1] if fisrt_size > second_size else alone_rmsd
+
+    alone_files['rmsd'] = alone_rmsd
+
+    if alone_energies is not None:
+        alone_energies = os.path.abspath(alone_energies)
+        if not os.path.exists(alone_energies) or not alone_energies.endswith(".csv"):
+            log('error', 'Invalid csv path: ' + alone_energies)
+            return False
+        alone_energies = [alone_energies]
+
+    alone_files['energies'] = alone_energies
+
+    return alone_files
+
+
+def check_catalytic(catalytic, pdb):
+    """Resolves catalytic site residues names"""
+
+    if len(catalytic) == 0:
+        return False
+
+    log('info', 'Checking catalytic residues in PDB file.')
+
+    catalytic_string = [str(resi) for resi in catalytic]
+    catalytic_dict = dict()
+    chain = ""
+
+    with open(pdb, 'r') as pdb_file:
+        for line in pdb_file:
+            line_elements = line.split()
+            try:
+                if chain != line_elements[4]:
+                    if len(catalytic_dict) == len(catalytic):
+                        return catalytic_dict
+                    else:
+                        catalytic_dict = dict()
+                        chain = line_elements[4]
+
+                if line_elements[5] in catalytic_string:
+                    catalytic_dict[line_elements[5]] = line_elements[3]
+
+            except IndexError:
+                continue
+
+    log('warning', 'Could not define residues names in catalytic site.')
+    return dict.fromkeys(catalytic, "")

@@ -29,6 +29,11 @@ out.path <- paste0(out.path, "rmsd/")
 name <- args[2]
 
 
+# Resolve catalytic site
+catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
+catalytic <- if (length(catalytic != 0)) catalytic else data.frame(resn = NaN, resi = NaN)
+
+
 # Load all rmsd
 file.name <- paste0(out.path, name, "_all_rmsd.csv")
 if (!file.exists(file.name)) {
@@ -43,10 +48,11 @@ rmsd.all <- read.table(file.name,
 
 
 # Get chains
-chain.names <- tail(colnames(rmsd.all), 2)
+chain.names <- tail(colnames(rmsd.all), -2)
 
 
 # Loop through table
+rmsd.trim <- list()
 for (i in 2:ncol(rmsd.all)) {
     colname <- colnames(rmsd.all)[i]
 
@@ -81,9 +87,9 @@ for (i in 2:ncol(rmsd.all)) {
     # Remove outliers
     outliers <- boxplot(rmsd.all[[colname]], plot = FALSE)$out
     if (length(outliers) != 0) {
-        rmsd.trim <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
+        rmsd.trim[[i]] <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
     } else {
-        rmsd.trim <- rmsd.all
+        rmsd.trim[[i]] <- rmsd.all
     }
 
 
@@ -91,7 +97,7 @@ for (i in 2:ncol(rmsd.all)) {
     out.name <- str_replace(out.name, '.png', '_trim.png')
 
     cat("Ploting selection", colname, "rmsd graph without outliers.\n")
-    plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
+    plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
         geom_line(color = "#e6e6e6") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
@@ -104,6 +110,16 @@ for (i in 2:ncol(rmsd.all)) {
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
+
+
+# Plot with alone stats
+if (args[3] != "False") {
+    source(args[3])
+    do.call(plot_alone_rmsd_stats, list(rmsd.all, rmsd.trim, args))
+}
+
+
+# Finnish
 cat("Done rmsd.\n")
 rm(rmsd.all)
 rm(rmsd.trim)
@@ -146,6 +162,20 @@ for (r in residues) {
     rmsd.stats$sd_last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
     stat_i <- stat_i + 1
 }
+
+
+# Get catalytic site measures
+if (length(catalytic != 0)) {
+    catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
+
+    for (r in catalytic$resi) {
+        catalytic.residue <- paste0("X", r)
+        if (catalytic.residue %in% colnames(rmsd.table)) {
+            catalytic.stats[r] <- rmsd.table[, catalytic.residue]
+        }
+    }
+}
+
 rm(rmsd.table)
 
 
@@ -193,7 +223,28 @@ chains.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list
 axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Final")
 
 
+# Create data for catalytic labels
+catalytic.data <- list()
+VectorIntersect <- function(v, z) {
+    unlist(lapply(unique(v[v %in% z]), function(x) rep(x, min(sum(v == x), sum(z == x)))))
+}
+is.contained <- function(v, z) { length(VectorIntersect(v, z)) == length(v) }
+
+for (i in 1:chain.number) {
+    if (is.contained(catalytic$resi, chains.stat[[i]]$residue)) {
+        catalytic.data[[i]] <- chains.stat[[i]][chains.stat[[i]]$residue %in% catalytic$resi]
+    } else {
+        catalytic.data[[i]] <- chains.stat[[i]][NA,]
+    }
+
+    catalytic.data[[i]]$label <- with(catalytic.data[[i]], paste0(residue, '\n', catalytic$resn[match(catalytic.data[[i]]$residue, catalytic$resi)]))
+    catalytic.data[[i]]$label <- gsub("\nNA", "", catalytic.data[[i]]$label)
+}
+
+
 # For each chain
+rmsf.chain.sd <- list()
+colors.steps <- c("sd_first" = 'green',"sd_middle" = 'blue', "sd_last" = 'red' )
 for (i in 1:chain.number) {
 
     steps.min_max <- c(+Inf, -Inf)
@@ -203,7 +254,7 @@ for (i in 1:chain.number) {
             steps.min_max[2] <- range[2]
         }
         if (range[1] < steps.min_max[1]) {
-            steps.min_max[1] <- range[1]
+            steps.min_max[1] <- range[1] - range[1] * 0.6
         }
     }
 
@@ -211,16 +262,20 @@ for (i in 1:chain.number) {
     for (j in 2:ncol(chains.stat[[i]])) {
         colname <- colnames(chains.stat[[i]])[j]
 
+        min_y_value <- min(chains.stat[[i]][[colname]])
+
         # Plot stat graphs
         png.name <- paste0("_rmsf_chain_", i, "_", colname, ".png")
         out.name <- paste0(out.path, name, png.name)
 
         cat("Ploting", colname, "for chain", i, '\n')
         plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
-            geom_line(color = "#000033", size = 1) +
-            labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
+            geom_line(color = if (is.na(colors.steps[colname][[1]])) "#000033" else colors.steps[colname][[1]], size = 1) +
+            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
             scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
             scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
+            labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -231,20 +286,24 @@ for (i in 1:chain.number) {
 
 
     # Resolve SD steps
-    rmsf.chain.sd <- select(chains.stat[[i]], residue, sd_first, sd_middle, sd_last)
-    rmsf.chain.sd <- gather(rmsf.chain.sd, sd, value, -residue)
-    rmsf.chain.sd$sd <- factor(rmsf.chain.sd$sd, levels = c("sd_first", "sd_middle", "sd_last"))
+    rmsf.chain.sd[[i]] <- select(chains.stat[[i]], residue, sd_first, sd_middle, sd_last)
+    rmsf.chain.sd[[i]] <- gather(rmsf.chain.sd[[i]], sd, value, -residue)
+    rmsf.chain.sd[[i]]$sd <- factor(rmsf.chain.sd[[i]]$sd, levels = c("sd_first", "sd_middle", "sd_last"))
 
 
     # Plot SD steps graphs
     png.name <- paste0("_rmsf_chain_", i, "_sd_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
+    min_y_value <- min(rmsf.chain.sd[[i]]$value)
+
     cat("Ploting standard deviation for chain", i, '\n')
-    plot <- ggplot(rmsf.chain.sd, aes_string(x = "residue", y = "value", group = "sd")) +
-        geom_line(aes(color = sd)) +
-        labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
+    plot <-  ggplot(rmsf.chain.sd[[i]], aes_string(x = "residue", y = "value")) +
+        geom_line(aes_string(color = 'sd', group = "sd")) +
+        geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+        geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
+        labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -254,4 +313,72 @@ for (i in 1:chain.number) {
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
-cat("Done.\n")
+
+
+# Plot catalytic site rmsd
+if (length(catalytic != 0)) {
+    color.list <- c('#ff0000', '#cccc00', '#4d2600', '#660066', '#00b300', '#003366', '#003300', '#990033')
+    while (length(catalytic$resi) > length(color.list)) {
+        color.list <- append(color.list, sample(rainbow(20), 1))
+    }
+    colors <- setNames(color.list, gsub("\nNA", "", paste0(catalytic$resi, '\n', catalytic$resn)))
+
+    out.name <- paste0(out.path, name, "_catalytic_rmsd.png")
+
+    cat("Ploting catalytic site.\n")
+    plot <- ggplot(catalytic.stats, aes(x = frame)) +
+        labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20)) +
+        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm")) +
+        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        scale_color_manual("Catalytic residues", values = colors)
+
+
+    for (resi in catalytic$resi) {
+        plot <- plot + geom_smooth(aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
+    }
+
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+
+    out.name <- paste0(out.path, name, "_catalytic_rmsd_trim.png")
+
+    cat("Ploting catalytic site without outliers.\n")
+    plot <- ggplot(catalytic.stats, aes(x = frame)) +
+        labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20)) +
+        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm")) +
+        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        scale_color_manual("Catalytic residues", values = colors)
+
+
+    for (resi in catalytic$resi) {
+        # Remove outliers
+        outliers <- boxplot(catalytic.stats[[resi]], plot = FALSE)$out
+        if (length(outliers) != 0) {
+            catalytic.stats.trim <- catalytic.stats[-which(catalytic.stats[[resi]] %in% outliers),]
+        } else {
+            catalytic.stats.trim <- catalytic.stats
+        }
+
+        plot <- plot + geom_smooth(data=catalytic.stats.trim, aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
+    }
+
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+}
+
+
+# Plot with alone stats
+if (args[3] != "False") {
+    do.call(plot_alone_rmsf_stats, list(chains.stat, args))
+}
+cat("Done.\n\n")

@@ -66,14 +66,15 @@ for (i in 2:ncol(energy.all)) {
 
 
 # Iterate over each column to plot whithout outliers
+energy.trim <- list()
 for (i in 2:ncol(energy.all)) {
     colname <- colnames(energy.all)[i]
 
     outliers <- boxplot(energy.all[[colname]], plot = FALSE)$out
     if (length(outliers) != 0) {
-        energy.trim <- energy.all[-which(energy.all[[colname]] %in% outliers),]
+        energy.trim[[i]] <- energy.all[-which(energy.all[[colname]] %in% outliers),]
     } else {
-        energy.trim <- energy.all
+        energy.trim[[i]] <- energy.all
     }
 
     # Plot graphs
@@ -81,7 +82,7 @@ for (i in 2:ncol(energy.all)) {
     out.name <- paste0(out.path, name, png.name)
 
     cat("Ploting", colname, "energy without outliers.", '\n')
-    plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
+    plot <- ggplot(energy.trim[[i]], aes_string(x = "Frame", y = colname, group = 1)) +
         geom_line(color = "#e6e6e6") +
         geom_smooth(color = "#0072B2", size = 2) +
         labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
@@ -97,8 +98,16 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Check for interaction table
+# Plot with alone stats
+if (args[3] != "False") {
+    source(args[3])
+    do.call(plot_alone_energy_stats, list(energy.all, energy.trim, args))
+}
 rm(energy.all)
+rm(energy.trim)
+
+
+# Check for interaction table
 file.name <- paste0(out.path, name, "_interaction_energies.csv")
 
 if (file.exists(file.name)) {
@@ -172,4 +181,4 @@ if (file.exists(file.name)) {
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
 }
-cat("Done.\n")
+cat("Done.\n\n")

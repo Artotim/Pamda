@@ -36,6 +36,11 @@ class DynamicAnalysis:
 
         self.plot_graphs = kwargs['graphs']
 
+        self.alone_rmsd = kwargs['alone_rmsd']
+        self.alone_energies = kwargs['alone_energies']
+
+        self.catalytic_site = kwargs['cat']
+
         try:
             self.main()
         except KeyboardInterrupt:
@@ -65,6 +70,12 @@ class DynamicAnalysis:
 
         create_outputs_dir(self.output, self.chimera_analysis, self.energies_analysis, self.rmsd_analysis,
                            self.score_analysis)
+
+        alone_compare = check_alone_files(self.alone_rmsd, self.alone_energies)
+        if not alone_compare:
+            return
+
+        self.catalytic_site = check_catalytic(self.catalytic_site, self.pdb_path)
 
         self.vmd_exe = check_vmd(self.vmd_exe)
         if not self.vmd_exe:
@@ -167,7 +178,7 @@ class DynamicAnalysis:
         )
         print()
 
-        # run R plots and analysis
+        # Run R plots and analysis
         if self.plot_graphs:
             create_plots(
                 chimera=self.chimera_analysis,
@@ -178,7 +189,9 @@ class DynamicAnalysis:
                 out=self.output,
                 name=self.name,
                 init=self.init_frame,
-                last=self.last_frame
+                last=self.last_frame,
+                alone=alone_compare,
+                catalytic=self.catalytic_site
             )
             print()
 
