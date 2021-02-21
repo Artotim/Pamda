@@ -76,6 +76,6 @@ def make_parser():
                           help='Path to alone output energies file to compare stats')
 
     optional.add_argument('-cat', '--catalytic-site', type=int, metavar='', dest='cat', default=[], nargs='+',
-                          help='Get additional data for catalytic site')
+                          help='Pass a list of residues to display on graphs and get specific plots')
 
     return parser
