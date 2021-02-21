@@ -104,7 +104,7 @@ Frame interval number to perform score analysis.
 Run contact map analysis with chimera (default: False).
 
 `-cti`, `--contact-interval` `INT`  
-Frame interval number to perform score analysis.
+Frame interval number to perform contact analysis.
 ***
 
 `-R`, `--rmsd`   
