@@ -53,4 +53,4 @@ plot <- ggplot(score.table, aes(x = description, y = total_score, group = 1)) +
     theme(axis.text = element_text(size = 20))
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-cat("Done.\n")
+cat("Done.\n\n")
