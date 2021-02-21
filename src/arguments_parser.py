@@ -52,7 +52,7 @@ def make_parser():
                           help='Path to vmd executable')
 
     optional.add_argument('-S', '--score', action='store_true',
-                          help='Run contact map analysis with rosetta')
+                          help='Run binding score analysis with rosetta')
     optional.add_argument('-sci', '--scoring-interval', type=int, metavar='',
                           help='Analyse score function each frame interval')
 
