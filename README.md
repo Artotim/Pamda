@@ -63,15 +63,12 @@ dinamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C 
 ### Required:
 `-d` , `--dcd` `DCD_PATH`  
 Indicates the path to your `dcd` file.
-***
 
 `-pdb` `PDB_PATH`  
 Indicates the path to your `pdb` file.  
-***
 
 `-psf` `PSF_PATH`  
 Indicates the path to your `pdf` file.
-***
 
 ### Optional:
 `-h`, `--help`  
