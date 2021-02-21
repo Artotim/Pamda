@@ -53,37 +53,85 @@ Then give it executable permissions:
 ## Usage
 You can set the program to your path or simply run it with ./dinamic_analysis
 
+Basic usage: 
 ```
-Basic usage: dinamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C -S -R -E -G
-
-Required:
-  -d , --dcd                 Path to dcd file
-  -pdb                       Path to pdb file
-  -psf                       Path to psf file
-
-Optional:
-  -h, --help                 Show help message and exit
-
-  -n , --name                Output name
-  -o , --output              Output folder path
-
-  -i , --init                Start analysis frame (default: first)
-  -l , --last                End analysis frame (default: last)
-
-  -vmd , --vmd-exe           Path to vmd executable
-
-  -S, --score                Run contact map analysis with rosetta
-  -sci , --scoring-interval  Analyse score function each frame interval
-
-  -C, --chimera              Run contact map analysis with chimera
-  -cti , --contact-interval  Analyse contact each frame interval
-
-  -R, --rmsd                 Run rmsd and rmsf analysis with vmd
-
-  -E, --energies             Run energies analysis with namd and vmd
-
-  -G, --graphs               Plot analysis graphs
+dinamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C -S -R -E -G`
 ```
+
+## Options
+
+### Required:
+`-d` , `--dcd` `DCD_PATH`  
+Indicates the path to your `dcd` file.
+***
+
+`-pdb` `PDB_PATH`  
+Indicates the path to your `pdb` file.  
+***
+
+`-psf` `PSF_PATH`  
+Indicates the path to your `pdf` file.
+***
+
+### Optional:
+`-h`, `--help`  
+Show help message and exit.
+***
+
+`-n`, `--name` `NAME`  
+Prefix to name output files (default: same as `dcd`).
+
+`-o`, `--output` `OUTPUT_PATH`  
+Path to an empty output folder. Creates if not exist.
+***
+
+` -i`, `--init` `INT`  
+Frame to start analysis (default: first).
+
+`-l`, `--last` `INT`  
+Frame to end analysis (default: last).
+***
+
+`-vmd`, `--vmd-exe` `VMD_PATH`  
+Indicates the path to your vmd executable.
+***
+
+`-S`, `--score`  
+Run binding score analysis with rosetta (default: False).
+
+`-sci`, `--scoring-interval` `INT`  
+Frame interval number to perform score analysis.
+***
+
+`-C`, `--chimera`  
+Run contact map analysis with chimera (default: False).
+
+`-cti`, `--contact-interval` `INT`  
+Frame interval number to perform score analysis.
+***
+
+`-R`, `--rmsd`   
+Run rmsd and rmsf analysis with vmd (default: False).
+***
+
+`-E`, `--energies`  
+Run energies analysis with namd and vmd (default: False).
+***
+
+`-G`, `--graphs`
+Plot analysis graphs (default: False).
+
+***
+`--alone-rmsd` `ALL.CSV` `RESIDUE.CSV`  
+Path to alone output rmsd files to plot compare stats (must include all and residue `csv`).
+
+`--alone-energies` `ENERGIES.CSV`  
+Path to alone output energies file to compare stats.
+***
+
+`-cat`, `--catalytic-site` `INT` `INT` `...`  
+Pass a list of residues to display on graphs and get specific plots.
+***
      
 ## Disclaimer
 
@@ -99,6 +147,5 @@ This software includes code developed by the Theoretical and Computational Bioph
  
 Third party licenses not obtained by the user are provided with its software. 
 
-### Known issues and improvements
+### Known issues and improvements to do
 - Provide full standalone program
-- Fix issues with single chain analysis
