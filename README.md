@@ -79,7 +79,7 @@ Show help message and exit.
 Prefix to name output files (default: same as `dcd`).
 
 `-o`, `--output` `OUTPUT_PATH`  
-Path to an empty output folder. Creates if not exist.
+Path to an empty output folder. Creates one if not exist.
 ***
 
 ` -i`, `--init` `INT`  
@@ -104,7 +104,7 @@ Frame interval number to perform score analysis.
 Run contact map analysis with chimera (default: False).
 
 `-cti`, `--contact-interval` `INT`  
-Frame interval number to perform score analysis.
+Frame interval number to perform contact analysis.
 ***
 
 `-R`, `--rmsd`   
