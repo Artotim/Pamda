@@ -328,7 +328,8 @@ def check_catalytic(catalytic, pdb):
                         chain = line_elements[4]
 
                 if line_elements[5] in catalytic_string:
-                    catalytic_dict[line_elements[5]] = line_elements[3]
+                    residue = line_elements[3] if line_elements[3] != 'HSD' else 'HIS'
+                    catalytic_dict[line_elements[5]] = residue
 
             except IndexError:
                 continue

@@ -139,7 +139,7 @@ rmsd.table <- read.table(file.name,
 
 
 # Format table
-rmsd.table$X = NULL
+rmsd.table$X <- NULL
 residues <- str_replace_all(names(rmsd.table), "X", "")
 residues <- as.numeric(residues)
 rows <- nrow(rmsd.table)
@@ -182,6 +182,7 @@ rm(rmsd.table)
 # Detect chain splits
 distance <- 1
 chains.sep <- NULL
+residue_ind <- 0
 while (length(chains.sep) != length(chain.names) - 1) {
     residue_ind <- 0
     previous <- residues[1]
@@ -263,6 +264,7 @@ for (i in 1:chain.number) {
         colname <- colnames(chains.stat[[i]])[j]
 
         min_y_value <- min(chains.stat[[i]][[colname]])
+        max_y_value <- max(chains.stat[[i]][[colname]])
 
         # Plot stat graphs
         png.name <- paste0("_rmsf_chain_", i, "_", colname, ".png")
@@ -271,8 +273,8 @@ for (i in 1:chain.number) {
         cat("Ploting", colname, "for chain", i, '\n')
         plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
             geom_line(color = if (is.na(colors.steps[colname][[1]])) "#000033" else colors.steps[colname][[1]], size = 1) +
-            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
+            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
             scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
             scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
             labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
@@ -296,12 +298,13 @@ for (i in 1:chain.number) {
     out.name <- paste0(out.path, name, png.name)
 
     min_y_value <- min(rmsf.chain.sd[[i]]$value)
+    max_y_value <- max(rmsf.chain.sd[[i]]$value)
 
     cat("Ploting standard deviation for chain", i, '\n')
     plot <-  ggplot(rmsf.chain.sd[[i]], aes_string(x = "residue", y = "value")) +
         geom_line(aes_string(color = 'sd', group = "sd")) +
-        geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-        geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
+        geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+        geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
         labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
         theme_minimal() +
@@ -317,7 +320,7 @@ for (i in 1:chain.number) {
 
 # Plot catalytic site rmsd
 if (length(catalytic != 0)) {
-    color.list <- c('#ff0000', '#cccc00', '#4d2600', '#660066', '#00b300', '#003366', '#003300', '#990033')
+    color.list <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
     while (length(catalytic$resi) > length(color.list)) {
         color.list <- append(color.list, sample(rainbow(20), 1))
     }

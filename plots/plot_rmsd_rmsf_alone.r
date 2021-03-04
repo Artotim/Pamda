@@ -148,7 +148,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
 
     # Format table
-    rmsd.table$X = NULL
+    rmsd.table$X <- NULL
     residues <- str_replace_all(names(rmsd.table), "X", "")
     residues <- as.numeric(residues)
     rows <- nrow(rmsd.table)
@@ -189,6 +189,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     # Detect chain splits
     distance <- 1
     chains.sep <- NULL
+    residue_ind <- 0
     while (length(chains.sep) != length(chain.names) - 1) {
         residue_ind <- 0
         previous <- residues[1]
@@ -277,6 +278,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
             min_y_value <- min(chains.alone.stat[[i]][[colname]])
             min_y_value <- if (min(chains.stat[[i]][[colname]]) < min_y_value) min(chains.stat[[i]][[colname]]) else min_y_value
+            max_y_value <- max(chains.alone.stat[[i]][[colname]])
 
             # Plot stat graphs
             png.name <- paste0("_alone_rmsf_chain_", i, "_", colname, ".png")
@@ -293,8 +295,8 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
             plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
                 geom_line(data = chains.alone.trim[[i]], aes_(color = "Alone"), size = 1) +
                 geom_line(aes_(color = "Docked"), size = 1) +
-                geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-                geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
+                geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+                geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
                 scale_x_continuous(breaks = if (length(chains.alone.stat[[i]]$residue) < 5) unique(chains.alone.stat[[i]]$residue) else breaks_pretty()) +
                 scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
                 labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
@@ -328,12 +330,13 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         out.name <- paste0(out.path, name, png.name)
 
         min_y_value <- min(rmsf.chain.alone.sd.trim$value)
+        max_y_value <- max(rmsf.chain.alone.sd.trim$value)
 
         cat("Ploting standard deviation for chain", i, ' wtih alone stats.\n')
         plot <- ggplot(rmsf.chain.alone.sd.trim, aes_string(x = "residue", y = "value")) +
             geom_line(aes_string(color = 'sd', group = "sd")) +
-            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - min_y_value * 0.5, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - min_y_value * 0.1, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
+            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
+            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
             scale_x_continuous(breaks = if (length(chains.alone.stat[[i]]$residue) < 5) unique(chains.alone.stat[[i]]$residue) else breaks_pretty()) +
             labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
             theme_minimal() +
@@ -349,7 +352,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
     # Plot catalytic site rmsd
     if (length(catalytic != 0)) {
-        color.list <- c('#ff0000', '#cccc00', '#4d2600', '#660066', '#00b300', '#003366', '#003300', '#990033')
+        color.list <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
         while (length(catalytic$resi) > length(color.list)) {
             color.list <- append(color.list, sample(rainbow(20), 1))
         }
