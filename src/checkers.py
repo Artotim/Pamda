@@ -275,7 +275,9 @@ def create_outputs_dir(out, chimera, energies, rmsd, score):
 def check_alone_files(alone_rmsd, alone_energies):
     """Resolves alone files path"""
 
-    log('info', 'Analyzing alone path to compare.')
+    if alone_rmsd is not None and alone_energies is not None:
+        log('info', 'Analyzing alone path to compare.')
+
     alone_files = dict()
 
     if alone_rmsd is not None:
