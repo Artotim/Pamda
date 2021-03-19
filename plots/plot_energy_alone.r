@@ -85,6 +85,8 @@ plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
         } else {
             energy.alone.trim <- energy.alone.all
         }
+        energy.alone.trim[1,]$frame <- min(energy.alone.all$frame)
+
 
         # Plot graphs
         png.name <- paste0("_alone_all_", colname, "_energy_trim", ".png")

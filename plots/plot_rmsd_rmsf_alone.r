@@ -45,7 +45,7 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
     )
 
     # Get chains
-    chain.names <- tail(colnames(rmsd.alone.all), -2)
+    alone.chain.names <- tail(colnames(rmsd.alone.all), -2)
 
 
     # Loop through table
@@ -55,8 +55,8 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
         colname <- colnames(rmsd.alone.all)[i]
 
         # Choose file name
-        if (colname %in% chain.names) {
-            chain.indx <- match(colname, chain.names)
+        if (colname %in% alone.chain.names) {
+            chain.indx <- match(colname, alone.chain.names)
             png.name <- paste0("_alone_rmsd_frame_chain_", chain.indx, ".png")
             out.name <- paste0(out.path, name, png.name)
             plot.title <- paste0("RMSD chain ", colname)
@@ -93,10 +93,11 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
         } else {
             rmsd.alone.trim[[i]] <- rmsd.alone.all
         }
+        rmsd.alone.trim[[i]][1,]$frame <- min(rmsd.alone.all$frame)
 
 
         # Plot rmsd graph without outliers
-        out.name <- str_replace(out.name, '.png', '_alone_trim.png')
+        out.name <- str_replace(out.name, '.png', '_trim.png')
 
         cat("Ploting selection", colname, "rmsd graph without outliers and with alone stats.\n")
         plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
@@ -129,16 +130,21 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     alone.path <- args[5]
 
 
-    # Resolve catalytic site
-    catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
-    catalytic <- if (length(catalytic != 0)) catalytic else data.frame(resn = NaN, resi = NaN)
-
-
     # Load residue rmsd
     file.name <- alone.path
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
     }
+
+    rmsd.alone.all <- read.table(args[4],
+                                 header = TRUE,
+                                 sep = ";",
+                                 dec = ".",
+    )
+
+    # Get chains
+    alone.chain.names <- tail(colnames(rmsd.alone.all), -2)
+    rm(rmsd.alone.all)
 
     rmsd.table <- read.table(file.name,
                              header = TRUE,
@@ -173,16 +179,6 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     }
 
 
-    # Get catalytic site measures
-    if (length(catalytic != 0)) {
-        catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
-
-        for (r in catalytic$resi) {
-            catalytic.residue <- paste0("X", r)
-            catalytic.stats[r] <- rmsd.table[, catalytic.residue]
-        }
-    }
-
     rm(rmsd.table)
 
 
@@ -190,7 +186,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     distance <- 1
     chains.sep <- NULL
     residue_ind <- 0
-    while (length(chains.sep) != length(chain.names) - 1) {
+    while (length(chains.sep) != length(alone.chain.names) - 1) {
         residue_ind <- 0
         previous <- residues[1]
         chains.sep <- NULL
@@ -230,30 +226,11 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Final")
 
 
-    # Create data for catalytic labels
-    catalytic.data <- list()
-    VectorIntersect <- function(v, z) {
-        unlist(lapply(unique(v[v %in% z]), function(x) rep(x, min(sum(v == x), sum(z == x)))))
-    }
-    is.contained <- function(v, z) { length(VectorIntersect(v, z)) == length(v) }
-
-    for (i in 1:chain.number) {
-        if (is.contained(catalytic$resi, chains.alone.stat[[i]]$residue)) {
-            catalytic.data[[i]] <- chains.alone.stat[[i]][chains.alone.stat[[i]]$residue %in% catalytic$resi]
-        } else {
-            catalytic.data[[i]] <- chains.alone.stat[[i]][NA,]
-        }
-
-        catalytic.data[[i]]$label <- with(catalytic.data[[i]], paste0(residue, '\n', catalytic$resn[match(catalytic.data[[i]]$residue, catalytic$resi)]))
-        catalytic.data[[i]]$label <- gsub("\nNA", "", catalytic.data[[i]]$label)
-    }
-
-
     # For each chain
     rmsf.chain.alone.sd <- list()
     chains.alone.trim <- list()
     colors <- c('Alone' = '#ccccff', 'Docked' = '#00004d')
-    for (i in 1:chain.number) {
+    for (i in seq_along(chains.stat)) {
 
         steps.min_max <- c(+Inf, -Inf)
         for (col_step in c("sd_first", "sd_middle", "sd_last")) {
@@ -267,8 +244,8 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
             if (range[2] > steps.min_max[2]) {
                 steps.min_max[2] <- range[2]
             }
-            if (range[1] < steps.min_max[1]) {
-                steps.min_max[1] <- range[1] - range[1] * 0.6
+            if (range[1] - range[2] * 0.06 < steps.min_max[1]) {
+                steps.min_max[1] <- range[1] - range[2] * 0.06
             }
         }
 
@@ -276,9 +253,6 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         for (j in 2:ncol(chains.alone.stat[[i]])) {
             colname <- colnames(chains.alone.stat[[i]])[j]
 
-            min_y_value <- min(chains.alone.stat[[i]][[colname]])
-            min_y_value <- if (min(chains.stat[[i]][[colname]]) < min_y_value) min(chains.stat[[i]][[colname]]) else min_y_value
-            max_y_value <- max(chains.alone.stat[[i]][[colname]])
 
             # Plot stat graphs
             png.name <- paste0("_alone_rmsf_chain_", i, "_", colname, ".png")
@@ -290,6 +264,12 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
             } else {
                 chains.alone.trim[[i]] <- chains.alone.stat[[i]]
             }
+
+
+            min_y_value <- min(chains.alone.trim[[i]][[colname]])
+            min_y_value <- if (min(chains.stat[[i]][[colname]]) < min_y_value) min(chains.stat[[i]][[colname]]) else min_y_value
+            max_y_value <- max(chains.alone.trim[[i]][[colname]])
+
 
             cat("Ploting", colname, "for chain", i, ' wtih alone stats.\n')
             plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
@@ -404,6 +384,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
             } else {
                 catalytic.stats.trim <- catalytic.stats
             }
+            catalytic.stats.trim[1,]$frame <- min(catalytic.stats$frame)
 
             plot <- plot + geom_smooth(data = catalytic.stats.trim, aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
         }

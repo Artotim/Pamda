@@ -76,6 +76,8 @@ for (i in 2:ncol(energy.all)) {
     } else {
         energy.trim[[i]] <- energy.all
     }
+    energy.trim[[i]][1,]$frame <- min(energy.all$frame)
+
 
     # Plot graphs
     png.name <- paste0("_all_", colname, "_energy_trim", ".png")
@@ -160,6 +162,8 @@ if (file.exists(file.name)) {
         } else {
             energy.trim <- energy.interaction
         }
+        energy.trim[1,]$frame <- min(energy.interaction$frame)
+
 
         # Plot graphs
         png.name <- paste0("_interaction_", colname, "_energy_trim", ".png")

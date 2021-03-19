@@ -31,7 +31,7 @@ name <- args[2]
 
 # Resolve catalytic site
 catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
-catalytic <- if (length(catalytic != 0)) catalytic else data.frame(resn = NaN, resi = NaN)
+catalytic <- if (dim(catalytic)[1] != 0) catalytic else data.frame(resn = NaN, resi = NaN)
 
 
 # Load all rmsd
@@ -91,6 +91,7 @@ for (i in 2:ncol(rmsd.all)) {
     } else {
         rmsd.trim[[i]] <- rmsd.all
     }
+    rmsd.trim[[i]][1,]$frame <- min(rmsd.all$frame)
 
 
     # Plot rmsd graph without outliers
@@ -231,7 +232,7 @@ VectorIntersect <- function(v, z) {
 }
 is.contained <- function(v, z) { length(VectorIntersect(v, z)) == length(v) }
 
-for (i in 1:chain.number) {
+for (i in seq_along(chains.stat)) {
     if (is.contained(catalytic$resi, chains.stat[[i]]$residue)) {
         catalytic.data[[i]] <- chains.stat[[i]][chains.stat[[i]]$residue %in% catalytic$resi]
     } else {
@@ -245,8 +246,8 @@ for (i in 1:chain.number) {
 
 # For each chain
 rmsf.chain.sd <- list()
-colors.steps <- c("sd_first" = 'green',"sd_middle" = 'blue', "sd_last" = 'red' )
-for (i in 1:chain.number) {
+colors.steps <- c("sd_first" = 'green', "sd_middle" = 'blue', "sd_last" = 'red')
+for (i in seq_along(chains.stat)) {
 
     steps.min_max <- c(+Inf, -Inf)
     for (col_step in c("sd_first", "sd_middle", "sd_last")) {
@@ -254,8 +255,8 @@ for (i in 1:chain.number) {
         if (range[2] > steps.min_max[2]) {
             steps.min_max[2] <- range[2]
         }
-        if (range[1] < steps.min_max[1]) {
-            steps.min_max[1] <- range[1] - range[1] * 0.6
+        if (range[1] - range[2] * 0.06 < steps.min_max[1]) {
+            steps.min_max[1] <- range[1] - range[2] * 0.06
         }
     }
 
@@ -301,7 +302,7 @@ for (i in 1:chain.number) {
     max_y_value <- max(rmsf.chain.sd[[i]]$value)
 
     cat("Ploting standard deviation for chain", i, '\n')
-    plot <-  ggplot(rmsf.chain.sd[[i]], aes_string(x = "residue", y = "value")) +
+    plot <- ggplot(rmsf.chain.sd[[i]], aes_string(x = "residue", y = "value")) +
         geom_line(aes_string(color = 'sd', group = "sd")) +
         geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
         geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
@@ -372,8 +373,9 @@ if (length(catalytic != 0)) {
         } else {
             catalytic.stats.trim <- catalytic.stats
         }
+        catalytic.stats.trim[1,]$frame <- min(catalytic.stats$frame)
 
-        plot <- plot + geom_smooth(data=catalytic.stats.trim, aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
+        plot <- plot + geom_smooth(data = catalytic.stats.trim, aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
