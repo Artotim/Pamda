@@ -1,4 +1,4 @@
-# DCD protein-peptide analysis
+# Protein-peptide `.dcd` analysis
 This software generates analysis data from a dynamic run between protein-peptide interaction, or a single protein.
 
 It can generate *csv* files with information about contact hits between chains; contact map for residues; RMSD general and for individual chains; RMSF; interaction energies; complex energies; and binding score.
@@ -48,14 +48,14 @@ Download the program and untar it with:
 
 Then give it executable permissions:
  
-    chmod +x path/to/program/dinamic_analysis
+    chmod +x path/to/program/dynamic_analysis
 
 ## Usage
-You can set the program to your path or simply run it with ./dinamic_analysis
+You can set the program to your path or simply run it with ./dynamic_analysis
 
 Basic usage: 
 ```
-dinamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C -S -R -E -G`
+dynamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C -S -R -E -G`
 ```
 
 ## Options
