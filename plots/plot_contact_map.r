@@ -136,7 +136,7 @@ cat("Ploting contact map.\n")
 plot <- ggplot(all.subset, aes(peptide, protein)) +
     geom_raster(aes(fill = count)) +
     geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-    geom_text(data=catalytic, aes_string(x=peptide.last + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
+    geom_text(data=catalytic, aes_string(x=peptide.length + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
     geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
     scale_fill_gradient(low = "white", high = "red") +
     scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
@@ -233,7 +233,7 @@ for (i in seq_along(contact.hits)) {
     plot <- ggplot(step.subset, aes(peptide, protein)) +
         geom_raster(aes(fill = count)) +
         geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-        geom_text(data=catalytic, aes_string(x=peptide.last + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
+        geom_text(data=catalytic, aes_string(x=peptide.length + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
         geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
         scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
