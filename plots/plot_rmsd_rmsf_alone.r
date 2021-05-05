@@ -129,6 +129,10 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
     alone.path <- args[5]
 
+    # Resolve catalytic site
+    catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
+    catalytic <- if (dim(catalytic)[1] != 0) catalytic else data.frame(resn = NaN, resi = NaN)
+
 
     # Load residue rmsd
     file.name <- alone.path
@@ -178,6 +182,18 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         stat_i <- stat_i + 1
     }
 
+
+    # Get catalytic site measures
+    if (length(catalytic != 0)) {
+        catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
+
+        for (r in catalytic$resi) {
+            catalytic.residue <- paste0("X", r)
+            if (catalytic.residue %in% colnames(rmsd.table)) {
+                catalytic.stats[r] <- rmsd.table[, catalytic.residue]
+            }
+        }
+    }
 
     rm(rmsd.table)
 
@@ -230,7 +246,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     rmsf.chain.alone.sd <- list()
     chains.alone.trim <- list()
     colors <- c('Alone' = '#ccccff', 'Docked' = '#00004d')
-    for (i in seq_along(chains.stat)) {
+    for (i in seq_along(chains.alone.stat)) {
 
         steps.min_max <- c(+Inf, -Inf)
         for (col_step in c("sd_first", "sd_middle", "sd_last")) {
@@ -271,7 +287,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
             max_y_value <- max(chains.alone.trim[[i]][[colname]])
 
 
-            cat("Ploting", colname, "for chain", i, ' wtih alone stats.\n')
+            cat("Ploting", colname, "for chain", i, 'with alone stats.\n')
             plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
                 geom_line(data = chains.alone.trim[[i]], aes_(color = "Alone"), size = 1) +
                 geom_line(aes_(color = "Docked"), size = 1) +
@@ -312,7 +328,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         min_y_value <- min(rmsf.chain.alone.sd.trim$value)
         max_y_value <- max(rmsf.chain.alone.sd.trim$value)
 
-        cat("Ploting standard deviation for chain", i, ' wtih alone stats.\n')
+        cat("Ploting standard deviation for chain", i, 'with alone stats.\n')
         plot <- ggplot(rmsf.chain.alone.sd.trim, aes_string(x = "residue", y = "value")) +
             geom_line(aes_string(color = 'sd', group = "sd")) +
             geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
