@@ -39,14 +39,14 @@ proc create_rmsf_out_file {} {
 
 	puts "Creating out files"
 
-    set rmsd_out [open ${out_path}rmsd/all_rmsd.csv a+]
+    set rmsd_out [open ${out_path}rmsd/all_rmsd.csv w]
 	puts -nonewline $rmsd_out "frame;all;${main_chain}"
 	if {$interaction == true} {
         puts -nonewline $rmsd_out ";$peptide"
 	}
     puts $rmsd_out ""
 
-    set rmsf_out [open ${out_path}rmsd/residue_rmsd.csv a+]
+    set rmsf_out [open ${out_path}rmsd/residue_rmsd.csv w]
     foreach residue $residue_list {
         puts -nonewline $rmsf_out "$residue;"
     }

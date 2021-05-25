@@ -26,8 +26,9 @@ class DynamicAnalysis:
 
         self.rmsd_analysis = kwargs['rmsd']
 
-        self.chimera_analysis = kwargs['chimera']
-        self.chimera_contact_interval = kwargs['contact_interval']
+        self.contact_analysis = kwargs['contact']
+        self.contact_interval = kwargs['contact_interval']
+        self.contact_cutoff = kwargs['contact_cutoff']
 
         self.energies_analysis = kwargs['energies']
 
@@ -52,7 +53,7 @@ class DynamicAnalysis:
         if not self.rmsd_analysis and not \
                 self.score_analysis and not \
                 self.energies_analysis and not \
-                self.chimera_analysis:
+                self.contact_analysis:
             log('error', 'No analyze requested')
             return
 
@@ -68,8 +69,8 @@ class DynamicAnalysis:
         if not self.output:
             return
 
-        create_outputs_dir(self.output, self.chimera_analysis, self.energies_analysis, self.rmsd_analysis,
-                           self.score_analysis)
+        create_outputs_dir(self.output, self.contact_analysis, self.energies_analysis,
+                           self.rmsd_analysis, self.score_analysis)
 
         alone_compare = check_alone_files(self.alone_rmsd, self.alone_energies)
         if not alone_compare:
@@ -81,11 +82,9 @@ class DynamicAnalysis:
         if not self.vmd_exe:
             return
 
-        if not check_chimera(self.chimera_analysis, self.output) or \
-                not check_bin(self.score_analysis, self.analysis_path, 'rosetta') or \
+        if not check_bin(self.score_analysis, self.analysis_path, 'rosetta') or \
                 not check_bin(self.energies_analysis, self.analysis_path, 'namd') or \
                 not check_r(self.plot_graphs, self.output):
-
             return
 
         self.last_frame = check_last_frame(self.last_frame, self.dcd_path, self.analysis_path)
@@ -94,22 +93,17 @@ class DynamicAnalysis:
 
         total = (self.last_frame - self.init_frame)
 
-        self.chimera_contact_interval = check_interval(self.chimera_analysis,
-                                                       'contact',
-                                                       self.chimera_contact_interval,
-                                                       total)
-        self.scoring_interval = check_interval(self.score_analysis,
-                                               'score',
-                                               self.scoring_interval,
-                                               total)
+        self.contact_interval = check_interval(self.contact_analysis, 'contact', self.contact_interval, total)
+        self.scoring_interval = check_interval(self.score_analysis, 'score', self.scoring_interval, total)
         print()
 
         # Frame analysis
-        if self.rmsd_analysis or self.score_analysis or self.chimera_analysis:
+        if self.rmsd_analysis or self.score_analysis or self.contact_analysis:
             prepare_frame_analysis(
                 rmsd=self.rmsd_analysis,
-                contact=self.chimera_analysis,
-                cci=self.chimera_contact_interval,
+                contact=self.contact_analysis,
+                cci=self.contact_interval,
+                cutoff=self.contact_cutoff,
                 score=self.score_analysis,
                 sci=self.scoring_interval,
                 pdb=self.pdb_path,
@@ -125,13 +119,7 @@ class DynamicAnalysis:
             start_frame_analysis(
                 out=self.output,
                 name=self.name,
-                vmd=self.vmd_exe,
-                chimera=self.chimera_analysis,
-                init=self.init_frame,
-                last=self.last_frame,
-                cci=self.chimera_contact_interval,
-                program_path=self.analysis_path,
-                pdb_path=self.pdb_path
+                vmd=self.vmd_exe
             )
             print()
 
@@ -169,7 +157,7 @@ class DynamicAnalysis:
 
         # Delete temp files and rename
         finish_analysis(
-            chimera=self.chimera_analysis,
+            contact=self.contact_analysis,
             score=self.score_analysis,
             energies=self.energies_analysis,
             rmsd=self.rmsd_analysis,
@@ -181,7 +169,7 @@ class DynamicAnalysis:
         # Run R plots and analysis
         if self.plot_graphs:
             create_plots(
-                chimera=self.chimera_analysis,
+                contact=self.contact_analysis,
                 score=self.score_analysis,
                 energies=self.energies_analysis,
                 rmsd=self.rmsd_analysis,

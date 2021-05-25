@@ -90,38 +90,6 @@ def check_vmd(vmd):
         return False
 
 
-def check_chimera(run_chimera, out_path):
-    """Check if chimera is running"""
-
-    if not run_chimera:
-        return True
-
-    log('info', 'Looking for chimera.')
-
-    path = out_path + 'chimera_test.py'
-    chimera_test = open(path, 'w')
-    chimera_test.write('import chimera')
-
-    cmd = ['python', '-m', 'pychimera', path]
-
-    try:
-        run_test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        if run_test[1].decode("utf-8") != '':
-            log('error', 'Chimera returned error:')
-            print(run_test[1].decode("utf-8"))
-            finish_test(chimera_test, path)
-            return False
-
-        else:
-            finish_test(chimera_test, path)
-            return True
-
-    except (PermissionError, FileNotFoundError):
-        log('error', 'Chimera not found.')
-        finish_test(chimera_test, path)
-        return False
-
-
 def check_bin(run_program, dir_path, program):
     """Check bin archives for rosetta and namd"""
 
@@ -246,7 +214,7 @@ def make_executable(path):
     os.chmod(path, mode)
 
 
-def create_outputs_dir(out, chimera, energies, rmsd, score):
+def create_outputs_dir(out, contact, energies, rmsd, score):
     """Create the output folders"""
 
     path = out + 'logs'
@@ -255,7 +223,7 @@ def create_outputs_dir(out, chimera, energies, rmsd, score):
     path = out + 'models'
     os.makedirs(path)
 
-    if chimera:
+    if contact:
         path = out + 'contact'
         os.makedirs(path)
 

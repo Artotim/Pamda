@@ -3,10 +3,10 @@ import subprocess
 from time import sleep
 
 
-def create_plots(chimera, score, energies, rmsd, program_path, out, name, init, last, alone, catalytic):
+def create_plots(contact, score, energies, rmsd, program_path, out, name, init, last, alone, catalytic):
     """Create plots for each analysis"""
 
-    if chimera:
+    if contact:
         plot_contacts(program_path, out, name, catalytic)
 
     if score:

@@ -28,11 +28,11 @@ def make_parser():
     required = parser.add_argument_group('Required')
     optional = parser.add_argument_group('Optional')
 
-    required.add_argument('-d', '--dcd', metavar='',  required=True,
+    required.add_argument('-d', '--dcd', metavar='', required=True,
                           help='Path to dcd file')
-    required.add_argument('-pdb', metavar='',  required=True,
+    required.add_argument('-pdb', metavar='', required=True,
                           help='Path to pdb file')
-    required.add_argument('-psf', metavar='',  required=True,
+    required.add_argument('-psf', metavar='', required=True,
                           help='Path to psf file')
 
     optional.add_argument("-h", "--help", action="help",
@@ -56,10 +56,12 @@ def make_parser():
     optional.add_argument('-sci', '--scoring-interval', type=int, metavar='',
                           help='Analyse score function each frame interval')
 
-    optional.add_argument('-C', '--chimera', action='store_true',
-                          help='Run contact map analysis with chimera')
+    optional.add_argument('-C', '--contact', action='store_true',
+                          help='Run contact analysis')
     optional.add_argument('-cti', '--contact-interval', type=int, metavar='',
                           help='Analyse contact each frame interval')
+    optional.add_argument('--cutoff', default=3, type=int, dest='contact_cutoff', metavar='',
+                          help='Max angstroms range to look for contacts (default: 3)')
 
     optional.add_argument('-R', '--rmsd', action='store_true',
                           help='Run rmsd and rmsf analysis with vmd')

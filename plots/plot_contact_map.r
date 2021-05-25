@@ -26,8 +26,8 @@ name <- args[2]
 
 
 # Resolve catalytic site
-catalytic <- data.frame(resn=str_extract(tail(args, -2), "[aA-zZ]+"), resi=str_extract(tail(args, -2), "[0-9]+"))
-catalytic <- if (length(catalytic != 0 )) catalytic else data.frame(resn=NaN, resi=NaN)
+catalytic <- data.frame(resn = str_extract(tail(args, -2), "[aA-zZ]+"), resi = str_extract(tail(args, -2), "[0-9]+"))
+catalytic <- if (length(catalytic != 0)) catalytic else data.frame(resn = NaN, resi = NaN)
 
 
 # Load contact map
@@ -44,51 +44,26 @@ contacts.map <- read.table(file.name,
 
 
 # Get contacting residues
-contact.residues <- select(contacts.map, frame, atom1, atom2)
-contact.residues$atom1 <- as.numeric(regmatches(contact.residues$atom1, regexpr("[[:digit:]]+", contact.residues$atom1)))
-contact.residues$atom2 <- as.numeric(regmatches(contact.residues$atom2, regexpr("[[:digit:]]+", contact.residues$atom2)))
+protein <- colnames(contacts.map)[4]
+peptide <- colnames(contacts.map)[8]
+contact.residues <- contacts.map[c("frame", protein, peptide)]
 
 
 # Get chain residues length
-chain1.first <- min(contact.residues$atom1)
-chain1.last <- max(contact.residues$atom1)
-chain1.length <- length(chain1.first:chain1.last)
+protein.first <- min(contact.residues[protein])
+protein.last <- max(contact.residues[protein])
+protein.length <- length(protein.first:protein.last)
 
-chain2.first <- min(contact.residues$atom2)
-chain2.last <- max(contact.residues$atom2)
-chain2.length <- length(chain2.first:chain2.last)
+peptide.first <- min(contact.residues[peptide])
+peptide.last <- max(contact.residues[peptide])
+peptide.length <- length(peptide.first:peptide.last)
 
 
 # Get chains info
 peptide.chain <- ''
-if (chain1.length > chain2.length) {
-
-    protein.first <- chain1.first
-    protein.last <- chain1.last
-    protein.length <- chain1.length
-
-    peptide.first <- chain2.first
-    peptide.last <- chain2.last
-    peptide.length <- chain2.length
-
-    for (i in sort(unique(contact.residues$atom2))) {
-        amino <- strsplit(as.character(contacts.map$atom2[match(i, contact.residues$atom2)]), ' ')[[1]][1]
-        peptide.chain <- paste0(peptide.chain, i, "\n", amino, " ")
-    }
-} else {
-
-    protein.first <- chain2.first
-    protein.last <- chain2.last
-    protein.length <- chain2.length
-
-    peptide.first <- chain1.first
-    peptide.last <- chain1.last
-    peptide.length <- chain1.length
-
-    for (i in sort(unique(contact.residues$atom1))) {
-        amino <- strsplit(as.character(contacts.map$atom1[match(i, contact.residues$atom1)]), ' ')[[1]][1]
-        peptide.chain <- paste0(peptide.chain, i, "\n", amino, " ")
-    }
+for (i in sort(unique(contact.residues[[peptide]]))) {
+    amino <- as.character(contacts.map[[9]][match(i, contact.residues[[peptide]])])
+    peptide.chain <- paste0(peptide.chain, i, "\n", amino, " ")
 }
 
 
@@ -98,8 +73,8 @@ rownames(contact.all.hits) <- as.character(protein.first:protein.last)
 colnames(contact.all.hits) <- as.character(peptide.first:peptide.last)
 
 for (line in seq_len(nrow(contact.residues))) {
-    row <- as.character(contact.residues[line, "atom1"])
-    col <- as.character(contact.residues[line, "atom2"])
+    row <- as.character(contact.residues[line, protein])
+    col <- as.character(contact.residues[line, peptide])
 
     contact.all.hits[row, col] <- contact.all.hits[row, col] + 1
 }
@@ -118,15 +93,14 @@ all.subset <- contact.all.hits[!(contact.all.hits$count == 0),]
 
 
 # Create data for catalytic labels
-for (i in catalytic$resi){
-    if (!(i %in% all.subset$protein) && !is.na(i)){
-        append.resi <- data.frame(protein=i, peptide=min(peptide.first), count = 0)
+for (i in catalytic$resi) {
+    if (!(i %in% all.subset$protein) && !is.na(i)) {
+        append.resi <- data.frame(protein = i, peptide = min(peptide.first), count = 0)
         all.subset <- rbind(all.subset, append.resi)
     }
 }
-catalytic$label <-  with(catalytic, paste0(resi, '\n', resn))
+catalytic$label <- with(catalytic, paste0(resi, '\n', resn))
 catalytic$label <- gsub("\nNA", "", catalytic$label)
-
 
 
 # Plot all graph
@@ -136,7 +110,7 @@ cat("Ploting contact map.\n")
 plot <- ggplot(all.subset, aes(peptide, protein)) +
     geom_raster(aes(fill = count)) +
     geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-    geom_text(data=catalytic, aes_string(x=peptide.length + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
+    geom_text(data = catalytic, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
     geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
     scale_fill_gradient(low = "white", high = "red") +
     scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
@@ -185,8 +159,8 @@ for (i in 1:iter) {
     colnames(step.frame) <- as.character(peptide.first:peptide.last)
 
     for (line in seq_len(nrow(step.contact))) {
-        row <- as.character(step.contact[line, "atom1"])
-        col <- as.character(step.contact[line, "atom2"])
+        row <- as.character(step.contact[line, protein])
+        col <- as.character(step.contact[line, peptide])
 
         step.frame[row, col] <- step.frame[row, col] + 1
     }
@@ -222,9 +196,9 @@ for (i in seq_along(contact.hits)) {
     step.subset <- contact.hits[[i]][contact.hits[[i]]$protein %in% all.subset$protein,]
     step.subset$count[step.subset$count == 0] = NA
 
-    for (res in catalytic$resi){
-        if (!(res %in% all.subset$protein) && !is.na(res)){
-            append.resi <- data.frame(protein=res, peptide=min(peptide.first), count = 0)
+    for (res in catalytic$resi) {
+        if (!(res %in% all.subset$protein) && !is.na(res)) {
+            append.resi <- data.frame(protein = res, peptide = min(peptide.first), count = 0)
             step.subset <- rbind(step.subset, append.resi)
         }
     }
@@ -233,7 +207,7 @@ for (i in seq_along(contact.hits)) {
     plot <- ggplot(step.subset, aes(peptide, protein)) +
         geom_raster(aes(fill = count)) +
         geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-        geom_text(data=catalytic, aes_string(x=peptide.length + 0.7, y = "resi", label="label"), color="#b30000", size=4, lineheight = 1) +
+        geom_text(data = catalytic, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
         geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
         scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +

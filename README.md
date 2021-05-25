@@ -4,10 +4,11 @@ This software generates analysis data from a dynamic run between protein-peptide
 It can generate *csv* files with information about contact hits between chains; contact map for residues; RMSD general and for individual chains; RMSF; interaction energies; complex energies; and binding score.
 
 ## Contacts
-Uses [pychimera](https://pypi.org/project/pychimera/) to analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues are contacting.
+Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting.
  
 `-C` Enables contact analysis.  
 `-cti` Defines interval for running contact analysis.
+`--cutoff` Defines max Ångström to look for contacts.
 
 ## RMSD and RMSF
 Uses [VMD](https://www.ks.uiuc.edu/Research/vmd/) to measure RMSD in each frame, for the entire complex and separated chains, and also measure RMSF. 
@@ -36,9 +37,7 @@ Requires [R](https://www.r-project.org/) installed.
 This software uses third party programs and requires you to first install/obtain them.
 
 VMD must be obtained from [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD).  
-Pychimera must be installed both the [exe version](https://www.cgl.ucsf.edu/chimera/download.html) and the [python module](https://pypi.org/project/pychimera/). 
-
-Then you must obtain a license for NAMD with [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?UserID=&AccessCode=&ArchiveID=1641). And a license for [rosetta](https://els2.comotion.uw.edu/product/rosetta).
+You must obtain a license for NAMD with [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?UserID=&AccessCode=&ArchiveID=1641). And a license for [rosetta](https://els2.comotion.uw.edu/product/rosetta).
 
 After this send an email with both licenses to [pyrthur@gmail.com](pyrthur@gmail.com) to get access to the download link.
 
@@ -105,6 +104,9 @@ Run contact map analysis with chimera (default: False).
 
 `-cti`, `--contact-interval` `INT`  
 Frame interval number to perform contact analysis.
+
+`-cutoff`, `INT`  
+Max angstroms range to look for contacts (default: 3).
 ***
 
 `-R`, `--rmsd`   
@@ -136,7 +138,6 @@ This product comes with no warranty whatsoever.
 
 This product is not an official VMD release or has any affiliation to it.  
 This product is not an official NAMD release or has any affiliation to it.  
-This product is not an official pychimera release or has any affiliation to it.  
 This product is not an official Rosetta release or has any affiliation to it.  
 
 This software includes code developed by the Theoretical Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.  

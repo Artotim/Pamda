@@ -3,14 +3,14 @@ import os
 import re
 
 
-def finish_analysis(chimera, score, energies, rmsd, out, name):
+def finish_analysis(contact, score, energies, rmsd, out, name):
     """Rename outputs and remove temps"""
 
     if rmsd:
         finish_rmsd(out, name)
 
-    if chimera:
-        finish_chimera(out, name)
+    if contact:
+        finish_contact(out, name)
 
     if energies:
         finish_energies(out, name)
@@ -38,7 +38,7 @@ def finish_rmsd(out, name):
     rename(old_rmsf, new_rmsf)
 
 
-def finish_chimera(out, name):
+def finish_contact(out, name):
     """Rename contact outputs and remove temps"""
 
     log('info', 'Adjusting contact output.')
