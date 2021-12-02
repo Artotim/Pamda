@@ -1,3 +1,6 @@
+# Energies Analysis
+
+
 proc energies {first last interaction} {
     global main_chain peptide psf_path dcd_path out_path namd_path
 
@@ -24,6 +27,7 @@ proc energies {first last interaction} {
         namdenergy -sel $sel_a $sel_b -exe ${namd_path}namd2 -par ${namd_path}params/par_all36_prot.prm -par ${namd_path}params/par_all36_na.prm -par ${namd_path}params/toppar_water_ions.str -vdw -elec- -nonb -tempname $temp -ofile $out
     }
 }
+
 
 proc get_energies {} {
     global init last interaction

@@ -11,7 +11,7 @@ def check_analysis_path(main_file):
     else:
         application_path = os.path.dirname(os.path.abspath(main_file))
 
-    return application_path + '/'
+    return os.path.dirname(application_path) + '/'
 
 
 def check_files(path, file_type):
@@ -96,12 +96,11 @@ def check_bin(run_program, dir_path, program):
     if not run_program:
         return True
 
-    if program == "rosetta":
-        log('info', 'Looking for rosetta.')
-        path = dir_path + 'rosetta/main/source/bin/relax.static.linuxgccrelease'
-    else:
+    if program == "namd":
         log('info', 'Looking for namd.')
         path = dir_path + 'namd/namd2'
+    else:
+        return False
 
     if os.access(path, os.X_OK):
         return True
@@ -193,10 +192,7 @@ def check_interval(analysis, module, interval, total_frames):
         return 0
 
     if not interval:
-        if module == 'score':
-            interval = total_frames // 5
-
-        elif module == 'contact':
+        if module == 'contact':
             if total_frames <= 1000:
                 interval = 10
             else:
@@ -214,7 +210,7 @@ def make_executable(path):
     os.chmod(path, mode)
 
 
-def create_outputs_dir(out, contact, energies, rmsd, score):
+def create_outputs_dir(out, contact, energies, rmsd, distances):
     """Create the output folders"""
 
     path = out + 'logs'
@@ -235,43 +231,43 @@ def create_outputs_dir(out, contact, energies, rmsd, score):
         path = out + 'rmsd'
         os.makedirs(path)
 
-    if score:
-        path = out + 'score'
+    if distances:
+        path = out + 'distances'
         os.makedirs(path)
 
 
-def check_alone_files(alone_rmsd, alone_energies):
-    """Resolves alone files path"""
+def check_compare_files(compare_rmsd, compare_energies):
+    """Resolves compare files path"""
 
-    if alone_rmsd is not None and alone_energies is not None:
-        log('info', 'Analyzing alone path to compare.')
+    if compare_rmsd is not None and compare_energies is not None:
+        log('info', 'Analyzing compare path to compare.')
 
-    alone_files = dict()
+    compare_files = dict()
 
-    if alone_rmsd is not None:
-        for rmsd_file in alone_rmsd:
+    if compare_rmsd is not None:
+        for rmsd_file in compare_rmsd:
             rmsd_file = os.path.abspath(rmsd_file)
             if not os.path.exists(rmsd_file) or not rmsd_file.endswith(".csv"):
                 log('error', 'Invalid csv path: ' + rmsd_file)
                 return False
 
-        with open(alone_rmsd[0], 'r') as first, open(alone_rmsd[1], 'r') as second:
+        with open(compare_rmsd[0], 'r') as first, open(compare_rmsd[1], 'r') as second:
             fisrt_size = len(first.readline().split(';'))
             second_size = len(second.readline().split(';'))
-            alone_rmsd = alone_rmsd[::-1] if fisrt_size > second_size else alone_rmsd
+            compare_rmsd = compare_rmsd[::-1] if fisrt_size > second_size else compare_rmsd
 
-    alone_files['rmsd'] = alone_rmsd
+    compare_files['rmsd'] = compare_rmsd
 
-    if alone_energies is not None:
-        alone_energies = os.path.abspath(alone_energies)
-        if not os.path.exists(alone_energies) or not alone_energies.endswith(".csv"):
-            log('error', 'Invalid csv path: ' + alone_energies)
+    if compare_energies is not None:
+        compare_energies = os.path.abspath(compare_energies)
+        if not os.path.exists(compare_energies) or not compare_energies.endswith(".csv"):
+            log('error', 'Invalid csv path: ' + compare_energies)
             return False
-        alone_energies = [alone_energies]
+        compare_energies = [compare_energies]
 
-    alone_files['energies'] = alone_energies
+    compare_files['energies'] = compare_energies
 
-    return alone_files
+    return compare_files
 
 
 def check_catalytic(catalytic, pdb):
@@ -282,27 +278,81 @@ def check_catalytic(catalytic, pdb):
 
     log('info', 'Checking catalytic residues in PDB file.')
 
-    catalytic_string = [str(resi) for resi in catalytic]
-    catalytic_dict = dict()
-    chain = ""
+    catalytic_data = {}
+
+    for resid in catalytic:
+        resid_data = get_pdb_by_idx(resid, pdb, 'resid')
+
+        if not resid_data:
+            log('warning', 'Could not define residues name \"' + resid +
+                '\" in imputed catalytic site. This may affect plots.')
+            resid_data = [resid.split(':')[0], '']
+
+        catalytic_data[resid_data[0]] = resid_data[1].split(':')[1]
+
+    return catalytic_data
+
+
+def check_dist_names(dist_pairs, dist_type, pdb):
+
+    dist_names = []
+
+    for pair in dist_pairs:
+        pair_names = []
+        for query in pair:
+            query_data = get_pdb_by_idx(query, pdb, dist_type)
+
+            if not query_data:
+                query_input = query.split(':')
+
+                if len(query_input) > 1:
+                    log('error', 'Could not find ' + dist_type + ' index: ' + query_input[0] +
+                        ', in chain: ' + query_input[1] + '.')
+                else:
+                    log('error', 'Could not find ' + dist_type + ' index: ' + query_input[0] + '.')
+
+            else:
+                pair_names.append(query_data[1])
+        dist_names.append('to'.join(pair_names))
+
+    if len(dist_names) != len(dist_pairs):
+        exit(1)
+
+    return dist_names
+
+
+def get_pdb_by_idx(query, pdb, idx_type):
+    """Get query indexes data in pdb file"""
+
+    column = 1 if idx_type == 'atom' else 5
+
+    query_info = query.split(':')
+    query_number = query_info[0]
 
     with open(pdb, 'r') as pdb_file:
         for line in pdb_file:
             line_elements = line.split()
             try:
-                if chain != line_elements[4]:
-                    if len(catalytic_dict) == len(catalytic):
-                        return catalytic_dict
-                    else:
-                        catalytic_dict = dict()
-                        chain = line_elements[4]
+                if line_elements[column] == query_number:
+                    chain = line_elements[4]
+                    residue = line_elements[3].replace('HSD', 'HIS')
+                    atom = line_elements[2]
 
-                if line_elements[5] in catalytic_string:
-                    residue = line_elements[3] if line_elements[3] != 'HSD' else 'HIS'
-                    catalytic_dict[line_elements[5]] = residue
+                    if len(query_info) > 1:
+                        if chain != query_info[1]:
+                            continue
+
+                    if idx_type == 'resid':
+                        result = [query_number, chain + ":" + residue]
+                    else:
+                        result = [query_number , chain + ":" + residue + ":" + atom]
+
+                    break
 
             except IndexError:
                 continue
 
-    log('warning', 'Could not define residues names in catalytic site.')
-    return dict.fromkeys(catalytic, "")
+    if not result:
+        return None
+    else:
+        return result

@@ -1,3 +1,6 @@
+#Contac Analysis
+
+
 proc create_contact_files {} {
 	global main_chain peptide out_path contact_map_out contact_count_out
 
@@ -10,12 +13,14 @@ proc create_contact_files {} {
 	puts $contact_count_out "frame;contacts"
 }
 
+
 proc  close_contact_files {} {
 	global contact_map_out contact_count_out
 
 	close $contact_map_out
 	close $contact_count_out
 }
+
 
 proc get_contacts {frame} {
 	global mol main_chain peptide cutoff contact_map_out contact_count_out
@@ -42,4 +47,19 @@ proc get_contacts {frame} {
 
 	set count [llength [lindex $contacts 0]]
 	puts $contact_count_out "$frame;$count"
+}
+
+
+proc measure_contact_interval {frame wrap} {
+    global mol init last cci out_path main_chain
+
+    if {[expr $frame % $cci] == 0} {
+        puts "Measuring contacts for frame $frame"
+        if {$wrap == True} {
+            pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
+            pbc wrap -center com -centersel "protein" -compound residue -all
+        }
+
+        get_contacts $frame
+    }
 }

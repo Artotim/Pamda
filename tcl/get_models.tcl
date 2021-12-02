@@ -1,3 +1,6 @@
+# Get Models
+
+
 proc get_models {psf_path pdb_path dcd_path out_path init last} {
     global main_chain
 	package require pbctools
@@ -21,5 +24,6 @@ proc get_models {psf_path pdb_path dcd_path out_path init last} {
 	set fileName "${out_path}models/last_model.pdb"
 	$writePdb writepdb $fileName
 }
+
 
 get_models *psf_path* *pdb_path* *dcd_path* *out_path* *init* *last*
