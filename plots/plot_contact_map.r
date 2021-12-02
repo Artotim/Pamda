@@ -191,7 +191,11 @@ for (i in seq_along(contact.hits)) {
     png.name <- paste0("_contact_map_", i - 1, "-", i, ".png")
     out.name <- paste0(out.path, name, png.name)
 
-    plot.title <- paste0("Contact per residue ", (i - 1) * 10, "-", i * 10, "k")
+    if (i * step > 1000) {
+        plot.title <- paste0("Contact per residue ", (i - 1) * step / 1000, "-", i * step / 1000, 'k')
+    } else {
+        plot.title <- paste0("Contact per residue ", (i - 1) * step, "-", i * step)
+    }
 
     step.subset <- contact.hits[[i]][contact.hits[[i]]$protein %in% all.subset$protein,]
     step.subset$count[step.subset$count == 0] = NA
@@ -220,6 +224,7 @@ for (i in seq_along(contact.hits)) {
         theme(axis.title = element_text(size = 24)) +
         theme(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 12)) +
         theme(panel.grid.major.x = element_blank()) +
+        theme(plot.background = element_rect(fill = 'white', colour = 'white')) +
         labs(fill = "Contacts #")
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
