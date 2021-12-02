@@ -3,25 +3,27 @@ import os
 import re
 
 
-def finish_analysis(chimera, score, energies, rmsd, out, name):
+def finish_analysis(contact, distances, energies, rmsd, out, name):
     """Rename outputs and remove temps"""
 
     if rmsd:
         finish_rmsd(out, name)
 
-    if chimera:
-        finish_chimera(out, name)
+    if contact:
+        finish_contact(out, name)
 
     if energies:
         finish_energies(out, name)
 
-    if score:
-        finish_score(out, name)
+    if distances:
+        finish_distances(out, name)
 
     rename_models(out, name)
 
     log('info', 'Excluding temp.')
     remove(F'{out}temp*analysis.tcl')
+
+    print()
 
 
 def finish_rmsd(out, name):
@@ -38,7 +40,7 @@ def finish_rmsd(out, name):
     rename(old_rmsf, new_rmsf)
 
 
-def finish_chimera(out, name):
+def finish_contact(out, name):
     """Rename contact outputs and remove temps"""
 
     log('info', 'Adjusting contact output.')
@@ -52,27 +54,14 @@ def finish_chimera(out, name):
     rename(old_count, new_count)
 
 
-def finish_score(out, name):
+def finish_distances(out, name):
     """Rename score outputs and remove temps"""
 
-    log('info', 'Adjusting score output.')
+    log('info', 'Adjusting distances output.')
 
-    old_score_path = out + 'score/score_relaxed.sc'
-    new_score_path = out + 'score/' + name + '_score.csv'
-
-    with open(old_score_path, 'r') as old_score:
-        with open(new_score_path, 'w') as new_score:
-            old_score.readline()
-            for line in old_score:
-                line = re.sub(r'\s+', ';', line.strip())
-                new_score.write(line + '\n')
-
-    remove(old_score_path)
-
-    remove(F"{out}score/*.pdb")
-    remove(F"{out}score/*.fasta")
-
-    remove(F"{out}models/*_ignorechain.*")
+    old_distances = out + 'distances/all_distances.csv'
+    new_distances = out + 'distances/' + name + '_all_distances.csv'
+    rename(old_distances, new_distances)
 
 
 def finish_energies(out, name):
@@ -141,7 +130,6 @@ def rename(old, new):
 
 def remove(pattern):
     """Remove files with pattern"""
-
     import glob
     file_list = glob.glob(pattern)
     if len(file_list) >= 1:

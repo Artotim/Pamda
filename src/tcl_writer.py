@@ -1,203 +1,229 @@
 from src.color_log import log
 
 
-def prepare_frame_analysis(rmsd, contact, cci, score, sci, pdb, psf, dcd, init, final, out, program_path):
-    """Write script to frame analysis"""
+class TclWriter:
+    """Class to write tcl files to use with vmd"""
 
-    log('info', 'Preparing .tcl file for frame analysis.')
+    def __init__(self, dynamic_analysis):
+        self.dynamic_analysis = dynamic_analysis
+        self.frame_script = []
+        self.energies_script = []
 
-    vmd_file = []
+    def prepare_frame_analysis(self):
+        """Write script to frame analysis"""
 
-    vmd_file = write_get_chain(vmd_file, program_path, pdb)
-    vmd_file = write_get_models(vmd_file, program_path, psf, pdb, dcd, out, init, final)
-    vmd_file = write_mol_create(vmd_file, program_path)
+        log('info', 'Preparing .tcl file for frame analysis.')
 
-    if rmsd:
-        vmd_file = write_bigdcd(vmd_file, program_path)
-        vmd_file = write_rmsd(vmd_file, program_path)
+        self.frame_script = self.write_get_chain(self.frame_script)
+        self.frame_script = self.write_get_models(self.frame_script)
+        self.frame_script = self.write_prepare_mol(self.frame_script)
 
-        if contact or score:
-            vmd_file = write_get_pdb(vmd_file, program_path, contact, score)
+        self.write_bigdcd_script()
 
-        vmd_file = write_bigdcd_main(vmd_file, program_path, contact, score)
+        if self.dynamic_analysis.rmsd_analysis:
+            self.write_rmsd_rmsf_analysis()
 
-    else:
-        vmd_file = write_pdb_writer(vmd_file, program_path, score, contact)
+        if self.dynamic_analysis.contact_analysis:
+            self.write_contacts_analysis()
 
-    vmd_file = write_frame_variables(vmd_file, contact, cci, score, sci, pdb, psf, init, final, out)
+        if self.dynamic_analysis.distances_analysis:
+            self.write_distances_analysis()
 
-    if rmsd:
-        call = "\nbigdcd_analyser " + dcd + "\nquit"
-    else:
-        call = "\npdb_writer_interval " + dcd + "\nquit"
+        self.write_bigdcd_main()
 
-    vmd_file.append(call)
+        self.write_frame_variables()
 
-    write_vmd(vmd_file, out, 'frame')
+        script_call = "\nbigdcd_analysis_main " + self.dynamic_analysis.dcd_path
+        self.frame_script.append(script_call)
 
+        self.write_tcl_tmp_file(self.frame_script, 'frame')
 
-def prepare_energies(psf, pdb, dcd, out, init, final, program_path):
-    """Write script to energy analysis"""
+    def prepare_energies_analysis(self):
+        """Write script to energy analysis"""
 
-    log('info', 'Preparing .tcl file for energies analysis.')
+        log('info', 'Preparing .tcl file for energies analysis.')
 
-    vmd_file = []
+        self.energies_script = self.write_get_chain(self.energies_script)
+        self.energies_script = self.write_get_models(self.energies_script)
 
-    vmd_file = write_get_chain(vmd_file, program_path, pdb)
-    vmd_file = write_get_models(vmd_file, program_path, psf, pdb, dcd, out, init, final)
-    vmd_file = write_energies(vmd_file, program_path)
+        self.write_energies()
+        self.write_energies_variables()
 
-    vmd_file = write_energies_variables(vmd_file, psf, dcd, init, final, out, program_path)
+        script_call = "\nget_energies"
+        self.energies_script.append(script_call)
 
-    call = "\nget_energies\nquit"
-    vmd_file.append(call)
+        self.write_tcl_tmp_file(self.energies_script, 'energies')
 
-    write_vmd(vmd_file, out, 'energies')
+    def write_get_chain(self, script):
+        """Append get_chain routine to script"""
 
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_chain.tcl', 'r') as get_chain:
+            file = get_chain.readlines()
+            file = set_argument(file, 'pdb_path', self.dynamic_analysis.pdb_path)
+            script.extend(file)
 
-def write_get_chain(script, program_path, pdb_path):
-    """Append get_chain routine to script"""
+        return script
 
-    with open(F'{program_path}tcl/get_chain.tcl', 'r') as get_chain:
-        file = get_chain.readlines()
-        file[-1] = file[-1].replace('*pdb_path*', pdb_path)
-        script.extend(file)
-    return script
+    def write_get_models(self, script):
+        """Append get_models routine to script"""
 
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_models.tcl', 'r') as get_chain:
+            file = get_chain.readlines()
+            file = set_argument(file, 'psf_path', self.dynamic_analysis.psf_path)
+            file = set_argument(file, 'pdb_path', self.dynamic_analysis.pdb_path)
+            file = set_argument(file, 'dcd_path', self.dynamic_analysis.dcd_path)
+            file = set_argument(file, 'out_path', self.dynamic_analysis.output)
+            file = set_argument(file, 'init', str(self.dynamic_analysis.init_frame))
+            file = set_argument(file, 'last', str(self.dynamic_analysis.last_frame))
 
-def write_get_models(script, program_path, psf, pdb, dcd, out, init, last):
-    """Append get_models routine to script"""
+            script.extend(file)
 
-    with open(F'{program_path}tcl/get_models.tcl', 'r') as get_chain:
-        file = get_chain.readlines()
-        file[-1] = file[-1].replace('*psf_path*', psf)
-        file[-1] = file[-1].replace('*pdb_path*', pdb)
-        file[-1] = file[-1].replace('*dcd_path*', dcd)
-        file[-1] = file[-1].replace('*out_path*', out)
-        file[-1] = file[-1].replace('*init*', str(init))
-        file[-1] = file[-1].replace('*last*', str(last))
-        script.extend(file)
-    return script
+        return script
 
+    def write_prepare_mol(self, script):
+        """Append mol_create routine to script"""
 
-def write_mol_create(script, program_path):
-    """Append mol_create routine to script"""
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_mol.tcl', 'r') as create:
+            script.extend(create.readlines())
+        return script
 
-    with open(F'{program_path}tcl/prepare_mol.tcl', 'r') as create:
-        script.extend(create.readlines())
-    return script
+    def write_bigdcd_script(self):
+        """Append bigdcd routine to script"""
 
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/bigdcd.tcl', 'r') as energies:
+            self.frame_script.extend(energies.readlines())
 
-def write_bigdcd(script, program_path):
-    """Append bigdcd routine to script"""
+    def write_rmsd_rmsf_analysis(self):
+        """Append rmsd_rmsf routine to script"""
 
-    with open(F'{program_path}tcl/bigdcd.tcl', 'r') as energies:
-        script.extend(energies.readlines())
-    return script
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/rmsd_rmsf_analysis.tcl', 'r') as rmsd:
+            self.frame_script.extend(rmsd.readlines())
 
+    def write_contacts_analysis(self):
+        """Append get contacts routine to script"""
 
-def write_rmsd(script, program_path):
-    """Append rmsd_rmsf routine to script"""
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/contact_analysis.tcl', 'r') as rmsd:
+            self.frame_script.extend(rmsd.readlines())
 
-    with open(F'{program_path}tcl/rmsd_rmsf.tcl', 'r') as rmsd:
-        script.extend(rmsd.readlines())
-    return script
+    def write_distances_analysis(self):
+        """Append get contacts routine to script"""
 
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/distances_analysis.tcl', 'r') as distance:
+            file = distance.readlines()
+            file = set_argument(file, 'dist_type', self.dynamic_analysis.dist_type.replace('atom', 'atom_idx'))
+            file = set_argument(file, 'dist_names', '{' + ' '.join(self.dynamic_analysis.dist_names) + '}')
 
-def write_get_pdb(script, program_path, contact, score):
-    """Append get_frame_pdb routine to script"""
+            self.frame_script.extend(file)
 
-    with open(F'{program_path}tcl/get_frame_pdb.tcl', 'r') as pdb_writer:
-        file = pdb_writer.readlines()
-        if not contact:
-            file[10:16] = ''
-        if not score:
-            file[3:9] = ''
+    def write_bigdcd_main(self):
+        """Append bigdcd_main routine to script"""
+    
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/bigdcd_main.tcl', 'r') as bigdcd_main:
+            file = bigdcd_main.readlines()
 
-        script.extend(file)
-    return script
+            if not self.dynamic_analysis.rmsd_analysis:
+                file = remove_function_call(file, 'prepare_rmsd')
+                file = remove_function_call(file, 'measure_rmsd_rmsf')
+                file = remove_function_call(file, 'close_rmsd_files')
+                
+            if not self.dynamic_analysis.contact_analysis:
+                file = remove_function_call(file, 'create_contact_files')
+                file = remove_function_call(file, 'measure_contact_interval')
+                file = remove_function_call(file, 'close_contact_files')
 
+            if not self.dynamic_analysis.distances_analysis:
+                file = remove_function_call(file, 'prepare_distances')
+                file = remove_function_call(file, 'measure_distances')
+                file = remove_function_call(file, 'close_distances_files')
 
-def write_bigdcd_main(script, program_path, contact, score):
-    """Append bigdcd_main routine to script"""
+            file = self.set_bigdcd_main_variables(file)
 
-    with open(F'{program_path}tcl/bigdcd_main.tcl', 'r') as main:
-        file = main.readlines()
+            self.frame_script.extend(file)
 
-        if not contact and not score:
-            file[8] = ''
+    def set_bigdcd_main_variables(self, file):
+        if not self.dynamic_analysis.rmsd_analysis and not self.dynamic_analysis.distances_analysis:
+            file = set_argument(file, 'wrap', 'True')
+            file = remove_function_call(file, 'pbc')
+        else:
+            file = set_argument(file, 'wrap', 'False')
 
-        script.extend(file)
+            if self.dynamic_analysis.distances_analysis:
+                file = set_argument(file, 'dist_list', '{' + ' '.join(self.dynamic_analysis.dist_pairs) + '}')
 
-    return script
+        return file
 
+    def write_pdb_writer(self, script):
+        """Append pdb_writer routine to script"""
 
-def write_pdb_writer(script, program_path, score, contact):
-    """Append pdb_writer routine to script"""
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/pdb_writer.tcl', 'r') as pdb_writer:
+            file = pdb_writer.readlines()
+            script.extend(file)
+        return script
 
-    with open(F'{program_path}tcl/pdb_writer.tcl', 'r') as pdb_writer:
-        file = pdb_writer.readlines()
-        if not contact:
-            file[7:31] = ''
-        if not score:
-            file[32:56] = ''
+    def write_energies(self):
+        """Append energies_analysis routine to script"""
 
-        script.extend(file)
-    return script
+        with open(F'{self.dynamic_analysis.analysis_path}tcl/energies_analysis.tcl', 'r') as energies:
+            self.energies_script.extend(energies.readlines())
 
+    def write_frame_variables(self):
+        """Write variables for frame analysis"""
 
-def write_energies(script, program_path):
-    """Append energies_analysis routine to script"""
+        set_variable(self.frame_script, 'psf_path', self.dynamic_analysis.psf_path)
+        set_variable(self.frame_script, 'pdb_path', self.dynamic_analysis.pdb_path)
+        set_variable(self.frame_script, 'out_path', self.dynamic_analysis.output)
 
-    with open(F'{program_path}tcl/energies_analysis.tcl', 'r') as energies:
-        script.extend(energies.readlines())
-    return script
+        set_variable(self.frame_script, 'init', self.dynamic_analysis.init_frame)
+        set_variable(self.frame_script, 'last', self.dynamic_analysis.last_frame)
 
+        if self.dynamic_analysis.contact_analysis:
+            set_variable(self.frame_script, 'cci', self.dynamic_analysis.contact_interval)
+            set_variable(self.frame_script, 'cutoff', self.dynamic_analysis.contact_cutoff)
 
-def write_frame_variables(script, contact, cci, score, sci, pdb, psf, init, final, out):
-    """Write variables for frame analysis"""
+    def write_energies_variables(self):
+        """Write variables for energies analysis"""
 
-    script = set_variable(script, 'psf_path', psf)
-    script = set_variable(script, 'pdb_path', pdb)
-    script = set_variable(script, 'out_path', out)
+        set_variable(self.energies_script, 'psf_path', self.dynamic_analysis.psf_path)
+        set_variable(self.energies_script, 'dcd_path', self.dynamic_analysis.dcd_path)
+        set_variable(self.energies_script, 'out_path', self.dynamic_analysis.output)
+        set_variable(self.energies_script, 'namd_path', self.dynamic_analysis.analysis_path + 'namd/')
 
-    script = set_variable(script, 'init', init)
-    script = set_variable(script, 'last', final)
+        set_variable(self.energies_script, 'init', self.dynamic_analysis.init_frame)
+        set_variable(self.energies_script, 'last', self.dynamic_analysis.last_frame)
 
-    if contact:
-        script = set_variable(script, 'cci', cci)
+    def write_tcl_tmp_file(self, script, name):
+        """Saves script as temp file"""
 
-    if score:
-        script = set_variable(script, 'sci', sci)
-
-    return script
-
-
-def write_energies_variables(script, psf, dcd, init, final, out, program_path):
-    """Write variables for energies analysis"""
-
-    script = set_variable(script, 'psf_path', psf)
-    script = set_variable(script, 'dcd_path', dcd)
-    script = set_variable(script, 'out_path', out)
-    script = set_variable(script, 'namd_path', program_path + 'namd/')
-
-    script = set_variable(script, 'init', init)
-    script = set_variable(script, 'last', final)
-
-    return script
+        filename = self.dynamic_analysis.output + 'temp_' + name + '_analysis.tcl'
+        with open(filename, 'w') as analysis:
+            analysis.write(''.join(script))
+            analysis.write("\nquit\n")
 
 
 def set_variable(script, variable, value):
-    """Set a variables on script"""
+    """Set a variables in script"""
 
     append = 'set ' + variable + ' ' + str(value) + '\n'
     script.append(append)
     return script
 
 
-def write_vmd(script, out, name):
-    """Saves script as temp file"""
+def set_argument(script, arg_name, arg):
+    """Set a function argument in script"""
 
-    filename = out + 'temp_' + name + '_analysis.tcl'
-    with open(filename, 'w') as analysis:
-        analysis.write(''.join(script))
+    arg_name = '*' + arg_name + '*'
+    for idx, line in enumerate(script):
+        if arg_name in line:
+            script[idx] = line.replace(arg_name, arg)
+
+    return script
+
+
+def remove_function_call(script, fnc_call):
+    """Remove a call to an unrequested function in script"""
+
+    for idx, line in enumerate(script):
+        if fnc_call in line:
+            script[idx] = "# " + line
+
+    return script

@@ -1,3 +1,6 @@
+# RMSD RMSF Analysis
+
+
 proc retrieve_mol_info {init} {
     global mol residue_list all_atoms atoms_reference atoms_selected interaction main_chain peptide main_chain_atom main_chain_reference peptide_atom peptide_reference
 
@@ -18,6 +21,7 @@ proc retrieve_mol_info {init} {
 
 }
 
+
 proc create_res_dic {init} {
     global mol reference_dict compare_dict residue_list
 
@@ -34,24 +38,26 @@ proc create_res_dic {init} {
     }
 }
 
+
 proc create_rmsf_out_file {} {
     global residue_list rmsf_out rmsd_out out_path interaction main_chain peptide
 
 	puts "Creating out files"
 
-    set rmsd_out [open ${out_path}rmsd/all_rmsd.csv a+]
+    set rmsd_out [open ${out_path}rmsd/all_rmsd.csv w]
 	puts -nonewline $rmsd_out "frame;all;${main_chain}"
 	if {$interaction == true} {
         puts -nonewline $rmsd_out ";$peptide"
 	}
     puts $rmsd_out ""
 
-    set rmsf_out [open ${out_path}rmsd/residue_rmsd.csv a+]
+    set rmsf_out [open ${out_path}rmsd/residue_rmsd.csv w]
     foreach residue $residue_list {
         puts -nonewline $rmsf_out "$residue;"
     }
     puts $rmsf_out ""
 }
+
 
 proc close_rmsd_files {} {
     global rmsf_out rmsd_out
@@ -60,13 +66,15 @@ proc close_rmsd_files {} {
     close $rmsd_out
 }
 
-proc rmsd_rmsf {frame} {
+
+proc measure_rmsd_rmsf {frame} {
     global all_atoms atoms_selected atoms_reference
 
     $all_atoms move [measure fit $atoms_selected $atoms_reference]
 	measure_rmsd $frame
 	measure_rmsf
 }
+
 
 proc measure_rmsd {frame} {
 	global rmsd_out atoms_selected atoms_reference interaction main_chain_atom main_chain_reference peptide_atom peptide_reference
@@ -84,6 +92,8 @@ proc measure_rmsd {frame} {
 
 	puts $rmsd_out ""
 }
+
+
 proc measure_rmsf {} {
 	global residue_list compare_dict reference_dict rmsf_out
 
@@ -93,6 +103,7 @@ proc measure_rmsf {} {
     }
     puts $rmsf_out ""
 }
+
 
 proc prepare_rmsd {} {
     global init

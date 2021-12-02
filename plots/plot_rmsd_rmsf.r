@@ -113,10 +113,10 @@ for (i in 2:ncol(rmsd.all)) {
 }
 
 
-# Plot with alone stats
+# Plot with compare stats
 if (args[3] != "False") {
     source(args[3])
-    do.call(plot_alone_rmsd_stats, list(rmsd.all, rmsd.trim, args))
+    do.call(plot_compare_rmsd_stats, list(rmsd.all, rmsd.trim, args))
 }
 
 
@@ -147,8 +147,8 @@ rows <- nrow(rmsd.table)
 
 
 # Create stats table
-rmsd.stats.type <- c("mean", "sd_total", "sd_first", "sd_middle", "sd_last")
-rmsd.stats <- setNames(data.table(matrix(ncol = 6, nrow = length(residues))), c("residue", rmsd.stats.type))
+rmsd.stats.type <- c("total", "first", "middle", "last")
+rmsd.stats <- setNames(data.table(matrix(ncol = 5, nrow = length(residues))), c("residue", rmsd.stats.type))
 rmsd.stats$residue <- residues
 
 
@@ -156,11 +156,10 @@ rmsd.stats$residue <- residues
 stat_i <- 1
 for (r in residues) {
     table_i <- paste0("X", r)
-    rmsd.stats$mean[stat_i] = mean(rmsd.table[, table_i])
-    rmsd.stats$sd_total[stat_i] = sd(rmsd.table[, table_i])
-    rmsd.stats$sd_first[stat_i] = sd(rmsd.table[, table_i][1:(rows / 3)])
-    rmsd.stats$sd_middle[stat_i] = sd(rmsd.table[, table_i][((rows / 3)):(2 * rows / 3)])
-    rmsd.stats$sd_last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
+    rmsd.stats$total[stat_i] = sd(rmsd.table[, table_i])
+    rmsd.stats$first[stat_i] = sd(rmsd.table[, table_i][1:(rows / 3)])
+    rmsd.stats$middle[stat_i] = sd(rmsd.table[, table_i][((rows / 3)):(2 * rows / 3)])
+    rmsd.stats$last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
     stat_i <- stat_i + 1
 }
 
@@ -222,7 +221,7 @@ chains.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list
 
 
 # Create names for plot
-axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Final")
+axis.names <- c("Residue", "Total", "Initial", "Middle", "Final")
 
 
 # Create data for catalytic labels
@@ -246,11 +245,11 @@ for (i in seq_along(chains.stat)) {
 
 # For each chain
 rmsf.chain.sd <- list()
-colors.steps <- c("sd_first" = 'green', "sd_middle" = 'blue', "sd_last" = 'red')
+colors.steps <- c("first" = 'green', "middle" = 'blue', "last" = 'red')
 for (i in seq_along(chains.stat)) {
 
     steps.min_max <- c(+Inf, -Inf)
-    for (col_step in c("sd_first", "sd_middle", "sd_last")) {
+    for (col_step in c("first", "middle", "last")) {
         range <- range(chains.stat[[i]][[col_step]])
         if (range[2] > steps.min_max[2]) {
             steps.min_max[2] <- range[2]
@@ -278,7 +277,7 @@ for (i in seq_along(chains.stat)) {
             geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
             scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
             scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
-            labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
+            labs(title = paste("Chain", i, "RMSF", axis.names[j]), x = "Residue", y = axis.names[j]) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -289,13 +288,13 @@ for (i in seq_along(chains.stat)) {
 
 
     # Resolve SD steps
-    rmsf.chain.sd[[i]] <- select(chains.stat[[i]], residue, sd_first, sd_middle, sd_last)
+    rmsf.chain.sd[[i]] <- select(chains.stat[[i]], residue, first, middle, last)
     rmsf.chain.sd[[i]] <- gather(rmsf.chain.sd[[i]], sd, value, -residue)
-    rmsf.chain.sd[[i]]$sd <- factor(rmsf.chain.sd[[i]]$sd, levels = c("sd_first", "sd_middle", "sd_last"))
+    rmsf.chain.sd[[i]]$sd <- factor(rmsf.chain.sd[[i]]$sd, levels = c("first", "middle", "last"))
 
 
     # Plot SD steps graphs
-    png.name <- paste0("_rmsf_chain_", i, "_sd_steps.png")
+    png.name <- paste0("_rmsf_chain_", i, "_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
     min_y_value <- min(rmsf.chain.sd[[i]]$value)
@@ -307,7 +306,7 @@ for (i in seq_along(chains.stat)) {
         geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
         geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
-        labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
+        labs(title = paste("Chain", i, "RMSF Steps"), x = "Residue", y = "Standard Deviation") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -382,8 +381,8 @@ if (length(catalytic != 0)) {
 }
 
 
-# Plot with alone stats
+# Plot with compare stats
 if (args[3] != "False") {
-    do.call(plot_alone_rmsf_stats, list(chains.stat, args))
+    do.call(plot_compare_rmsf_stats, list(chains.stat, args))
 }
 cat("Done.\n\n")

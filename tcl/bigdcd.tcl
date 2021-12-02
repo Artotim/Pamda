@@ -1,5 +1,6 @@
 # Bigdcd
 
+
 proc bigdcd { script type args } {
     global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame bigdcd_running
 
@@ -25,6 +26,7 @@ proc bigdcd { script type args } {
     after idle bigdcd_wait
 }
 
+
 proc bigdcd_callback { tracedvar mol op } {
     global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame
     set msg {}
@@ -46,6 +48,7 @@ proc bigdcd_callback { tracedvar mol op } {
     return $msg
 }
 
+
 proc bigdcd_done { } {
     global bigdcd_running
 
@@ -55,6 +58,7 @@ proc bigdcd_done { } {
         set bigdcd_running 0
     }
 }
+
 
 proc bigdcd_wait { } {
     global bigdcd_running bigdcd_frame

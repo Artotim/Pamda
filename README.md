@@ -4,10 +4,11 @@ This software generates analysis data from a dynamic run between protein-peptide
 It can generate *csv* files with information about contact hits between chains; contact map for residues; RMSD general and for individual chains; RMSF; interaction energies; complex energies; and binding score.
 
 ## Contacts
-Uses [pychimera](https://pypi.org/project/pychimera/) to analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues are contacting.
+Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting.
  
 `-C` Enables contact analysis.  
 `-cti` Defines interval for running contact analysis.
+`--cutoff` Defines max Ångström to look for contacts.
 
 ## RMSD and RMSF
 Uses [VMD](https://www.ks.uiuc.edu/Research/vmd/) to measure RMSD in each frame, for the entire complex and separated chains, and also measure RMSF. 
@@ -19,11 +20,11 @@ Uses [NAMD](https://www.ks.uiuc.edu/Research/namd/) to measure several energies 
 
 `-E` Enables energie analysis.
 
-## Score
-Uses [Rosetta](https://www.rosettacommons.org/) scoring function to generate binding scores every frame interval.
+## Distances
+Measures distances in Ångström between a pair of atom os residues.
 
-`-S` Enables contact analysis.  
-`-sci` Defines interval for running scoring analysis.
+`-dpair` Specify a pair of residues, or atoms, to measure distances. More than one pair can be passed. You can pecify the chains using comma notation (i.e. 25:A).  
+`-dtype` Type of indexes passed as pairs to measure distance.
 
 ## Plots
 Optionally you can plot the analysis results to a *png* file.
@@ -36,11 +37,9 @@ Requires [R](https://www.r-project.org/) installed.
 This software uses third party programs and requires you to first install/obtain them.
 
 VMD must be obtained from [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD).  
-Pychimera must be installed both the [exe version](https://www.cgl.ucsf.edu/chimera/download.html) and the [python module](https://pypi.org/project/pychimera/). 
+You must obtain a license for NAMD with [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?UserID=&AccessCode=&ArchiveID=1641). And a license for [rosetta](https://els2.comotion.uw.edu/product/rosetta).
 
-Then you must obtain a license for NAMD with [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?UserID=&AccessCode=&ArchiveID=1641). And a license for [rosetta](https://els2.comotion.uw.edu/product/rosetta).
-
-After this send an email with both licenses to [pyrthur@gmail.com](pyrthur@gmail.com) to get access to the download link.
+After this, send an email with both licenses to [pyrthur@gmail.com](pyrthur@gmail.com) to get access to the download link.
 
 Download the program and untar it with:
 
@@ -61,7 +60,7 @@ dynamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C 
 ## Options
 
 ### Required:
-`-d` , `--dcd` `DCD_PATH`  
+`-dcd` `DCD_PATH`  
 Indicates the path to your `dcd` file.
 
 `-pdb` `PDB_PATH`  
@@ -93,11 +92,11 @@ Frame to end analysis (default: last).
 Indicates the path to your vmd executable.
 ***
 
-`-S`, `--score`  
-Run binding score analysis with rosetta (default: False).
+`-dpair`, `--dist-pair`  `IDX IDX`
+Index pairs to measure distances. Use this argument once for each pair. Specify the chains using comma notation (i.e. 25:A).
 
-`-sci`, `--scoring-interval` `INT`  
-Frame interval number to perform score analysis.
+`-dtype`, `--dist-type` `INT`  
+Type of index passed as distance pairs. Must be atom or resid (default:resid).
 ***
 
 `-C`, `--chimera`  
@@ -105,6 +104,9 @@ Run contact map analysis with chimera (default: False).
 
 `-cti`, `--contact-interval` `INT`  
 Frame interval number to perform contact analysis.
+
+`-cutoff`, `INT`  
+Max angstroms range to look for contacts (default: 3).
 ***
 
 `-R`, `--rmsd`   
@@ -119,11 +121,11 @@ Run energies analysis with namd and vmd (default: False).
 Plot analysis graphs (default: False).
 
 ***
-`--alone-rmsd` `ALL.CSV` `RESIDUE.CSV`  
-Path to alone output rmsd files to plot compare stats (must include all and residue `csv`).
+`--compare-rmsd` `ALL.CSV` `RESIDUE.CSV`  
+Path to compare output rmsd files to plot compare stats (must include all and residue `csv`).
 
-`--alone-energies` `ENERGIES.CSV`  
-Path to alone output energies file to compare stats.
+`--compare-energies` `ENERGIES.CSV`  
+Path to compare output energies file to compare stats.
 ***
 
 `-cat`, `--catalytic-site` `INT` `INT` `...`  
@@ -136,8 +138,6 @@ This product comes with no warranty whatsoever.
 
 This product is not an official VMD release or has any affiliation to it.  
 This product is not an official NAMD release or has any affiliation to it.  
-This product is not an official pychimera release or has any affiliation to it.  
-This product is not an official Rosetta release or has any affiliation to it.  
 
 This software includes code developed by the Theoretical Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.  
 This software includes code developed by the Theoretical and Computational Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.

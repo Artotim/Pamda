@@ -1,4 +1,7 @@
-proc create_mol {} {
+# Get Mol
+
+
+proc get_mol {} {
     global mol psf_path pdb_path
 
 	puts "Creating molecule"

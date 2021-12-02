@@ -3,20 +3,20 @@ import subprocess
 from time import sleep
 
 
-def create_plots(chimera, score, energies, rmsd, program_path, out, name, init, last, alone, catalytic):
+def create_plots(boss_class, compare):
     """Create plots for each analysis"""
 
-    if chimera:
-        plot_contacts(program_path, out, name, catalytic)
+    if boss_class.contact_analysis:
+        plot_contacts(boss_class.analysis_path, boss_class.output, boss_class.name, boss_class.catalytic_site)
 
-    if score:
-        plot_score(program_path, out, name, init, last)
+    if boss_class.distances_analysis:
+        plot_distances(boss_class.analysis_path, boss_class.output, boss_class.name)
 
-    if energies:
-        plot_energies(program_path, out, name, alone)
+    if boss_class.energies_analysis:
+        plot_energies(boss_class.analysis_path, boss_class.output, boss_class.name, compare)
 
-    if rmsd:
-        plot_rmsd(program_path, out, name, alone, catalytic)
+    if boss_class.rmsd_analysis:
+        plot_rmsd(boss_class.analysis_path, boss_class.output, boss_class.name, compare, boss_class.catalytic_site)
 
 
 def plot_contacts(program_path, out, name, catalytic):
@@ -33,47 +33,72 @@ def plot_contacts(program_path, out, name, catalytic):
     cmd = ['Rscript', '--vanilla', script, out, name]
     run_plot(cmd, 'contact count', out, name)
 
+    run_ffmpeg(out, name)
 
-def plot_score(program_path, out, name, init, last):
+
+def run_ffmpeg(out, name):
+    from os.path import exists
+    from .finish_and_clean import remove
+
+    out_path = out + "contact/" + name + "_contact_map_steps.mp4"
+
+    cmd = ["ffmpeg", "-framerate", "1", "-pattern_type", "glob",  "-i", out + "contact/*-*[!_].png", "-y",
+           "-c:v", "libx264", "-r", "30", "-pix_fmt", "yuv420p", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", out_path]
+
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        while process.poll() is None:
+            sleep(10)
+
+    except (PermissionError, FileNotFoundError):
+        log('error', 'Failed to run ffmpeg on contact plots.')
+
+    if exists(out_path):
+        remove(F'{out}contact/*-*[!_].png')
+    else:
+        log('error', 'Failed to run ffmpeg on contact plots.')
+
+
+def plot_distances(program_path, out, name):
     """Create plots for score analysis"""
 
-    script = program_path + 'plots/plot_score.r'
-    cmd = ['Rscript', '--vanilla', script, out, name, str(init), str(last)]
-    run_plot(cmd, 'score', out, name)
+    script = program_path + 'plots/plot_distances.r'
+    cmd = ['Rscript', '--vanilla', script, out, name]
+    run_plot(cmd, 'distances', out, name)
 
 
-def plot_energies(program_path, out, name, alone):
+def plot_energies(program_path, out, name, compare):
     """Create plots for energies analysis"""
 
     script = program_path + 'plots/plot_energy.r'
 
     cmd = ['Rscript', '--vanilla', script, out, name]
-    cmd = plot_alone_files(cmd, program_path, "energies", alone)
+    cmd = plot_compare_files(cmd, program_path, "energies", compare)
 
     run_plot(cmd, 'energies', out, name)
 
 
-def plot_rmsd(program_path, out, name, alone, catalytic):
+def plot_rmsd(program_path, out, name, compare, catalytic):
     """Create plots for rmsd analysis"""
 
     script = program_path + 'plots/plot_rmsd_rmsf.r'
 
     cmd = ['Rscript', '--vanilla', script, out, name]
-    cmd = plot_alone_files(cmd, program_path, "rmsd", alone)
+    cmd = plot_compare_files(cmd, program_path, "rmsd", compare)
     cmd = plot_catalytic_site(cmd, catalytic)
 
     run_plot(cmd, 'rmsd', out, name)
 
 
-def plot_alone_files(cmd, program_path, plot, alone):
-    """Add alone files to compare on cmd"""
+def plot_compare_files(cmd, program_path, plot, compare):
+    """Add compare files to compare on cmd"""
 
-    program_path = {'rmsd': program_path + 'plots/plot_rmsd_rmsf_alone.r',
-                    'energies': program_path + 'plots/plot_energy_alone.r'}
+    program_path = {'rmsd': program_path + 'plots/plot_rmsd_rmsf_compare.r',
+                    'energies': program_path + 'plots/plot_energy_compare.r'}
 
-    if alone[plot] is not None:
+    if compare[plot] is not None:
         cmd.append(program_path[plot])
-        cmd.extend(alone[plot])
+        cmd.extend(compare[plot])
     else:
         cmd.append(str(False))
         cmd.append(str(False))

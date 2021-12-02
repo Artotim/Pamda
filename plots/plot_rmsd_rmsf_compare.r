@@ -21,7 +21,7 @@ library('stringr')
 library('extrafont')
 
 
-plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
+plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
     # Resolve file names
     out.path <- args[1]
@@ -29,48 +29,48 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
     name <- args[2]
 
-    alone.path <- args[4]
+    compare.path <- args[4]
 
 
     # Load all rmsd
-    file.name <- alone.path
+    file.name <- compare.path
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
     }
 
-    rmsd.alone.all <- read.table(file.name,
+    rmsd.compare.all <- read.table(file.name,
                                  header = TRUE,
                                  sep = ";",
                                  dec = ".",
     )
 
     # Get chains
-    alone.chain.names <- tail(colnames(rmsd.alone.all), -2)
+    compare.chain.names <- tail(colnames(rmsd.compare.all), -2)
 
 
     # Loop through table
-    rmsd.alone.trim <- list()
-    colors <- c('Alone' = '#ccccff', 'Docked' = '#00004d')
-    for (i in 2:ncol(rmsd.alone.all)) {
-        colname <- colnames(rmsd.alone.all)[i]
+    rmsd.compare.trim <- list()
+    colors <- c('compare' = '#ccccff', 'Docked' = '#00004d')
+    for (i in 2:ncol(rmsd.compare.all)) {
+        colname <- colnames(rmsd.compare.all)[i]
 
         # Choose file name
-        if (colname %in% alone.chain.names) {
-            chain.indx <- match(colname, alone.chain.names)
-            png.name <- paste0("_alone_rmsd_frame_chain_", chain.indx, ".png")
+        if (colname %in% compare.chain.names) {
+            chain.indx <- match(colname, compare.chain.names)
+            png.name <- paste0("_compare_rmsd_frame_chain_", chain.indx, ".png")
             out.name <- paste0(out.path, name, png.name)
             plot.title <- paste0("RMSD chain ", colname)
         } else {
-            out.name <- paste0(out.path, name, "_alone_rmsd_frame_all.png")
+            out.name <- paste0(out.path, name, "_compare_rmsd_frame_all.png")
             plot.title <- "RMSD All"
         }
 
 
         # Plot rmsd graph
-        cat("Ploting selection", colname, "rmsd graph with alone stats.\n")
+        cat("Ploting selection", colname, "rmsd graph with compare stats.\n")
         plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
-            geom_smooth(data = rmsd.alone.all, aes_(y = as.name(colname), color = "Alone"), size = 1.5, se = FALSE) +
+            geom_smooth(data = rmsd.compare.all, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
             scale_x_continuous(labels = scales::comma_format()) +
@@ -81,28 +81,28 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
             theme(axis.text = element_text(size = 20)) +
             theme(legend.text = element_text(size = 14), legend.key.size = unit(1, "cm")) +
             theme(legend.title = element_blank(), legend.key = element_rect(fill = 'white', color = 'white')) +
-            scale_color_manual(values = colors, breaks = c("Docked", "Alone"))
+            scale_color_manual(values = colors, breaks = c("Docked", "compare"))
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 
 
         # Remove outliers
-        outliers <- boxplot(rmsd.alone.all[[colname]], plot = FALSE)$out
+        outliers <- boxplot(rmsd.compare.all[[colname]], plot = FALSE)$out
         if (length(outliers) != 0) {
-            rmsd.alone.trim[[i]] <- rmsd.alone.all[-which(rmsd.alone.all[[colname]] %in% outliers),]
+            rmsd.compare.trim[[i]] <- rmsd.compare.all[-which(rmsd.compare.all[[colname]] %in% outliers),]
         } else {
-            rmsd.alone.trim[[i]] <- rmsd.alone.all
+            rmsd.compare.trim[[i]] <- rmsd.compare.all
         }
-        rmsd.alone.trim[[i]][1,]$frame <- min(rmsd.alone.all$frame)
+        rmsd.compare.trim[[i]][1,]$frame <- min(rmsd.compare.all$frame)
 
 
         # Plot rmsd graph without outliers
         out.name <- str_replace(out.name, '.png', '_trim.png')
 
-        cat("Ploting selection", colname, "rmsd graph without outliers and with alone stats.\n")
+        cat("Ploting selection", colname, "rmsd graph without outliers and with compare stats.\n")
         plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
-            geom_smooth(data = rmsd.alone.trim[[i]], aes_(y = as.name(colname), color = "Alone"), size = 1.5, se = FALSE) +
+            geom_smooth(data = rmsd.compare.trim[[i]], aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
             scale_x_continuous(labels = scales::comma_format()) +
@@ -113,21 +113,21 @@ plot_alone_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
             theme(axis.text = element_text(size = 20)) +
             theme(legend.text = element_text(size = 14), legend.key.size = unit(1, "cm")) +
             theme(legend.title = element_blank(), legend.key = element_rect(fill = 'white', color = 'white')) +
-            scale_color_manual(values = colors, breaks = c("Docked", "Alone"))
+            scale_color_manual(values = colors, breaks = c("Docked", "compare"))
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
 }
 
 
-plot_alone_rmsf_stats <- function(chains.stat, args) {
+plot_compare_rmsf_stats <- function(chains.stat, args) {
     # Resolve file names
     out.path <- args[1]
     out.path <- paste0(out.path, "rmsd/")
 
     name <- args[2]
 
-    alone.path <- args[5]
+    compare.path <- args[5]
 
     # Resolve catalytic site
     catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
@@ -135,20 +135,20 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
 
     # Load residue rmsd
-    file.name <- alone.path
+    file.name <- compare.path
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
     }
 
-    rmsd.alone.all <- read.table(args[4],
+    rmsd.compare.all <- read.table(args[4],
                                  header = TRUE,
                                  sep = ";",
                                  dec = ".",
     )
 
     # Get chains
-    alone.chain.names <- tail(colnames(rmsd.alone.all), -2)
-    rm(rmsd.alone.all)
+    compare.chain.names <- tail(colnames(rmsd.compare.all), -2)
+    rm(rmsd.compare.all)
 
     rmsd.table <- read.table(file.name,
                              header = TRUE,
@@ -165,8 +165,8 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
 
     # Create stats table
-    rmsd.stats.type <- c("mean", "sd_total", "sd_first", "sd_middle", "sd_last")
-    rmsd.stats <- setNames(data.table(matrix(ncol = 6, nrow = length(residues))), c("residue", rmsd.stats.type))
+    rmsd.stats.type <- c("total", "first", "middle", "last")
+    rmsd.stats <- setNames(data.table(matrix(ncol = 5, nrow = length(residues))), c("residue", rmsd.stats.type))
     rmsd.stats$residue <- residues
 
 
@@ -174,11 +174,10 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     stat_i <- 1
     for (r in residues) {
         table_i <- paste0("X", r)
-        rmsd.stats$mean[stat_i] = mean(rmsd.table[, table_i])
-        rmsd.stats$sd_total[stat_i] = sd(rmsd.table[, table_i])
-        rmsd.stats$sd_first[stat_i] = sd(rmsd.table[, table_i][1:(rows / 3)])
-        rmsd.stats$sd_middle[stat_i] = sd(rmsd.table[, table_i][((rows / 3)):(2 * rows / 3)])
-        rmsd.stats$sd_last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
+        rmsd.stats$total[stat_i] = sd(rmsd.table[, table_i])
+        rmsd.stats$first[stat_i] = sd(rmsd.table[, table_i][1:(rows / 3)])
+        rmsd.stats$middle[stat_i] = sd(rmsd.table[, table_i][((rows / 3)):(2 * rows / 3)])
+        rmsd.stats$last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
         stat_i <- stat_i + 1
     }
 
@@ -202,7 +201,7 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
     distance <- 1
     chains.sep <- NULL
     residue_ind <- 0
-    while (length(chains.sep) != length(alone.chain.names) - 1) {
+    while (length(chains.sep) != length(compare.chain.names) - 1) {
         residue_ind <- 0
         previous <- residues[1]
         chains.sep <- NULL
@@ -235,26 +234,26 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
 
     # Split stat in chains
-    chains.alone.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list(rmsd.stats)
+    chains.compare.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list(rmsd.stats)
 
 
     # Create names for plot
-    axis.names <- c("Residue", "Mean", "SD Total", "SD Initial", "SD Middle", "SD Final")
+    axis.names <- c("Residue", "Total", "Initial", "Middle", "Final")
 
 
     # For each chain
-    rmsf.chain.alone.sd <- list()
-    chains.alone.trim <- list()
-    colors <- c('Alone' = '#ccccff', 'Docked' = '#00004d')
-    for (i in seq_along(chains.alone.stat)) {
+    rmsf.chain.compare.sd <- list()
+    chains.compare.trim <- list()
+    colors <- c('compare' = '#ccccff', 'Docked' = '#00004d')
+    for (i in seq_along(chains.compare.stat)) {
 
         steps.min_max <- c(+Inf, -Inf)
-        for (col_step in c("sd_first", "sd_middle", "sd_last")) {
-            outliers <- boxplot(chains.alone.stat[[i]][[col_step]], plot = FALSE)$out
+        for (col_step in c("first", "middle", "last")) {
+            outliers <- boxplot(chains.compare.stat[[i]][[col_step]], plot = FALSE)$out
             if (length(outliers) != 0) {
-                range <- range(chains.alone.stat[[i]][[col_step]][!(chains.alone.stat[[i]][[col_step]] %in% outliers)])
+                range <- range(chains.compare.stat[[i]][[col_step]][!(chains.compare.stat[[i]][[col_step]] %in% outliers)])
             } else {
-                range <- range(chains.alone.stat[[i]][[col_step]])
+                range <- range(chains.compare.stat[[i]][[col_step]])
             }
 
             if (range[2] > steps.min_max[2]) {
@@ -266,36 +265,36 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         }
 
         # For each stat
-        for (j in 2:ncol(chains.alone.stat[[i]])) {
-            colname <- colnames(chains.alone.stat[[i]])[j]
+        for (j in 2:ncol(chains.compare.stat[[i]])) {
+            colname <- colnames(chains.compare.stat[[i]])[j]
 
 
             # Plot stat graphs
-            png.name <- paste0("_alone_rmsf_chain_", i, "_", colname, ".png")
+            png.name <- paste0("_compare_rmsf_chain_", i, "_", colname, ".png")
             out.name <- paste0(out.path, name, png.name)
 
-            outliers <- boxplot(chains.alone.stat[[i]][[colname]], plot = FALSE)$out
+            outliers <- boxplot(chains.compare.stat[[i]][[colname]], plot = FALSE)$out
             if (length(outliers) != 0) {
-                chains.alone.trim[[i]] <- chains.alone.stat[[i]][-which(chains.alone.stat[[i]][[colname]] %in% outliers),]
+                chains.compare.trim[[i]] <- chains.compare.stat[[i]][-which(chains.compare.stat[[i]][[colname]] %in% outliers),]
             } else {
-                chains.alone.trim[[i]] <- chains.alone.stat[[i]]
+                chains.compare.trim[[i]] <- chains.compare.stat[[i]]
             }
 
 
-            min_y_value <- min(chains.alone.trim[[i]][[colname]])
+            min_y_value <- min(chains.compare.trim[[i]][[colname]])
             min_y_value <- if (min(chains.stat[[i]][[colname]]) < min_y_value) min(chains.stat[[i]][[colname]]) else min_y_value
-            max_y_value <- max(chains.alone.trim[[i]][[colname]])
+            max_y_value <- max(chains.compare.trim[[i]][[colname]])
 
 
-            cat("Ploting", colname, "for chain", i, 'with alone stats.\n')
+            cat("Ploting", colname, "for chain", i, 'with compare stats.\n')
             plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
-                geom_line(data = chains.alone.trim[[i]], aes_(color = "Alone"), size = 1) +
+                geom_line(data = chains.compare.trim[[i]], aes_(color = "compare"), size = 1) +
                 geom_line(aes_(color = "Docked"), size = 1) +
                 geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
                 geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
-                scale_x_continuous(breaks = if (length(chains.alone.stat[[i]]$residue) < 5) unique(chains.alone.stat[[i]]$residue) else breaks_pretty()) +
+                scale_x_continuous(breaks = if (length(chains.compare.stat[[i]]$residue) < 5) unique(chains.compare.stat[[i]]$residue) else breaks_pretty()) +
                 scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
-                labs(title = paste("Chain", i, "RMSD", axis.names[j]), x = "Residue", y = axis.names[j]) +
+                labs(title = paste("Chain", i, "RMSF", axis.names[j]), x = "Residue", y = axis.names[j]) +
                 theme_minimal() +
                 theme(text = element_text(family = "Times New Roman")) +
                 theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -303,38 +302,38 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
                 theme(axis.text = element_text(size = 20)) +
                 theme(legend.text = element_text(size = 12), legend.key.size = unit(1, "cm")) +
                 theme(legend.title = element_blank(), legend.key = element_rect(fill = 'white', color = 'white')) +
-                scale_color_manual(values = colors, breaks = c("Docked", "Alone"))
+                scale_color_manual(values = colors, breaks = c("Docked", "compare"))
 
             ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
         }
 
 
         # Resolve SD steps
-        rmsf.chain.alone.sd[[i]] <- select(chains.alone.stat[[i]], residue, sd_first, sd_middle, sd_last)
-        rmsf.chain.alone.sd[[i]] <- gather(rmsf.chain.alone.sd[[i]], sd, value, -residue)
-        rmsf.chain.alone.sd[[i]]$sd <- factor(rmsf.chain.alone.sd[[i]]$sd, levels = c("sd_first", "sd_middle", "sd_last"))
+        rmsf.chain.compare.sd[[i]] <- select(chains.compare.stat[[i]], residue, first, middle, last)
+        rmsf.chain.compare.sd[[i]] <- gather(rmsf.chain.compare.sd[[i]], sd, value, -residue)
+        rmsf.chain.compare.sd[[i]]$sd <- factor(rmsf.chain.compare.sd[[i]]$sd, levels = c("first", "middle", "last"))
 
-        outliers <- boxplot(rmsf.chain.alone.sd[[i]]$value, plot = FALSE)$out
+        outliers <- boxplot(rmsf.chain.compare.sd[[i]]$value, plot = FALSE)$out
         if (length(outliers) != 0) {
-            rmsf.chain.alone.sd.trim <- rmsf.chain.alone.sd[[i]][-which(rmsf.chain.alone.sd[[i]]$value %in% outliers),]
+            rmsf.chain.compare.sd.trim <- rmsf.chain.compare.sd[[i]][-which(rmsf.chain.compare.sd[[i]]$value %in% outliers),]
         } else {
-            rmsf.chain.alone.sd.trim <- rmsf.chain.alone.sd[[i]]
+            rmsf.chain.compare.sd.trim <- rmsf.chain.compare.sd[[i]]
         }
 
         # Plot SD steps graphs
-        png.name <- paste0("_alone_rmsf_chain_", i, "_sd_steps.png")
+        png.name <- paste0("_compare_rmsf_chain_", i, "_steps.png")
         out.name <- paste0(out.path, name, png.name)
 
-        min_y_value <- min(rmsf.chain.alone.sd.trim$value)
-        max_y_value <- max(rmsf.chain.alone.sd.trim$value)
+        min_y_value <- min(rmsf.chain.compare.sd.trim$value)
+        max_y_value <- max(rmsf.chain.compare.sd.trim$value)
 
-        cat("Ploting standard deviation for chain", i, 'with alone stats.\n')
-        plot <- ggplot(rmsf.chain.alone.sd.trim, aes_string(x = "residue", y = "value")) +
+        cat("Ploting standard deviation for chain", i, 'with compare stats.\n')
+        plot <- ggplot(rmsf.chain.compare.sd.trim, aes_string(x = "residue", y = "value")) +
             geom_line(aes_string(color = 'sd', group = "sd")) +
             geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
             geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
-            scale_x_continuous(breaks = if (length(chains.alone.stat[[i]]$residue) < 5) unique(chains.alone.stat[[i]]$residue) else breaks_pretty()) +
-            labs(title = paste("Chain", i, "RMSD SD Steps"), x = "Residue", y = "Standard Deviation") +
+            scale_x_continuous(breaks = if (length(chains.compare.stat[[i]]$residue) < 5) unique(chains.compare.stat[[i]]$residue) else breaks_pretty()) +
+            labs(title = paste("Chain", i, "RMSF SD Steps"), x = "Residue", y = "Standard Deviation") +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -354,9 +353,9 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
         }
         colors <- setNames(color.list, gsub("\nNA", "", paste0(catalytic$resi, '\n', catalytic$resn)))
 
-        out.name <- paste0(out.path, name, "_alone_catalytic_rmsd.png")
+        out.name <- paste0(out.path, name, "_compare_catalytic_rmsd.png")
 
-        cat("Ploting catalytic site for alone stats.\n")
+        cat("Ploting catalytic site for compare stats.\n")
         plot <- ggplot(catalytic.stats, aes(x = frame)) +
             labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
             scale_x_continuous(labels = scales::comma_format()) +
@@ -376,9 +375,9 @@ plot_alone_rmsf_stats <- function(chains.stat, args) {
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 
-        out.name <- paste0(out.path, name, "_alone_catalytic_rmsd_trim.png")
+        out.name <- paste0(out.path, name, "_compare_catalytic_rmsd_trim.png")
 
-        cat("Ploting catalytic site without outliers for alone stats.\n")
+        cat("Ploting catalytic site without outliers for compare stats.\n")
         plot <- ggplot(catalytic.stats, aes(x = frame)) +
             labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
             scale_x_continuous(labels = scales::comma_format()) +

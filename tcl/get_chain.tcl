@@ -1,3 +1,6 @@
+#Get Chains
+
+
 proc get_chain {pdb_path} {
 	global main_chain peptide interaction
 
@@ -32,5 +35,6 @@ proc get_chain {pdb_path} {
        set interaction false
     }
 }
+
 
 get_chain *pdb_path*

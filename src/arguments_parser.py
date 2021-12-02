@@ -1,4 +1,17 @@
 import argparse
+import re
+
+
+class IndexValidator(object):
+
+    def __init__(self):
+        self._pattern = re.compile(r"^[\d]+(:\w)?$")
+
+    def __call__(self, value):
+        if not self._pattern.match(value):
+            raise argparse.ArgumentTypeError(
+                "Argument has to match 'index' or 'index:chain'".format(self._pattern.pattern))
+        return value
 
 
 class SubcommandHelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -16,23 +29,25 @@ class SubcommandHelpFormatter(argparse.RawDescriptionHelpFormatter):
 def make_parser():
     """Return parser with arguments for program"""
 
+    idx_validator = IndexValidator()
+
     # noinspection PyTypeChecker
     parser = argparse.ArgumentParser(description='This software generates analysis data from a dynamic run between '
                                                  'protein-peptide interaction or single protein.',
                                      epilog="Made by artotim",
                                      usage='%(prog)s -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> '
-                                           '-C -S -R -E -G',
+                                           '-<analysis>',
                                      add_help=False,
                                      formatter_class=SubcommandHelpFormatter)
 
     required = parser.add_argument_group('Required')
     optional = parser.add_argument_group('Optional')
 
-    required.add_argument('-d', '--dcd', metavar='',  required=True,
+    required.add_argument('-dcd', metavar='', required=True,
                           help='Path to dcd file')
-    required.add_argument('-pdb', metavar='',  required=True,
+    required.add_argument('-pdb', metavar='', required=True,
                           help='Path to pdb file')
-    required.add_argument('-psf', metavar='',  required=True,
+    required.add_argument('-psf', metavar='', required=True,
                           help='Path to psf file')
 
     optional.add_argument("-h", "--help", action="help",
@@ -51,15 +66,18 @@ def make_parser():
     optional.add_argument('-vmd', '--vmd-exe', default='vmd', metavar='',
                           help='Path to vmd executable')
 
-    optional.add_argument('-S', '--score', action='store_true',
-                          help='Run binding score analysis with rosetta')
-    optional.add_argument('-sci', '--scoring-interval', type=int, metavar='',
-                          help='Analyse score function each frame interval')
+    optional.add_argument('-dpair', '--dist-pair', type=idx_validator, metavar='', default=[], nargs=2, action='append',
+                          help='Index pairs to measure distances. Use this argument once for each pair'
+                               'Specify the chains using comma notation (i.e. 25:A)')
+    optional.add_argument('-dtype', '--dist-type', metavar='', default='resid', choices=['atom', 'resid'],
+                          help='Type of index passed as distance pairs. Must be atom or resid (default:resid)')
 
-    optional.add_argument('-C', '--chimera', action='store_true',
-                          help='Run contact map analysis with chimera')
+    optional.add_argument('-C', '--contact', action='store_true',
+                          help='Run contact analysis')
     optional.add_argument('-cti', '--contact-interval', type=int, metavar='',
                           help='Analyse contact each frame interval')
+    optional.add_argument('--cutoff', default=3, type=int, dest='contact_cutoff', metavar='',
+                          help='Max angstroms range to look for contacts (default: 3)')
 
     optional.add_argument('-R', '--rmsd', action='store_true',
                           help='Run rmsd and rmsf analysis with vmd')
@@ -70,12 +88,14 @@ def make_parser():
     optional.add_argument('-G', '--graphs', action='store_true',
                           help='Plot analysis graphs')
 
-    optional.add_argument('--alone-rmsd', metavar='', dest='alone_rmsd', nargs=2,
-                          help='Path to alone output rmsd files to compare stats (must include all and residue csv)')
-    optional.add_argument('--alone-energies', metavar='', dest='alone_energies',
-                          help='Path to alone output energies file to compare stats')
+    optional.add_argument('--compare-rmsd', metavar='', dest='compare_rmsd', nargs=2,
+                          help='Path to another rmsd analysis output files to compare stats in plot '
+                               '(must include all and residue csv)')
+    optional.add_argument('--compare-energies', metavar='', dest='compare_energies',
+                          help='Path to another energies analysis output file to compare stats in plot')
 
-    optional.add_argument('-cat', '--catalytic-site', type=int, metavar='', dest='cat', default=[], nargs='+',
-                          help='Pass a list of residues to display on graphs and get specific plots')
+    optional.add_argument('-cat', '--catalytic-site', type=idx_validator, metavar='', dest='cat', default=[], nargs='+',
+                          help='Pass a list of residues to get measures and highlight in plots. '
+                               'You can specify the chain with a colon')
 
     return parser
