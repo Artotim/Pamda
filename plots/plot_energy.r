@@ -100,10 +100,10 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Plot with alone stats
+# Plot with compare stats
 if (args[3] != "False") {
     source(args[3])
-    do.call(plot_alone_energy_stats, list(energy.all, energy.trim, args))
+    do.call(plot_compare_energy_stats, list(energy.all, energy.trim, args))
 }
 rm(energy.all)
 rm(energy.trim)

@@ -12,7 +12,7 @@ library('ggplot2')
 library('scales')
 library('extrafont')
 
-plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
+plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
 
     # Resolve file names
     args <- commandArgs(trailingOnly = TRUE)
@@ -21,15 +21,15 @@ plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
 
     name <- args[2]
 
-    alone.file <- args[4]
+    compare.file <- args[4]
 
     # Load table
-    file.name <- alone.file
+    file.name <- compare.file
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
     }
 
-    energy.alone.all <- read.table(file.name,
+    energy.compare.all <- read.table(file.name,
                                    header = TRUE,
                                    sep = ";",
                                    dec = ".",
@@ -37,27 +37,27 @@ plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
 
 
     # Format table
-    energy.alone.all$Time = NULL
-    energy.alone.all$Frame = seq_along(energy.alone.all$Frame)
+    energy.compare.all$Time = NULL
+    energy.compare.all$Frame = seq_along(energy.compare.all$Frame)
 
 
     # Define colors
-    colors <- c('Alone' = '#b3e3ff', 'Docked' = '#0072B2')
+    colors <- c('compare' = '#b3e3ff', 'Docked' = '#0072B2')
 
 
     # Iterate over each column
-    for (i in 2:ncol(energy.alone.all)) {
-        colname <- colnames(energy.alone.all)[i]
+    for (i in 2:ncol(energy.compare.all)) {
+        colname <- colnames(energy.compare.all)[i]
 
 
         # Plot graphs
-        png.name <- paste0("_alone_all_", colname, "_energy", ".png")
+        png.name <- paste0("_compare_all_", colname, "_energy", ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "energy with alone stats.", '\n')
+        cat("Ploting", colname, "energy with compare stats.", '\n')
         plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
-            geom_smooth(data = energy.alone.all, aes_(y = as.name(colname), color = "Alone"), size = 1.5, se = FALSE) +
+            geom_smooth(data = energy.compare.all, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
@@ -69,33 +69,33 @@ plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
             theme(axis.text = element_text(size = 20)) +
             theme(legend.text = element_text(size = 14), legend.key.size = unit(1, "cm")) +
             theme(legend.title = element_blank(), legend.key = element_rect(fill = 'white', color = 'white')) +
-            scale_color_manual(values = colors, breaks = c("Docked", "Alone"))
+            scale_color_manual(values = colors, breaks = c("Docked", "compare"))
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
 
 
     # Iterate over each column to plot whithout outliers
-    for (i in 2:ncol(energy.alone.all)) {
-        colname <- colnames(energy.alone.all)[i]
+    for (i in 2:ncol(energy.compare.all)) {
+        colname <- colnames(energy.compare.all)[i]
 
-        outliers <- boxplot(energy.alone.all[[colname]], plot = FALSE)$out
+        outliers <- boxplot(energy.compare.all[[colname]], plot = FALSE)$out
         if (length(outliers) != 0) {
-            energy.alone.trim <- energy.alone.all[-which(energy.alone.all[[colname]] %in% outliers),]
+            energy.compare.trim <- energy.compare.all[-which(energy.compare.all[[colname]] %in% outliers),]
         } else {
-            energy.alone.trim <- energy.alone.all
+            energy.compare.trim <- energy.compare.all
         }
-        energy.alone.trim[1,]$frame <- min(energy.alone.all$frame)
+        energy.compare.trim[1,]$frame <- min(energy.compare.all$frame)
 
 
         # Plot graphs
-        png.name <- paste0("_alone_all_", colname, "_energy_trim", ".png")
+        png.name <- paste0("_compare_all_", colname, "_energy_trim", ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "energy without outliers with alone stats.", '\n')
+        cat("Ploting", colname, "energy without outliers with compare stats.", '\n')
         plot <- ggplot(energy.trim[[i]], aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#e6e6e6") +
-            geom_smooth(data = energy.alone.trim, aes_(y = as.name(colname), color = "Alone"), size = 1.5, se = FALSE) +
+            geom_smooth(data = energy.compare.trim, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
@@ -107,7 +107,7 @@ plot_alone_energy_stats <- function(energy.all, energy.trim, args) {
             theme(axis.text = element_text(size = 20)) +
             theme(legend.text = element_text(size = 14), legend.key.size = unit(1, "cm")) +
             theme(legend.title = element_blank(), legend.key = element_rect(fill = 'white', color = 'white')) +
-            scale_color_manual(values = colors, breaks = c("Docked", "Alone"))
+            scale_color_manual(values = colors, breaks = c("Docked", "compare"))
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
