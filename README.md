@@ -1,7 +1,7 @@
-# Protein-peptide `.dcd` analysis
-This software generates analysis data from a dynamic run between protein-peptide interaction, or a single protein.
+# Protein-peptide `.dcd` dynamics analysis
+This software generates analysis data from a dynamic run between protein-peptide, or a single protein.
 
-It can generate *csv* files with information about contact hits between chains; contact map for residues; RMSD general and for individual chains; RMSF; interaction energies; complex energies; and binding score.
+It can generate *csv* and plot files with information about contact hits between chains; contact map for residues; RMSD general and for individual chains or residues; RMSF for each cahin; interaction energies; complex energies; and distances between atoms or residues.
 
 ## Contacts
 Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting.
