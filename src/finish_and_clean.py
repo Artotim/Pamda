@@ -3,7 +3,7 @@ import os
 import re
 
 
-def finish_analysis(contact, distances, energies, rmsd, out, name):
+def finish_analysis(contact, energies, distances, rmsd, out, name):
     """Rename outputs and remove temps"""
 
     if rmsd:
@@ -109,6 +109,8 @@ def write_energies(file_to_write, file_to_merge, file_to_merge_name):
 
 def rename_models(out, name):
     """Rename pdb models"""
+
+    log('info', 'Renaming first and last models outputs.')
 
     old_first = out + 'models/first_model.pdb'
     new_first = out + 'models/' + name + '_first_model.pdb'
