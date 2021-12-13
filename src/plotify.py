@@ -41,14 +41,17 @@ def run_ffmpeg(out, name):
     from .finish_and_clean import remove
 
     out_path = out + "contact/" + name + "_contact_map_steps.mp4"
+    log_file = F"{out}logs/{name}_plot_contact.log"
+    err_file = F"{out}logs/{name}_plot_contact.err"
 
     cmd = ["ffmpeg", "-framerate", "1", "-pattern_type", "glob",  "-i", out + "contact/*-*[!_].png", "-y",
            "-c:v", "libx264", "-r", "30", "-pix_fmt", "yuv420p", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", out_path]
 
     try:
-        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        while process.poll() is None:
-            sleep(10)
+        with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
+            process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f)
+            while process.poll() is None:
+                sleep(10)
 
     except (PermissionError, FileNotFoundError):
         log('error', 'Failed to run ffmpeg on contact plots.')
@@ -123,8 +126,10 @@ def run_plot(cmd, plot, out, name):
 
     log('info', 'Creating plots for ' + plot + '.')
 
-    log_file = out + 'logs/' + name + '_plots.log'
-    err_file = out + 'logs/' + name + '_plots.err'
+    plot_name = plot.split(' ')[0]
+
+    log_file = F"{out}logs/{name}_plot_{plot_name}.log"
+    err_file = F"{out}logs/{name}_plot_{plot_name}.err"
     log('info', 'Logging plot info to ' + log_file + '.')
 
     try:
