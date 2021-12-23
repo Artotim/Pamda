@@ -1,8 +1,8 @@
-from src.color_log import log
 import os
-from signal import SIGTERM
 import subprocess
 from time import sleep
+from signal import SIGTERM
+from src.color_log import log
 
 
 def start_frame_analysis(out, name, vmd):
@@ -34,7 +34,7 @@ def start_energies_analysis(out, name, vmd):
 
     run_vmd(vmd, vmd_file, log_file, err_file)
 
-    log('info', 'Energie analysis done.')
+    log('info', 'Energies analysis done.')
 
 
 def run_vmd(vmd, vmd_file, log_file, err_file):

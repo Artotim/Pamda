@@ -6,6 +6,7 @@ import re
 def finish_analysis(contact, energies, distances, rmsd, out, name):
     """Rename outputs and remove temps"""
 
+    print()
     if rmsd:
         finish_rmsd(out, name)
 

@@ -35,7 +35,7 @@ def make_parser():
     parser = argparse.ArgumentParser(description='This software generates analysis data from a dynamic run between '
                                                  'protein-peptide interaction or single protein.',
                                      epilog="Made by artotim",
-                                     usage='%(prog)s -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> '
+                                     usage='%(prog)s -dcd <dcd_file.dcd> -pdb <pdb_file.pdb> -psf <psf_file.pdf> '
                                            '-<analysis>',
                                      add_help=False,
                                      formatter_class=SubcommandHelpFormatter)
@@ -80,10 +80,10 @@ def make_parser():
                           help='Max angstroms range to look for contacts (default: 3)')
 
     optional.add_argument('-R', '--rmsd', action='store_true',
-                          help='Run rmsd and rmsf analysis with vmd')
+                          help='Run rmsd and rmsf analysis')
 
     optional.add_argument('-E', '--energies', action='store_true',
-                          help='Run energies analysis with namd and vmd')
+                          help='Run energies analysis')
 
     optional.add_argument('-G', '--graphs', action='store_true',
                           help='Plot analysis graphs')

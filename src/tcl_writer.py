@@ -186,7 +186,8 @@ class TclWriter:
         set_variable(self.energies_script, 'psf_path', self.dynamic_analysis.psf_path)
         set_variable(self.energies_script, 'dcd_path', self.dynamic_analysis.dcd_path)
         set_variable(self.energies_script, 'out_path', self.dynamic_analysis.output)
-        set_variable(self.energies_script, 'namd_path', self.dynamic_analysis.analysis_path + 'namd/')
+        set_variable(self.energies_script, 'namdenergy_path',
+                     self.dynamic_analysis.analysis_path + 'dependencies/namdenergy/')
 
         set_variable(self.energies_script, 'init', self.dynamic_analysis.init_frame)
         set_variable(self.energies_script, 'last', self.dynamic_analysis.last_frame)

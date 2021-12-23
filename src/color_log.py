@@ -43,13 +43,14 @@ logger.addHandler(ch)
 def log(log_type, message):
     """Log function to export"""
 
-    if log_type == 'debug':
-        logger.debug(message)
-    elif log_type == 'info':
-        logger.info(message)
-    elif log_type == 'warning':
-        logger.warning(message)
-    elif log_type == 'error':
-        logger.error(message)
-    elif log_type == 'critical':
-        logger.critical(message)
+    for line in message.split("\n"):
+        if log_type == 'debug':
+            logger.debug(line)
+        elif log_type == 'info':
+            logger.info(line)
+        elif log_type == 'warning':
+            logger.warning(line)
+        elif log_type == 'error':
+            logger.error(line)
+        elif log_type == 'critical':
+            logger.critical(line)

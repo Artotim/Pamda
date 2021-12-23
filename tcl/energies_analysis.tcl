@@ -2,7 +2,7 @@
 
 
 proc energies {first last interaction} {
-    global main_chain peptide psf_path dcd_path out_path namd_path
+    global main_chain peptide psf_path dcd_path out_path namdenergy_path
 
     puts "Measuring energy from $first to $last"
 
@@ -16,7 +16,7 @@ proc energies {first last interaction} {
     set out "${out_path}energies/all_$last"
 
     set sel_all [atomselect top protein]
-    namdenergy -sel $sel_all -exe ${namd_path}namd2 -par ${namd_path}params/par_all36_prot.prm -par ${namd_path}params/par_all36_na.prm -par ${namd_path}params/toppar_water_ions.str -all -tempname $temp -ofile $out
+    namdenergy -sel $sel_all -exe ${namdenergy_path}namdenergy -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm -par ${namdenergy_path}params/toppar_water_ions.str -all -tempname $temp -ofile $out
 
     if {$interaction == true} {
         set temp "${out_path}energies/interaction_temp_$last"
@@ -24,7 +24,7 @@ proc energies {first last interaction} {
 
         set sel_a [atomselect top "chain $main_chain"]
         set sel_b [atomselect top "chain $peptide"]
-        namdenergy -sel $sel_a $sel_b -exe ${namd_path}namd2 -par ${namd_path}params/par_all36_prot.prm -par ${namd_path}params/par_all36_na.prm -par ${namd_path}params/toppar_water_ions.str -vdw -elec- -nonb -tempname $temp -ofile $out
+        namdenergy -sel $sel_a $sel_b -exe ${namdenergy_path}namdenergy -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm -par ${namdenergy_path}params/toppar_water_ions.str -vdw -elec -nonb -tempname $temp -ofile $out
     }
 }
 

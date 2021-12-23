@@ -1,24 +1,24 @@
 # Protein-peptide `.dcd` dynamics analysis
-This software generates analysis data from a dynamic run between protein-peptide, or a single protein in `.dcd` format.
+This software generates analysis data from a dynamic run in `.dcd` format for a protein-peptide complex, or a single protein.
 
-It can generate *csv* and plot files with information about contact hits between chains; map contacts between chain residues; RMSD general and for individual chains or residues; RMSF for each chain; interaction energies; complex energies; and distances between set of atoms or residues.
+It can generate *csv* and plot files with information about contact hits between chains; map contacts between chain residues; RMSD general and for individual chains or residues; RMSF for each residue; complex energies; interaction energies; and distances between set of atoms or residues.
 
 ## Contacts
-Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting.
+Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting for the entire simulation.
  
 `-C` Enables contact analysis.  
 `-cti` Defines interval for running contact analysis.
 `--cutoff` Defines max Ångström to look for contacts.
 
 ## RMSD and RMSF
-Uses [VMD](https://www.ks.uiuc.edu/Research/vmd/) to measure RMSD in each frame, for the entire complex and separated chains, and also measure RMSF. 
+Measures RMSD in each frame, for the entire complex and separated chains, and measure RMSF for each residue. 
 
 `-R` Enables RMSD and RMSF analysis.
 
 ## Energies
-Uses [NAMD](https://www.ks.uiuc.edu/Research/namd/) to measure several energies in the complex and between chains interaction.
+Measures angles, bond, conformational, dihedrals, electrostatic , impropers, nonbond, vdW, and total energies in the complex and between chains interaction.
 
-`-E` Enables energie analysis.
+`-E` Enables energies analysis.
 
 ## Distances
 Measures distances in Ångström between a pair of atom os residues.
@@ -31,13 +31,10 @@ Optionally you can plot the analysis results to a *png* file.
 
 `-R` Enables analysis plotting.
 
-Requires [R](https://www.r-project.org/) installed.
-
 ## Installation
 This software uses third party programs and requires you to first install/obtain them.
 
 VMD must be obtained from [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD).  
-You must obtain a license for NAMD with [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?UserID=&AccessCode=&ArchiveID=1641). And a license for [rosetta](https://els2.comotion.uw.edu/product/rosetta).
 
 After this, send an email with both licenses to [pyrthur@gmail.com](pyrthur@gmail.com) to get access to the download link.
 
@@ -54,7 +51,7 @@ You can set the program to your path or simply run it with ./dynamic_analysis
 
 Basic usage: 
 ```
-dynamic_analysis -d <dcd_file.dcd> --pdb <pdb_file.pdb> --psf <psf_file.pdf> -C -S -R -E -G`
+dynamic_analysis -dcd <dcd_file.dcd> -pdb <pdb_file.pdb> -psf <psf_file.pdf> -<analysis>`
 ```
 
 ## Options
@@ -78,7 +75,7 @@ Show help message and exit.
 Prefix to name output files (default: same as `dcd`).
 
 `-o`, `--output` `OUTPUT_PATH`  
-Path to an empty output folder. Creates one if not exist.
+Path to output folder. Creates one if not exist.
 ***
 
 ` -i`, `--init` `INT`  
@@ -99,8 +96,8 @@ Index pairs to measure distances. Use this argument once for each pair. Specify 
 Type of index passed as distance pairs. Must be atom or resid (default:resid).
 ***
 
-`-C`, `--chimera`  
-Run contact map analysis with chimera (default: False).
+`-C`, `--contact`  
+Run contact count and map analysis (default: False).
 
 `-cti`, `--contact-interval` `INT`  
 Frame interval number to perform contact analysis.
@@ -110,11 +107,11 @@ Max angstroms range to look for contacts (default: 3).
 ***
 
 `-R`, `--rmsd`   
-Run rmsd and rmsf analysis with vmd (default: False).
+Run rmsd and rmsf analysis default: False).
 ***
 
 `-E`, `--energies`  
-Run energies analysis with namd and vmd (default: False).
+Run energies analysis (default: False).
 ***
 
 `-G`, `--graphs`
@@ -129,7 +126,7 @@ Path to compare output energies file to compare stats.
 ***
 
 `-cat`, `--catalytic-site` `INT` `INT` `...`  
-Pass a list of residues to display on graphs and get specific plots.
+Pass a list of residues to highlight on plots and also get specific plots.
 ***
      
 ## Disclaimer
@@ -137,9 +134,7 @@ Pass a list of residues to display on graphs and get specific plots.
 This product comes with no warranty whatsoever.  
 
 This product is not an official VMD release or has any affiliation to it.  
-This product is not an official NAMD release or has any affiliation to it.  
 
-This software includes code developed by the Theoretical Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.  
 This software includes code developed by the Theoretical and Computational Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.
  
 Third party licenses not obtained by the user are provided with its software. 

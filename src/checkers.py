@@ -14,29 +14,29 @@ def check_analysis_path(main_file):
     return os.path.dirname(application_path) + '/'
 
 
-def check_files(path, file_type):
+def check_files(path, file_type, silent=False):
     """Check if required files exist and are right"""
 
     if not os.path.exists(path):
         log('error', 'Invalid ' + file_type + ' path: ' + path)
         return False
 
+    if not silent:
+        log('info', F'Checking {file_type} file')
+
     if file_type == 'dcd':
-        log('info', 'Checking dcd file')
         if path.endswith('.dcd'):
             return True
         else:
             log('error', 'Please input a valid .dcd file')
 
     elif file_type == 'pdb':
-        log('info', 'Checking pdb file')
         if path.endswith('.pdb'):
             return True
         else:
             log('error', 'Please input a valid .dcd file')
 
     elif file_type == 'psf':
-        log('info', 'Checking psf file')
         if path.endswith('.psf'):
             return True
         else:
@@ -45,18 +45,20 @@ def check_files(path, file_type):
     return False
 
 
-def get_name(name, dcd):
+def get_name(name, dcd, silent=False):
     """Get complex name"""
 
     if not name:
         pathless_file = dcd.split('/')[-1]
         name = pathless_file.split('.dcd')[0]
 
-    log('info', 'Naming out files prefix: ' + name + '.')
+    if not silent:
+        log('info', 'Naming out files prefix: ' + name + '.')
+
     return name
 
 
-def check_output(path, name):
+def check_output(path, name, silent=False):
     """Resolve output path"""
 
     if not path:
@@ -67,52 +69,63 @@ def check_output(path, name):
     if not os.path.exists(path):
         os.makedirs(path)
     else:
-        if len(os.listdir(path)) != 0:
+        if len([i for i in os.listdir(path) if not i.startswith('.')]) > 0:
             log('error', 'Output folder not empty.')
             return False
 
-    log('info', 'Setting output folder.')
+    if not silent:
+        log('info', 'Setting output folder.')
+
     return path
 
 
-def check_vmd(vmd):
+def check_vmd(vmd, silent=False):
     """Check for vmd exe"""
 
-    log('info', 'Looking for vmd.')
+    if not silent:
+        log('info', 'Looking for VMD.')
+
+    vmd_path = os.path.abspath(vmd)
+
+    def _test_vmd(test_vmd):
+        vmd_test = subprocess.Popen(test_vmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        vmd_test.communicate(input=b'quit')
 
     try:
-        vmd_test = subprocess.Popen(vmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-        vmd_test.communicate(input=b'quit')
-        return vmd
+        _test_vmd(vmd_path)
+        return vmd_path
 
     except (PermissionError, FileNotFoundError):
-        log('error', 'Vmd not found.')
-        return False
+        try:
+            _test_vmd(vmd)
+            return vmd
+
+        except (PermissionError, FileNotFoundError):
+            log('error', 'Vmd not found.')
+            return False
 
 
-def check_bin(run_program, dir_path, program):
-    """Check bin archives for rosetta and namd"""
+def check_dependencies(energies_analysis, dir_path):
+    """Check for dependencies"""
 
-    if not run_program:
+    if not energies_analysis:
         return True
 
-    if program == "namd":
-        log('info', 'Looking for namd.')
-        path = dir_path + 'namd/namd2'
-    else:
-        return False
+    log('info', 'Checking dependencies.')
+
+    path = dir_path + 'dependencies/namdenergy/namdenergy'
 
     if os.access(path, os.X_OK):
         return True
     else:
-        log('warning', 'Trying to convert ' + program + ' to executable.')
+        log('warning', 'Trying to convert dependence to executable.')
         make_executable(path)
 
         if os.access(path, os.X_OK):
             log('info', 'Success.')
             return True
         else:
-            log('error', 'Program not responding: ' + program + '.')
+            log('error', F'A dependence in {path} did not respond.')
             return False
 
 
@@ -161,7 +174,7 @@ def check_last_frame(last_frame, dcd, dir_path):
 
     if not last_frame:
         log('info', 'Using catdcd to determine last frame.')
-        path = dir_path + 'countdcd/catdcd'
+        path = dir_path + 'dependencies/catdcd/catdcd'
 
         if os.access(path, os.X_OK):
             cmd = [path, dcd]
@@ -236,11 +249,11 @@ def create_outputs_dir(out, contact, energies, rmsd, distances):
         os.makedirs(path)
 
 
-def check_compare_files(compare_rmsd, compare_energies):
+def check_compare_files(compare_rmsd, compare_energies, silent=False):
     """Resolves compare files path"""
 
-    if compare_rmsd is not None and compare_energies is not None:
-        log('info', 'Analyzing compare path to compare.')
+    if compare_rmsd is not None and compare_energies is not None and not silent:
+        log('info', 'Analyzing path to compare files.')
 
     compare_files = dict()
 
@@ -294,7 +307,6 @@ def check_catalytic(catalytic, pdb):
 
 
 def check_dist_names(dist_pairs, dist_type, pdb):
-
     dist_names = []
 
     for pair in dist_pairs:
@@ -345,7 +357,7 @@ def get_pdb_by_idx(query, pdb, idx_type):
                     if idx_type == 'resid':
                         result = [query_number, chain + ":" + residue]
                     else:
-                        result = [query_number , chain + ":" + residue + ":" + atom]
+                        result = [query_number, chain + ":" + residue + ":" + atom]
 
                     break
 

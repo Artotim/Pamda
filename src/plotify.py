@@ -54,12 +54,12 @@ def run_ffmpeg(out, name):
                 sleep(10)
 
     except (PermissionError, FileNotFoundError):
-        log('error', 'Failed to run ffmpeg on contact plots.')
+        log('warning', 'Could not find installed ffmpeg to plot contacts.')
 
     if exists(out_path):
         remove(F'{out}contact/*-*[!_].png')
     else:
-        log('error', 'Failed to run ffmpeg on contact plots.')
+        log('warning', 'Could not run ffmpeg on contact plots.')
 
 
 def plot_distances(program_path, out, name):

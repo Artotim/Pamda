@@ -67,7 +67,7 @@ class DynamicAnalysis:
 
         # Check programs
         self._get_vmd()
-        self._check_binaries()
+        self._check_dependencies()
 
         # Get dcd data
         self._resolve_last_frame()
@@ -135,10 +135,10 @@ class DynamicAnalysis:
         if not self._vmd_exe:
             exit(1)
 
-    def _check_binaries(self):
-        """Check if binaries are working"""
+    def _check_dependencies(self):
+        """Check if dependencies are working"""
 
-        if not check_bin(self.energies_analysis, self.analysis_path, 'namd') or \
+        if not check_dependencies(self.energies_analysis, self.analysis_path) or \
                 not check_r(self._plot_graphs, self.output):
             exit(1)
 
