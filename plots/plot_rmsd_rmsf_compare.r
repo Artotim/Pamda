@@ -183,7 +183,7 @@ plot_compare_rmsf_stats <- function(chains.stat, args) {
 
 
     # Get catalytic site measures
-    if (length(catalytic != 0)) {
+    if (nrow(catalytic) != 0) {
         catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
 
         for (r in catalytic$resi) {
@@ -346,7 +346,7 @@ plot_compare_rmsf_stats <- function(chains.stat, args) {
 
 
     # Plot catalytic site rmsd
-    if (length(catalytic != 0)) {
+    if (nrow(catalytic) != 0) {
         color.list <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
         while (length(catalytic$resi) > length(color.list)) {
             color.list <- append(color.list, sample(rainbow(20), 1))

@@ -31,7 +31,7 @@ name <- args[2]
 
 # Resolve catalytic site
 catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
-catalytic <- if (dim(catalytic)[1] != 0) catalytic else data.frame(resn = NaN, resi = NaN)
+catalytic <- if (nrow(catalytic) != 0) catalytic else data.frame(resn = NaN, resi = NaN)
 
 
 # Load all rmsd
@@ -165,7 +165,7 @@ for (r in residues) {
 
 
 # Get catalytic site measures
-if (length(catalytic != 0)) {
+if (nrow(catalytic) != 0) {
     catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
 
     for (r in catalytic$resi) {
@@ -319,7 +319,7 @@ for (i in seq_along(chains.stat)) {
 
 
 # Plot catalytic site rmsd
-if (length(catalytic != 0)) {
+if (nrow(catalytic) != 0) {
     color.list <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
     while (length(catalytic$resi) > length(color.list)) {
         color.list <- append(color.list, sample(rainbow(20), 1))
