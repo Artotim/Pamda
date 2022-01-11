@@ -44,7 +44,7 @@ def run_ffmpeg(out, name):
     log_file = F"{out}logs/{name}_plot_contact.log"
     err_file = F"{out}logs/{name}_plot_contact.err"
 
-    cmd = ["ffmpeg", "-framerate", "1", "-pattern_type", "glob",  "-i", out + "contact/*-*[!_].png", "-y",
+    cmd = ["ffmpeg", "-framerate", "1", "-pattern_type", "glob", "-i", out + "contact/*step_*.png", "-y",
            "-c:v", "libx264", "-r", "30", "-pix_fmt", "yuv420p", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", out_path]
 
     try:
@@ -57,7 +57,7 @@ def run_ffmpeg(out, name):
         log('warning', 'Could not find installed ffmpeg to plot contacts.')
 
     if exists(out_path):
-        remove(F'{out}contact/*-*[!_].png')
+        remove(F'{out}contact/*step_*.png')
     else:
         log('warning', 'Could not run ffmpeg on contact plots.')
 

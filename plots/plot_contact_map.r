@@ -27,7 +27,7 @@ name <- args[2]
 
 # Resolve catalytic site
 catalytic <- data.frame(resn = str_extract(tail(args, -2), "[aA-zZ]+"), resi = str_extract(tail(args, -2), "[0-9]+"))
-catalytic <- if (length(catalytic != 0)) catalytic else data.frame(resn = NaN, resi = NaN)
+catalytic <- if (nrow(catalytic) != 0) catalytic else data.frame(resn = NaN, resi = NaN)
 
 
 # Load contact map
@@ -187,8 +187,9 @@ for (i in seq_along(contact.hits)) {
 
 
 # Plot graph
+leading_zeros <- paste0("%0",floor(log10(length(contact.hits))) + 1 ,"d")
 for (i in seq_along(contact.hits)) {
-    png.name <- paste0("_contact_map_", i - 1, "-", i, ".png")
+  png.name <- paste0("_contact_map_step_", sprintf(leading_zeros, i), ".png")
     out.name <- paste0(out.path, name, png.name)
 
     if (i * step > 1000) {
