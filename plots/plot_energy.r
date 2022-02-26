@@ -50,7 +50,7 @@ for (i in 2:ncol(energy.all)) {
 
     cat("Ploting", colname, "energy.", '\n')
     plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
-        geom_line(color = "#e6e6e6") +
+        geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#0072B2", size = 2) +
         labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
         scale_y_continuous(breaks = breaks_pretty(n = 5)) +
@@ -85,7 +85,7 @@ for (i in 2:ncol(energy.all)) {
 
     cat("Ploting", colname, "energy without outliers.", '\n')
     plot <- ggplot(energy.trim[[i]], aes_string(x = "Frame", y = colname, group = 1)) +
-        geom_line(color = "#e6e6e6") +
+        geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#0072B2", size = 2) +
         labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
         scale_y_continuous(breaks = breaks_pretty(n = 5)) +
@@ -138,7 +138,7 @@ if (file.exists(file.name)) {
 
         cat("Ploting", colname, "interaction energy.", '\n')
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(color = "#0072B2", size = 2) +
             labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
@@ -171,7 +171,7 @@ if (file.exists(file.name)) {
 
         cat("Ploting", colname, "interaction energy without outliers.", '\n')
         plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(color = "#0072B2", size = 2) +
             labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +

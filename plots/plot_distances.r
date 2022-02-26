@@ -44,7 +44,7 @@ for (i in 2:ncol(distance.all)) {
   out.name <- paste0(out.path, name, png.name)
 
   plot <- ggplot(distance.all, aes_string(x = 'frame', y = colname)) +
-    geom_line(color = "#e6e6e6") +
+    geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#009933", size = 2) +
     labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
     scale_x_continuous(labels = scales::comma_format()) +
@@ -72,7 +72,7 @@ for (i in 2:ncol(distance.all)) {
   out.name <- paste0(out.path, name, png.name)
 
   plot <- ggplot(distance.trim, aes_string(x = 'frame', y = colname)) +
-    geom_line(color = "#e6e6e6") +
+    geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#009933", size = 2) +
     labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
     scale_x_continuous(labels = scales::comma_format()) +

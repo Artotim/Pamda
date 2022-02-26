@@ -43,7 +43,7 @@ out.name <- paste0(out.path, name, "_contact_count.png")
 
 cat("Ploting contact count.\n")
 plot <- ggplot(contact.count, aes(x = frame, y = contacts, group = 1)) +
-    geom_line(color = "#e6e6e6") +
+    geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#cc0000", size = 2) +
     labs(title = "Contacts per Frame", x = "Frame", y = "Contacts") +
     scale_y_continuous(breaks = breaks_pretty(n = 10)) +

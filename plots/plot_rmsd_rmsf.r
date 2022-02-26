@@ -56,6 +56,8 @@ rmsd.trim <- list()
 for (i in 2:ncol(rmsd.all)) {
     colname <- colnames(rmsd.all)[i]
 
+    rmsd.all <- rbind(rep(0, ncol(rmsd.all)), rmsd.all)
+
     # Choose file name
     if (colname %in% chain.names) {
         chain.indx <- match(colname, chain.names)
@@ -71,7 +73,7 @@ for (i in 2:ncol(rmsd.all)) {
     # Plot rmsd graph
     cat("Ploting selection", colname, "rmsd graph.\n")
     plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
-        geom_line(color = "#e6e6e6") +
+        geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
         scale_x_continuous(labels = scales::comma_format()) +
@@ -85,7 +87,7 @@ for (i in 2:ncol(rmsd.all)) {
 
 
     # Remove outliers
-    outliers <- boxplot(rmsd.all[[colname]], plot = FALSE)$out
+    outliers <- boxplot(tail(rmsd.all, 0.9 * length(rmsd.all[[colname]])), plot = FALSE)$out
     if (length(outliers) != 0) {
         rmsd.trim[[i]] <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
     } else {
@@ -99,7 +101,7 @@ for (i in 2:ncol(rmsd.all)) {
 
     cat("Ploting selection", colname, "rmsd graph without outliers.\n")
     plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
-        geom_line(color = "#e6e6e6") +
+        geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
         scale_x_continuous(labels = scales::comma_format()) +

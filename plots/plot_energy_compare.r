@@ -56,7 +56,7 @@ plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
 
         cat("Ploting", colname, "energy with compare stats.", '\n')
         plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(data = energy.compare.all, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
@@ -94,7 +94,7 @@ plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
 
         cat("Ploting", colname, "energy without outliers with compare stats.", '\n')
         plot <- ggplot(energy.trim[[i]], aes_string(x = "Frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(data = energy.compare.trim, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +

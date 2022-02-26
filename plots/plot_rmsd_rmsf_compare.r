@@ -54,6 +54,8 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
     for (i in 2:ncol(rmsd.compare.all)) {
         colname <- colnames(rmsd.compare.all)[i]
 
+        rmsd.compare.all <- rbind(rep(0, ncol(rmsd.compare.all)), rmsd.compare.all)
+
         # Choose file name
         if (colname %in% compare.chain.names) {
             chain.indx <- match(colname, compare.chain.names)
@@ -69,7 +71,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
         # Plot rmsd graph
         cat("Ploting selection", colname, "rmsd graph with compare stats.\n")
         plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(data = rmsd.compare.all, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
@@ -87,7 +89,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
 
         # Remove outliers
-        outliers <- boxplot(rmsd.compare.all[[colname]], plot = FALSE)$out
+        outliers <- boxplot(tail(rmsd.compare.all, 0.9 * length(rmsd.compare.all[[colname]])), plot = FALSE)$out
         if (length(outliers) != 0) {
             rmsd.compare.trim[[i]] <- rmsd.compare.all[-which(rmsd.compare.all[[colname]] %in% outliers),]
         } else {
@@ -101,7 +103,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
         cat("Ploting selection", colname, "rmsd graph without outliers and with compare stats.\n")
         plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
-            geom_line(color = "#e6e6e6") +
+            geom_line(color = "#bfbfbf") +
             geom_smooth(data = rmsd.compare.trim[[i]], aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
