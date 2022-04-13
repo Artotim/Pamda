@@ -2,20 +2,24 @@
 
 
 proc frame_analysis {frame} {
-    global main_chain init last
+    global main_chain init last wrapped mol bigdcd_keepframe kfi
 
     if {$frame < $init || $frame > $last} {
-        puts "Skipping frame $frame ...
+        puts "Skipping frame $frame ..."
         return
     }
 
     puts "\nAnalysing frame $frame ..."
 
-    pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
-    pbc wrap -center com -centersel "protein" -compound residue -all
+    pbc_wrap frames_now $wrapped
+
+    if {[expr $frame % $kfi] == 0} {
+        set bigdcd_keepframe True
+        animate dup $mol
+    }
 
     measure_rmsd_rmsf $frame
-	measure_contact_interval $frame *wrap*
+	measure_contact_interval $frame *call_pbc* $wrapped
 	measure_distances $frame
 }
 
@@ -26,7 +30,7 @@ proc bigdcd_analysis_main {dcd_path} {
     mol delete all
     get_mol
 
-    prepare_rmsd
+    prepare_rmsd $dcd_path
     prepare_distances *dist_list*
     create_contact_files
 

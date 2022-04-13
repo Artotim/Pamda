@@ -2,12 +2,13 @@
 
 
 proc bigdcd { script type args } {
-    global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame bigdcd_running
+    global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame bigdcd_running bigdcd_keepframe
 
     set bigdcd_running 1
     set bigdcd_frame 0
     set bigdcd_firstframe [molinfo top get numframes]
     set bigdcd_proc $script
+    set bigdcd_keepframe False
 
     # backwards "compatibility". type flag is omitted.
     if {[file exists $type]} {
@@ -28,7 +29,7 @@ proc bigdcd { script type args } {
 
 
 proc bigdcd_callback { tracedvar mol op } {
-    global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame
+    global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame bigdcd_keepframe
     set msg {}
 
     set thisframe $vmd_frame($mol)
@@ -44,7 +45,14 @@ proc bigdcd_callback { tracedvar mol op } {
         bigdcd_done
         return
     }
-    animate delete beg $thisframe end $thisframe $mol
+
+    if {$bigdcd_keepframe == False} {
+        animate delete beg $thisframe end $thisframe $mol
+    } else {
+        animate delete beg [expr $thisframe +1] end [expr $thisframe +1] $mol
+        set bigdcd_keepframe False
+    }
+
     return $msg
 }
 

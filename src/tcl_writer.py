@@ -75,6 +75,7 @@ class TclWriter:
             file = set_argument(file, 'out_path', self.dynamic_analysis.output)
             file = set_argument(file, 'init', str(self.dynamic_analysis.init_frame))
             file = set_argument(file, 'last', str(self.dynamic_analysis.last_frame))
+            file = set_argument(file, 'wrapped', str(self.dynamic_analysis.wrapped))
 
             script.extend(file)
 
@@ -142,10 +143,10 @@ class TclWriter:
 
     def set_bigdcd_main_variables(self, file):
         if not self.dynamic_analysis.rmsd_analysis and not self.dynamic_analysis.distances_analysis:
-            file = set_argument(file, 'wrap', 'True')
+            file = set_argument(file, 'call_pbc', 'True')
             file = remove_function_call(file, 'pbc')
         else:
-            file = set_argument(file, 'wrap', 'False')
+            file = set_argument(file, 'call_pbc', 'False')
 
             if self.dynamic_analysis.distances_analysis:
                 file = set_argument(file, 'dist_list', '{' + ' '.join(self.dynamic_analysis.dist_pairs) + '}')
@@ -176,6 +177,10 @@ class TclWriter:
         set_variable(self.frame_script, 'init', self.dynamic_analysis.init_frame)
         set_variable(self.frame_script, 'last', self.dynamic_analysis.last_frame)
 
+        set_variable(self.frame_script, 'wrapped', self.dynamic_analysis.wrapped)
+
+        set_variable(self.frame_script, 'kfi', self.dynamic_analysis.keep_frame_interval)
+
         if self.dynamic_analysis.contact_analysis:
             set_variable(self.frame_script, 'cci', self.dynamic_analysis.contact_interval)
             set_variable(self.frame_script, 'cutoff', self.dynamic_analysis.contact_cutoff)
@@ -191,6 +196,8 @@ class TclWriter:
 
         set_variable(self.energies_script, 'init', self.dynamic_analysis.init_frame)
         set_variable(self.energies_script, 'last', self.dynamic_analysis.last_frame)
+
+        set_variable(self.energies_script, 'wrapped', self.dynamic_analysis.wrapped)
 
     def write_tcl_tmp_file(self, script, name):
         """Saves script as temp file"""

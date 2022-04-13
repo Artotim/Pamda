@@ -1,4 +1,4 @@
-#Contac Analysis
+#Contact Analysis
 
 
 proc create_contact_files {} {
@@ -50,14 +50,13 @@ proc get_contacts {frame} {
 }
 
 
-proc measure_contact_interval {frame wrap} {
+proc measure_contact_interval {frame call_pbc wrapped} {
     global mol init last cci out_path main_chain
 
     if {[expr $frame % $cci] == 0} {
         puts "Measuring contacts for frame $frame"
-        if {$wrap == True} {
-            pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
-            pbc wrap -center com -centersel "protein" -compound residue -all
+        if {$call_pbc == True} {
+            pbc_wrap frames_now $wrapped
         }
 
         get_contacts $frame

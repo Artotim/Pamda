@@ -43,6 +43,10 @@ class DynamicAnalysis:
 
         self.catalytic_site = kwargs['cat']
 
+        self.wrapped = kwargs['wrapped']
+
+        self.keep_frame_interval = None
+
     def main(self):
         try:
             self.main_routine()
@@ -72,6 +76,7 @@ class DynamicAnalysis:
         # Get dcd data
         self._resolve_last_frame()
         total_frames = (self.last_frame - self.init_frame)
+        self._decide_keep_frame_interval(total_frames)
         self.contact_interval = check_interval(self.contact_analysis, 'contact', self.contact_interval, total_frames)
 
         # Create tcl writer
@@ -85,7 +90,7 @@ class DynamicAnalysis:
 
         # Delete temp files and reformat output
         finish_analysis(self.contact_analysis, self.energies_analysis, self.distances_analysis, self.rmsd_analysis,
-                        self.output, self.name)
+                        self.output, self.name, self.init_frame)
 
         # Run R plots and analysis
         if self._plot_graphs:
@@ -148,6 +153,13 @@ class DynamicAnalysis:
         self.last_frame = check_last_frame(self.last_frame, self.dcd_path, self.analysis_path)
         if not self.last_frame:
             exit(1)
+
+    def _decide_keep_frame_interval(self, total_frames):
+        """Resolves interval to keep frames on memory for reference"""
+
+        if self.rmsd_analysis or self.contact_analysis or self.distances_analysis:
+            kfi = total_frames // 500
+            self.keep_frame_interval = kfi if kfi > 20 else 20
 
     def _resolve_frame_analysis(self, tcl_writer):
         """Prepare and run frame analysis"""
