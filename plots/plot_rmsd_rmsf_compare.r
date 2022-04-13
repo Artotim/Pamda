@@ -21,6 +21,14 @@ library('stringr')
 library('extrafont')
 
 
+set_frame_breaks <- function(original_func, data_range) {
+  function(x) {
+    original_result <- original_func(x)
+    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+  }
+}
+
+
 plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
     # Resolve file names
@@ -54,8 +62,6 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
     for (i in 2:ncol(rmsd.compare.all)) {
         colname <- colnames(rmsd.compare.all)[i]
 
-        rmsd.compare.all <- rbind(rep(0, ncol(rmsd.compare.all)), rmsd.compare.all)
-
         # Choose file name
         if (colname %in% compare.chain.names) {
             chain.indx <- match(colname, compare.chain.names)
@@ -75,7 +81,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
             geom_smooth(data = rmsd.compare.all, aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.all$frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -89,7 +95,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
 
 
         # Remove outliers
-        outliers <- boxplot(tail(rmsd.compare.all, 0.9 * length(rmsd.compare.all[[colname]])), plot = FALSE)$out
+        outliers <- boxplot(tail(rmsd.compare.all[[colname]], 0.9 * nrow(rmsd.compare.all)), plot = FALSE)$out
         if (length(outliers) != 0) {
             rmsd.compare.trim[[i]] <- rmsd.compare.all[-which(rmsd.compare.all[[colname]] %in% outliers),]
         } else {
@@ -107,7 +113,7 @@ plot_compare_rmsd_stats <- function(rmsd.all, rmsd.trim, args) {
             geom_smooth(data = rmsd.compare.trim[[i]], aes_(y = as.name(colname), color = "compare"), size = 1.5, se = FALSE) +
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.trim[[i]]$frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -360,7 +366,7 @@ plot_compare_rmsf_stats <- function(chains.stat, args) {
         cat("Ploting catalytic site for compare stats.\n")
         plot <- ggplot(catalytic.stats, aes(x = frame)) +
             labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -382,7 +388,7 @@ plot_compare_rmsf_stats <- function(chains.stat, args) {
         cat("Ploting catalytic site without outliers for compare stats.\n")
         plot <- ggplot(catalytic.stats, aes(x = frame)) +
             labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +

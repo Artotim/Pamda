@@ -21,6 +21,14 @@ library('stringr')
 library('extrafont')
 
 
+set_frame_breaks <- function(original_func, data_range) {
+  function(x) {
+    original_result <- original_func(x)
+    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+  }
+}
+
+
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
 out.path <- args[1]
@@ -56,8 +64,6 @@ rmsd.trim <- list()
 for (i in 2:ncol(rmsd.all)) {
     colname <- colnames(rmsd.all)[i]
 
-    rmsd.all <- rbind(rep(0, ncol(rmsd.all)), rmsd.all)
-
     # Choose file name
     if (colname %in% chain.names) {
         chain.indx <- match(colname, chain.names)
@@ -76,7 +82,7 @@ for (i in 2:ncol(rmsd.all)) {
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(labels = scales::comma_format()) +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -87,7 +93,7 @@ for (i in 2:ncol(rmsd.all)) {
 
 
     # Remove outliers
-    outliers <- boxplot(tail(rmsd.all, 0.9 * length(rmsd.all[[colname]])), plot = FALSE)$out
+    outliers <- boxplot(tail(rmsd.all[[colname]], 0.9 * nrow(rmsd.all)), plot = FALSE)$out
     if (length(outliers) != 0) {
         rmsd.trim[[i]] <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
     } else {
@@ -104,7 +110,7 @@ for (i in 2:ncol(rmsd.all)) {
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(labels = scales::comma_format()) +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.trim[[i]]$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -333,7 +339,7 @@ if (nrow(catalytic) != 0) {
     cat("Ploting catalytic site.\n")
     plot <- ggplot(catalytic.stats, aes(x = frame)) +
         labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(labels = scales::comma_format()) +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -355,7 +361,7 @@ if (nrow(catalytic) != 0) {
     cat("Ploting catalytic site without outliers.\n")
     plot <- ggplot(catalytic.stats, aes(x = frame)) +
         labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(labels = scales::comma_format()) +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +

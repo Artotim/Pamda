@@ -12,6 +12,15 @@ library('ggplot2')
 library('scales')
 library('extrafont')
 
+
+set_frame_breaks <- function(original_func, data_range) {
+  function(x) {
+    original_result <- original_func(x)
+    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+  }
+}
+
+
 plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
 
     # Resolve file names
@@ -38,7 +47,6 @@ plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
 
     # Format table
     energy.compare.all$Time = NULL
-    energy.compare.all$Frame = seq_along(energy.compare.all$Frame)
 
 
     # Define colors
@@ -61,7 +69,7 @@ plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.all$Frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -99,7 +107,7 @@ plot_compare_energy_stats <- function(energy.all, energy.trim, args) {
             geom_smooth(aes_(color = "Docked"), size = 2, se = FALSE) +
             labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
-            scale_x_continuous(labels = scales::comma_format()) +
+            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.trim[[i]]$Frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +

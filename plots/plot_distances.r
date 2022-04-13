@@ -1,6 +1,7 @@
 dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)  # create personal library
 .libPaths(Sys.getenv("R_LIBS_USER"))  # add to the path
 if (!require('ggplot2')) install.packages('ggplot2', lib = Sys.getenv("R_LIBS_USER"), repos = "https://cloud.r-project.org/"); library('ggplot2')
+if (!require('scales')) install.packages('scales', lib = Sys.getenv("R_LIBS_USER"), repos = "https://cloud.r-project.org/"); library('scales')
 if (!require('extrafont')) {
   library('extrafont')
   font_import(prompt = FALSE)
@@ -9,6 +10,15 @@ if (!require('extrafont')) {
 library('ggplot2')
 library('stringr')
 library('extrafont')
+library('scales')
+
+
+set_frame_breaks <- function(original_func, data_range) {
+  function(x) {
+    original_result <- original_func(x)
+    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+  }
+}
 
 
 # Resolve file names
@@ -47,7 +57,7 @@ for (i in 2:ncol(distance.all)) {
     geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#009933", size = 2) +
     labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
-    scale_x_continuous(labels = scales::comma_format()) +
+    scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.all$frame)), labels = scales::comma_format()) +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
     theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -75,7 +85,7 @@ for (i in 2:ncol(distance.all)) {
     geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#009933", size = 2) +
     labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
-    scale_x_continuous(labels = scales::comma_format()) +
+    scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.trim$frame)), labels = scales::comma_format()) +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
     theme(plot.title = element_text(size = 36, hjust = 0.5)) +

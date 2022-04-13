@@ -13,6 +13,14 @@ library('scales')
 library('extrafont')
 
 
+set_frame_breaks <- function(original_func, data_range) {
+  function(x) {
+    original_result <- original_func(x)
+    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+  }
+}
+
+
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
 out.path <- args[1]
@@ -47,7 +55,7 @@ plot <- ggplot(contact.count, aes(x = frame, y = contacts, group = 1)) +
     geom_smooth(color = "#cc0000", size = 2) +
     labs(title = "Contacts per Frame", x = "Frame", y = "Contacts") +
     scale_y_continuous(breaks = breaks_pretty(n = 10)) +
-    scale_x_continuous(labels = scales::comma_format()) +
+    scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(contact.count$frame)), labels = scales::comma_format()) +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
     theme(plot.title = element_text(size = 36, hjust = 0.5)) +
