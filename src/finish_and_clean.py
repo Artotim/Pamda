@@ -3,7 +3,7 @@ import os
 import re
 
 
-def finish_analysis(contact, energies, distances, rmsd, out, name):
+def finish_analysis(contact, energies, distances, rmsd, out, name, init):
     """Rename outputs and remove temps"""
 
     print()
@@ -14,7 +14,7 @@ def finish_analysis(contact, energies, distances, rmsd, out, name):
         finish_contact(out, name)
 
     if energies:
-        finish_energies(out, name)
+        finish_energies(out, name, init)
 
     if distances:
         finish_distances(out, name)
@@ -65,7 +65,7 @@ def finish_distances(out, name):
     rename(old_distances, new_distances)
 
 
-def finish_energies(out, name):
+def finish_energies(out, name, init):
     """Merge energies outputs and remove temps"""
 
     log('info', 'Adjusting energies output.')
@@ -74,6 +74,8 @@ def finish_energies(out, name):
     all_name = out + "energies/" + name + '_all_energies.csv'
     inter_name = out + "energies/" + name + '_interaction_energies.csv'
 
+    all_frame_count = inter_frame_count = init if init != 0 else 1
+
     file_list = natural_sort(os.listdir(energies_path))
 
     for file_name in file_list:
@@ -81,14 +83,14 @@ def finish_energies(out, name):
 
         if file_name.startswith("all_"):
             with open(all_name, 'a+') as all_en:
-                write_energies(file_to_write, all_en, all_name)
+                all_frame_count = write_energies(file_to_write, all_en, all_name, all_frame_count)
 
         elif file_name.startswith("interaction_"):
             with open(inter_name, 'a+') as inter_en:
-                write_energies(file_to_write, inter_en, inter_name)
+                inter_frame_count = write_energies(file_to_write, inter_en, inter_name, inter_frame_count)
 
 
-def write_energies(file_to_write, file_to_merge, file_to_merge_name):
+def write_energies(file_to_write, file_to_merge, file_to_merge_name, frame_count):
     """Write energies to new output"""
 
     with open(file_to_write, "r") as file_now:
@@ -102,10 +104,13 @@ def write_energies(file_to_write, file_to_merge, file_to_merge_name):
 
         for line in file_now:
             line = re.sub(r'\s+', ';', line.strip())
+            line = re.sub(r'^\d+;\d+', F'{frame_count};{frame_count}', line)
             file_to_merge.write('\n')
             file_to_merge.write(line)
+            frame_count += 1
 
     os.remove(file_to_write)
+    return frame_count
 
 
 def rename_models(out, name):

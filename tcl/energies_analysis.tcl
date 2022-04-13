@@ -1,16 +1,22 @@
 # Energies Analysis
 
 
-proc energies {first last interaction} {
-    global main_chain peptide psf_path dcd_path out_path namdenergy_path
+proc measure_energies {first last interaction first_analysis} {
+    global main_chain peptide psf_path dcd_path out_path namdenergy_path wrapped
 
     puts "Measuring energy from $first to $last"
 
     set mol [mol new $psf_path type psf waitfor all]
-    mol addfile $dcd_path type dcd first $first last [expr $last -1] waitfor all molid $mol
 
-    pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
-    pbc wrap -center com -centersel "protein" -compound residue -all
+    if {$first > 0 && $first_analysis == True} {
+        mol addfile $dcd_path type dcd first [expr $first - 1] last $last waitfor all molid $mol
+    } elseif {$first == 0} {
+        mol addfile $dcd_path type dcd first $first last $last waitfor all molid $mol
+    } else {
+        mol addfile $dcd_path type dcd first [expr $first + 1] last $last waitfor all molid $mol
+    }
+
+    pbc_wrap frames_all $wrapped
 
     set temp "${out_path}energies/all_temp_$last"
     set out "${out_path}energies/all_$last"
@@ -39,13 +45,19 @@ proc get_energies {} {
 
     mol delete all
 
-	set total_frames $last
-	set count $init
+	set first_analysis True
+	set analysed_count $init
 
-    while {$count < $total_frames} {
-        energies $count [expr {$count + 5000}] $interaction
+    while {$analysed_count < $last} {
+        set next_analyse [expr {$analysed_count + 5000}]
+        if {$next_analyse > $last} {
+            set next_analyse $last
+        }
+
+        measure_energies $analysed_count $next_analyse $interaction $first_analysis
         mol delete top
 
-        set count [expr {$count + 5000}]
+        set analysed_count [expr {$analysed_count + 5000}]
+        set first_analysis False
     }
 }
