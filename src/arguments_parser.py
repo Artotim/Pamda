@@ -98,4 +98,8 @@ def make_parser():
                           help='Pass a list of residues to get measures and highlight in plots. '
                                'You can specify the chain with a colon')
 
+    optional.add_argument('-w', '--wrapped', action='store_true',
+                          help='Unwraps molecule before analysis. '
+                               'Use this flag only if you wrapped your protein during dynamic.')
+
     return parser
