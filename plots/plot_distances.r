@@ -43,6 +43,7 @@ distance.all <- read.table(file.name,
 )
 
 
+# Create plots for each pair
 for (i in 2:ncol(distance.all)) {
     colname <- colnames(distance.all)[i]
     pairs <- sort(strsplit(colname, 'to')[[1]])
