@@ -88,14 +88,8 @@ def make_parser():
     optional.add_argument('-G', '--graphs', action='store_true',
                           help='Plot analysis graphs')
 
-    optional.add_argument('--compare-rmsd', metavar='', dest='compare_rmsd', nargs=2,
-                          help='Path to another rmsd analysis output files to compare stats in plot '
-                               '(must include all and residue csv)')
-    optional.add_argument('--compare-energies', metavar='', dest='compare_energies',
-                          help='Path to another energies analysis output file to compare stats in plot')
-
-    optional.add_argument('-cat', '--catalytic-site', type=idx_validator, metavar='', dest='cat', default=[], nargs='+',
-                          help='Pass a list of residues to get measures and highlight in plots. '
+    optional.add_argument('-hgl', '--highlight', type=idx_validator, metavar='', dest='hgl', default=[], nargs='+',
+                          help='List of residues to generate separated measures and highlight in plots. '
                                'You can specify the chain with a colon')
 
     optional.add_argument('-w', '--wrapped', action='store_true',

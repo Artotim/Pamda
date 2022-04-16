@@ -25,9 +25,12 @@ out.path <- paste0(out.path, "contact/")
 name <- args[2]
 
 
-# Resolve catalytic site
-catalytic <- data.frame(resn = str_extract(tail(args, -2), "[aA-zZ]+"), resi = str_extract(tail(args, -2), "[0-9]+"))
-catalytic <- if (nrow(catalytic) != 0) catalytic else data.frame(resn = NaN, resi = NaN)
+# Resolve highlight residues
+highlight <- data.frame(
+    resn = str_replace_all(str_extract(tail(args, -2), ":[aA-zZ]+:"), ":", ""),
+    resi = str_extract(tail(args, -2), "[0-9]+"),
+    chain = str_extract(tail(args, -2), "^[aA-zZ]+"))
+highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, resi = NaN, chain = NaN)
 
 
 # Load contact map
@@ -53,6 +56,7 @@ contact.residues <- contacts.map[c("frame", protein, peptide)]
 protein.first <- min(contact.residues[protein])
 protein.last <- max(contact.residues[protein])
 protein.length <- length(protein.first:protein.last)
+protein_chain <- str_replace(protein, "resid_", "")
 
 peptide.first <- min(contact.residues[peptide])
 peptide.last <- max(contact.residues[peptide])
@@ -92,15 +96,20 @@ contact.all.hits <- contact.all.hits %>%
 all.subset <- contact.all.hits[!(contact.all.hits$count == 0),]
 
 
-# Create data for catalytic labels
-for (i in catalytic$resi) {
+# Create data for highlight labels
+highlight <- highlight[which(highlight$chain == protein_chain),]
+
+for (i in highlight$resi) {
     if (!(i %in% all.subset$protein) && !is.na(i)) {
         append.resi <- data.frame(protein = i, peptide = min(peptide.first), count = 0)
         all.subset <- rbind(all.subset, append.resi)
     }
 }
-catalytic$label <- with(catalytic, paste0(resi, '\n', resn))
-catalytic$label <- gsub("\nNA", "", catalytic$label)
+
+highlight$label <- with(highlight, paste0(resi, '\n', resn))
+highlight$label <- gsub("\nNA", "", highlight$label)
+
+all.subset$protein <- ordered(all.subset$protein, levels = str_sort(unique(all.subset$protein), numeric = TRUE))
 
 
 # Plot all graph
@@ -109,11 +118,11 @@ out.name <- paste0(out.path, name, "_contact_map_all.png")
 cat("Ploting contact map.\n")
 plot <- ggplot(all.subset, aes(peptide, protein)) +
     geom_raster(aes(fill = count)) +
-    geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-    geom_text(data = catalytic, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
+    geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
+    geom_text(data = highlight, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
     geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
     scale_fill_gradient(low = "white", high = "red") +
-    scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
+    scale_y_discrete(breaks = unique(str_sort(all.subset$protein, numeric = TRUE))[c(FALSE, TRUE)]) +
     scale_x_discrete(breaks = peptide.first:peptide.last, labels = str_split(peptide.chain, " ")) +
     labs(title = "Contact per residue", x = "Peptide residues", y = "Protein residues") +
     coord_cartesian(clip = 'off') +
@@ -129,24 +138,16 @@ ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limit
 
 
 # Resolve step number
-frames <- max(contact.residues$frame)
-if (frames > 50000) {
-    step <- 10000
-} else if (frames > 10000) {
-    step <- 5000
-} else if (frames > 1000) {
-    step <- 500
-} else {
-    step <- 100
-}
-iter <- frames / step
+fisrt_frame <- min(contact.residues$frame)
+frames <- max(contact.residues$frame) - fisrt_frame
+step <- ceiling(frames / 10)
 
 
 # Create matrix for residue contact every step
 contact.hits <- list()
-for (i in 1:iter) {
+for (i in 1:10) {
     cat("Preparing step", i, '\n')
-    value <- i * step
+    value <- i * step + fisrt_frame
 
     if (i != 1) {
         step.contact <- subset(contact.residues, frame > (value - step) & frame <= value)
@@ -187,41 +188,44 @@ for (i in seq_along(contact.hits)) {
 
 
 # Plot graph
-leading_zeros <- paste0("%0",floor(log10(length(contact.hits))) + 1 ,"d")
 for (i in seq_along(contact.hits)) {
-  png.name <- paste0("_contact_map_step_", sprintf(leading_zeros, i), ".png")
+    png.name <- paste0("_contact_map_step_", sprintf("%02d", i), ".png")
     out.name <- paste0(out.path, name, png.name)
 
-    if (i * step > 1000) {
-        plot.title <- paste0("Contact per residue ", (i - 1) * step / 1000, "-", i * step / 1000, 'k')
+    first_step <- ((i - 1) * step) + fisrt_frame
+    last_step <- i * step + fisrt_frame
+
+    if (last_step >= 1000) {
+        plot.title <- paste0("Contact per residue\nFrames: ", round(first_step / 1000, 1), "-", round(last_step / 1000, 1), 'k')
     } else {
-        plot.title <- paste0("Contact per residue ", (i - 1) * step, "-", i * step)
+        plot.title <- paste0("Contact per residue\nFrames: ", first_step, "-", last_step)
     }
 
     step.subset <- contact.hits[[i]][contact.hits[[i]]$protein %in% all.subset$protein,]
-    step.subset$count[step.subset$count == 0] = NA
+    step.subset$count[step.subset$count == 0] <- NA
 
-    for (res in catalytic$resi) {
-        if (!(res %in% all.subset$protein) && !is.na(res)) {
+    for (res in highlight$resi) {
+        if (!(res %in% step.subset$protein) && !is.na(res)) {
             append.resi <- data.frame(protein = res, peptide = min(peptide.first), count = 0)
             step.subset <- rbind(step.subset, append.resi)
         }
     }
+    step.subset$protein <- ordered(step.subset$protein, levels = str_sort(unique(step.subset$protein), numeric = TRUE))
 
     cat("Ploting contact map for step", i, '\n')
     plot <- ggplot(step.subset, aes(peptide, protein)) +
         geom_raster(aes(fill = count)) +
-        geom_hline(yintercept = catalytic$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-        geom_text(data = catalytic, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
+        geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
+        geom_text(data = highlight, aes_string(x = peptide.length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
         geom_vline(xintercept = seq(1.5, peptide.length - 0.5, 1), lwd = 0.5, colour = "black") +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
-        scale_y_discrete(breaks = unique(all.subset$protein)[c(FALSE, TRUE)]) +
+        scale_y_discrete(breaks = unique(str_sort(all.subset$protein, numeric = TRUE))[c(FALSE, TRUE)]) +
         scale_x_discrete(breaks = peptide.first:peptide.last, labels = str_split(peptide.chain, " ")) +
         labs(title = plot.title, x = "Peptide residues", y = "Protein residues") +
         coord_cartesian(clip = 'off') +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(plot.title = element_text(size = 28, hjust = 0.5)) +
         theme(axis.title = element_text(size = 24)) +
         theme(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 12)) +
         theme(panel.grid.major.x = element_blank()) +

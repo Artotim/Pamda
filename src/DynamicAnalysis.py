@@ -38,10 +38,7 @@ class DynamicAnalysis:
 
         self._plot_graphs = kwargs['graphs']
 
-        self._compare_rmsd = kwargs['compare_rmsd']
-        self._compare_energies = kwargs['compare_energies']
-
-        self.catalytic_site = kwargs['cat']
+        self.highlight_residues = kwargs['hgl']
 
         self.wrapped = kwargs['wrapped']
 
@@ -60,9 +57,8 @@ class DynamicAnalysis:
         self._enforce_analysis_requested()
         self._enforce_valid_files()
         self.name = get_name(self.name, self.dcd_path)
-        self.catalytic_site = check_catalytic(self.catalytic_site, self.pdb_path)
+        self.highlight_residues = check_highlight(self.highlight_residues, self.pdb_path)
         self._get_dist_names()
-        compare_analysis = self._ensure_compare_files()
 
         # Check outputs
         self._enforce_output()
@@ -94,7 +90,7 @@ class DynamicAnalysis:
 
         # Run R plots and analysis
         if self._plot_graphs:
-            create_plots(self, compare_analysis)
+            create_plots(self)
         print()
 
         log('info', 'Finished.')
@@ -123,15 +119,6 @@ class DynamicAnalysis:
         self.output = check_output(self.output, self.name)
         if not self.output:
             exit(1)
-
-    def _ensure_compare_files(self):
-        """Ensure compare files are valid, if requested"""
-
-        compare_analysis = check_compare_files(self._compare_rmsd, self._compare_energies)
-        if not compare_analysis:
-            exit(1)
-        else:
-            return compare_analysis
 
     def _get_vmd(self):
         """Find vmd executable"""
