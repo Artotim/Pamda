@@ -14,10 +14,10 @@ library('extrafont')
 
 
 set_frame_breaks <- function(original_func, data_range) {
-  function(x) {
-    original_result <- original_func(x)
-    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
-  }
+    function(x) {
+        original_result <- original_func(x)
+        original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+    }
 }
 
 

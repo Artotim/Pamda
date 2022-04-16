@@ -14,10 +14,10 @@ library('extrafont')
 
 
 set_frame_breaks <- function(original_func, data_range) {
-  function(x) {
-    original_result <- original_func(x)
-    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
-  }
+    function(x) {
+        original_result <- original_func(x)
+        original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+    }
 }
 
 
@@ -43,7 +43,7 @@ energy.all <- read.table(file.name,
 
 
 # Format table
-energy.all$Time = NULL
+energy.all$Time <- NULL
 
 
 # Iterate over each column
@@ -107,11 +107,6 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Plot with compare stats
-if (args[3] != "False") {
-    source(args[3])
-    do.call(plot_compare_energy_stats, list(energy.all, energy.trim, args))
-}
 rm(energy.all)
 rm(energy.trim)
 
@@ -130,7 +125,7 @@ if (file.exists(file.name)) {
 
 
     # Format table
-    energy.interaction$Time = NULL
+    energy.interaction$Time <- NULL
 
 
     # Iterate over each column
