@@ -33,7 +33,7 @@ proc create_distances_list {distances_list_in} {
                 atomselect $mol "resid $item and protein"]]
         }
     } else {
-        foreach item $distances_list {
+        foreach item $distances_list_in {
             lappend distances_list [uplevel "#0" [list \
                 atomselect $mol "index $item"]]
         }
@@ -57,7 +57,7 @@ proc measure_distances {frame} {
         }
     } else {
         foreach item $distances_list {
-            lappend distances_objs $item
+            lappend distances_objs [$item get index]
         }
     }
 

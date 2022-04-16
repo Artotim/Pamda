@@ -3,9 +3,9 @@ dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)  # create personal libra
 if (!require('ggplot2')) install.packages('ggplot2', lib = Sys.getenv("R_LIBS_USER"), repos = "https://cloud.r-project.org/"); library('ggplot2')
 if (!require('scales')) install.packages('scales', lib = Sys.getenv("R_LIBS_USER"), repos = "https://cloud.r-project.org/"); library('scales')
 if (!require('extrafont')) {
-  library('extrafont')
-  font_import(prompt = FALSE)
-  loadfonts()
+    library('extrafont')
+    font_import(prompt = FALSE)
+    loadfonts()
 }
 library('ggplot2')
 library('stringr')
@@ -14,10 +14,10 @@ library('scales')
 
 
 set_frame_breaks <- function(original_func, data_range) {
-  function(x) {
-    original_result <- original_func(x)
-    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
-  }
+    function(x) {
+        original_result <- original_func(x)
+        original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+    }
 }
 
 
@@ -32,66 +32,66 @@ name <- args[2]
 # Load distance file
 file.name <- paste0(out.path, name, "_all_distances.csv")
 if (!file.exists(file.name)) {
-  stop("Missing file ", file.name)
+    stop("Missing file ", file.name)
 }
 
 
 distance.all <- read.table(file.name,
-                       header = TRUE,
-                       sep = ";",
-                       dec = ".",
+                           header = TRUE,
+                           sep = ";",
+                           dec = ".",
 )
 
 for (i in 2:ncol(distance.all)) {
-  colname <- colnames(distance.all)[i]
-  pairs <- sort(strsplit(colname, 'to')[[1]])
-  pair1 <- str_replace(pairs[1], '\\.', ':')
-  pair2 <- str_replace(pairs[2], '\\.', ':')
+    colname <- colnames(distance.all)[i]
+    pairs <- sort(strsplit(colname, 'to')[[1]])
+    pair1_name <- str_replace_all(gsub("(\\..*?)\\.", "\\1", pairs[1]), '\\.', ':')
+    pair2_name <- str_replace_all(gsub("(\\..*?)\\.", "\\1", pairs[2]), '\\.', ':')
 
-  cat("Ploting distance between", pair1, "and", paste0(pair2, ".\n"))
+    cat("Ploting distance between", pair1_name, "and", paste0(pair2_name, ".\n"))
 
-  png.name <- paste0("_pair", i-1 , "_distance.png")
-  out.name <- paste0(out.path, name, png.name)
+    png.name <- paste0("_pair", i - 1, "_distance.png")
+    out.name <- paste0(out.path, name, png.name)
 
-  plot <- ggplot(distance.all, aes_string(x = 'frame', y = colname)) +
-    geom_line(color = "#bfbfbf") +
-    geom_smooth(color = "#009933", size = 2) +
-    labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
-    scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.all$frame)), labels = scales::comma_format()) +
-    theme_minimal() +
-    theme(text = element_text(family = "Times New Roman")) +
-    theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-    theme(axis.title = element_text(size = 24)) +
-    theme(axis.text = element_text(size = 22))
+    plot <- ggplot(distance.all, aes_string(x = 'frame', y = colname)) +
+        geom_line(color = "#bfbfbf") +
+        geom_smooth(color = "#009933", size = 2) +
+        labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance in Å") +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.all$frame)), labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 22))
 
-  ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 
 
-  # Remove outliers
-  outliers <- boxplot(distance.all[[colname]], plot = FALSE)$out
-  if (length(outliers) != 0) {
-    distance.trim <- distance.all[-which(distance.all[[colname]] %in% outliers),]
-  } else {
-    distance.trim <- distance.all
-  }
-  distance.trim[1,]$frame <- min(distance.all$frame)
+    # Remove outliers
+    outliers <- boxplot(distance.all[[colname]], plot = FALSE)$out
+    if (length(outliers) != 0) {
+        distance.trim <- distance.all[-which(distance.all[[colname]] %in% outliers),]
+    } else {
+        distance.trim <- distance.all
+    }
+    distance.trim[1,]$frame <- min(distance.all$frame)
 
-  cat("Ploting distance between", pair1, "and", pair2, "without outliers.\n")
+    cat("Ploting distance between", pair1_name, "and", pair2_name, "without outliers.\n")
 
-  png.name <- paste0("_pair", i-1 , "_distance_trim.png")
-  out.name <- paste0(out.path, name, png.name)
+    png.name <- paste0("_pair", i - 1, "_distance_trim.png")
+    out.name <- paste0(out.path, name, png.name)
 
-  plot <- ggplot(distance.trim, aes_string(x = 'frame', y = colname)) +
-    geom_line(color = "#bfbfbf") +
-    geom_smooth(color = "#009933", size = 2) +
-    labs(title = paste("Distance\n",pair1, "to", pair2), x = "Frame", y = "Distance in Å") +
-    scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.trim$frame)), labels = scales::comma_format()) +
-    theme_minimal() +
-    theme(text = element_text(family = "Times New Roman")) +
-    theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-    theme(axis.title = element_text(size = 24)) +
-    theme(axis.text = element_text(size = 22))
+    plot <- ggplot(distance.trim, aes_string(x = 'frame', y = colname)) +
+        geom_line(color = "#bfbfbf") +
+        geom_smooth(color = "#009933", size = 2) +
+        labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance in Å") +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.trim$frame)), labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 22))
 
-  ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
 cat("Done.\n")
