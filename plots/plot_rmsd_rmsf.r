@@ -22,10 +22,10 @@ library('extrafont')
 
 
 set_frame_breaks <- function(original_func, data_range) {
-  function(x) {
-    original_result <- original_func(x)
-    original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
-  }
+    function(x) {
+        original_result <- original_func(x)
+        original_result <- c(data_range[1], head(tail(original_result, -2), -2), data_range[2])
+    }
 }
 
 
@@ -37,9 +37,12 @@ out.path <- paste0(out.path, "rmsd/")
 name <- args[2]
 
 
-# Resolve catalytic site
-catalytic <- data.frame(resn = str_extract(tail(args, -5), "[aA-zZ]+"), resi = str_extract(tail(args, -5), "[0-9]+"))
-catalytic <- if (nrow(catalytic) != 0) catalytic else data.frame(resn = NaN, resi = NaN)
+# Resolve highlight residues
+highlight <- data.frame(
+    resn = str_replace_all(str_extract(tail(args, -2), ":[aA-zZ]+:"), ":", ""),
+    resi = str_extract(tail(args, -2), "[0-9]+"),
+    chain = str_extract(tail(args, -2), "^[aA-zZ]+"))
+highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, resi = NaN, chain = NaN)
 
 
 # Load all rmsd
@@ -55,12 +58,8 @@ rmsd.all <- read.table(file.name,
 )
 
 
-# Get chains
+# Loop through table to genrate plots
 chain.names <- tail(colnames(rmsd.all), -2)
-
-
-# Loop through table
-rmsd.trim <- list()
 for (i in 2:ncol(rmsd.all)) {
     colname <- colnames(rmsd.all)[i]
 
@@ -95,22 +94,22 @@ for (i in 2:ncol(rmsd.all)) {
     # Remove outliers
     outliers <- boxplot(tail(rmsd.all[[colname]], 0.9 * nrow(rmsd.all)), plot = FALSE)$out
     if (length(outliers) != 0) {
-        rmsd.trim[[i]] <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
+        rmsd.trim <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
     } else {
-        rmsd.trim[[i]] <- rmsd.all
+        rmsd.trim <- rmsd.all
     }
-    rmsd.trim[[i]][1,]$frame <- min(rmsd.all$frame)
+    rmsd.trim[1,]$frame <- min(rmsd.all$frame)
 
 
     # Plot rmsd graph without outliers
     out.name <- str_replace(out.name, '.png', '_trim.png')
 
     cat("Ploting selection", colname, "rmsd graph without outliers.\n")
-    plot <- ggplot(rmsd.trim[[i]], aes_string(x = "frame", y = colname, group = 1)) +
+    plot <- ggplot(rmsd.trim, aes_string(x = "frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.trim[[i]]$frame)), labels = scales::comma_format()) +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.trim$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -121,13 +120,6 @@ for (i in 2:ncol(rmsd.all)) {
 }
 
 
-# Plot with compare stats
-if (args[3] != "False") {
-    source(args[3])
-    do.call(plot_compare_rmsd_stats, list(rmsd.all, rmsd.trim, args))
-}
-
-
 # Finnish
 cat("Done rmsd.\n")
 rm(rmsd.all)
@@ -135,12 +127,12 @@ rm(rmsd.trim)
 
 
 # Load residue rmsd
-file.name <- paste0(out.path, name, "_residue_rmsd.csv")
+file.name <- paste0(out.path, name, "_all_rmsf.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
 
-rmsd.table <- read.table(file.name,
+rmsf.table <- read.table(file.name,
                          header = TRUE,
                          sep = ";",
                          dec = ".",
@@ -148,117 +140,23 @@ rmsd.table <- read.table(file.name,
 
 
 # Format table
-rmsd.table$X <- NULL
-residues <- str_replace_all(names(rmsd.table), "X", "")
-residues <- as.numeric(residues)
-rows <- nrow(rmsd.table)
+rmsf.table[c('residue_chain', 'residue_number')] <- str_split_fixed(rmsf.table$residue, ':', 2)
+rmsf.table$residue_number <- as.numeric(rmsf.table$residue_number)
+rmsf.table.divided <- split(rmsf.table, rmsf.table$residue_chain)
 
 
-# Create stats table
-rmsd.stats.type <- c("total", "first", "middle", "last")
-rmsd.stats <- setNames(data.table(matrix(ncol = 5, nrow = length(residues))), c("residue", rmsd.stats.type))
-rmsd.stats$residue <- residues
-
-
-# Take measures for stat table
-stat_i <- 1
-for (r in residues) {
-    table_i <- paste0("X", r)
-    rmsd.stats$total[stat_i] = sd(rmsd.table[, table_i])
-    rmsd.stats$first[stat_i] = sd(rmsd.table[, table_i][1:(rows / 3)])
-    rmsd.stats$middle[stat_i] = sd(rmsd.table[, table_i][((rows / 3)):(2 * rows / 3)])
-    rmsd.stats$last[stat_i] = sd(rmsd.table[, table_i][((2 * rows / 3)):rows])
-    stat_i <- stat_i + 1
-}
-
-
-# Get catalytic site measures
-if (nrow(catalytic) != 0) {
-    catalytic.stats <- data.frame(frame = seq_along(rmsd.table[[1]]))
-
-    for (r in catalytic$resi) {
-        catalytic.residue <- paste0("X", r)
-        if (catalytic.residue %in% colnames(rmsd.table)) {
-            catalytic.stats[r] <- rmsd.table[, catalytic.residue]
-        }
-    }
-}
-
-rm(rmsd.table)
-
-
-# Detect chain splits
-distance <- 1
-chains.sep <- NULL
-residue_ind <- 0
-while (length(chains.sep) != length(chain.names) - 1) {
-    residue_ind <- 0
-    previous <- residues[1]
-    chains.sep <- NULL
-
-    for (now in (residues)) {
-        if (abs(previous - now) > distance || previous > now) {
-            chains.sep <- c(chains.sep, residue_ind)
-            residue_ind <- 0
-        } else {
-            residue_ind <- residue_ind + 1
-        }
-        previous <- now
-    }
-    distance <- distance + 1
-
-    if (distance == 1001) {
-        warning("Could not split rediues in chains. Using single chain!")
-        break
-    }
-}
-
-
-# Split residues acccording to chains
-chain.number <- 1
-residue.chains <- NULL
-for (i in chains.sep) {
-    residue.chains <- c(residue.chains, rep(chain.number, i))
-    chain.number <- chain.number + 1
-}
-residue.chains <- c(residue.chains, rep(chain.number, (residue_ind + 1)))
-
-
-# Split stat in chains
-chains.stat <- if (chain.number > 1) split(rmsd.stats, residue.chains) else list(rmsd.stats)
-
-
-# Create names for plot
-axis.names <- c("Residue", "Total", "Initial", "Middle", "Final")
-
-
-# Create data for catalytic labels
-catalytic.data <- list()
-VectorIntersect <- function(v, z) {
-    unlist(lapply(unique(v[v %in% z]), function(x) rep(x, min(sum(v == x), sum(z == x)))))
-}
-is.contained <- function(v, z) { length(VectorIntersect(v, z)) == length(v) }
-
-for (i in seq_along(chains.stat)) {
-    if (is.contained(catalytic$resi, chains.stat[[i]]$residue)) {
-        catalytic.data[[i]] <- chains.stat[[i]][chains.stat[[i]]$residue %in% catalytic$resi]
-    } else {
-        catalytic.data[[i]] <- chains.stat[[i]][NA,]
-    }
-
-    catalytic.data[[i]]$label <- with(catalytic.data[[i]], paste0(residue, '\n', catalytic$resn[match(catalytic.data[[i]]$residue, catalytic$resi)]))
-    catalytic.data[[i]]$label <- gsub("\nNA", "", catalytic.data[[i]]$label)
-}
+# Generate names and colors for plots
+axis.names <- c("Residue", "", "Init", "Middle", "Final")
+colors.steps <- c("rmsf_init" = 'green', "rmsf_middle" = 'blue', "rmsf_final" = 'red')
 
 
 # For each chain
-rmsf.chain.sd <- list()
-colors.steps <- c("first" = 'green', "middle" = 'blue', "last" = 'red')
-for (i in seq_along(chains.stat)) {
+for (chain in names(rmsf.table.divided)) {
 
+    # Get range for steps
     steps.min_max <- c(+Inf, -Inf)
-    for (col_step in c("first", "middle", "last")) {
-        range <- range(chains.stat[[i]][[col_step]])
+    for (col_step in names(colors.steps)) {
+        range <- range(rmsf.table.divided[[chain]][[col_step]])
         if (range[2] > steps.min_max[2]) {
             steps.min_max[2] <- range[2]
         }
@@ -267,25 +165,42 @@ for (i in seq_along(chains.stat)) {
         }
     }
 
-    # For each stat
-    for (j in 2:ncol(chains.stat[[i]])) {
-        colname <- colnames(chains.stat[[i]])[j]
 
-        min_y_value <- min(chains.stat[[i]][[colname]])
-        max_y_value <- max(chains.stat[[i]][[colname]])
+    # Create data for highlight labels
+    highlight.data <- data.frame(matrix(ncol = 8, nrow = 0, dimnames = list(NULL, c(colnames(rmsf.table), "label"))))
+    for (row in seq_len(nrow(highlight))) {
+        residue <- paste0(highlight[row,]$chain, ":", highlight[row,]$resi)
+
+        if (residue %in% rmsf.table.divided[[chain]]$residue) {
+            data <- rmsf.table[rmsf.table$residue == residue,]
+            data$label <- paste0(highlight[row,]$resi, '\n', highlight[row,]$resn)
+
+            highlight.data <- rbind(highlight.data, data)
+            highlight.data$label <- gsub("\nNA", "", highlight.data$label)
+        }
+    }
+    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 8, nrow = 1)
+
+
+    # For each stat
+    for (i in 2:ncol(subset(rmsf.table.divided[[chain]], select = -c(residue_chain, residue_number)))) {
+        colname <- colnames(rmsf.table)[i]
+
+        min_y_value <- min(rmsf.table.divided[[chain]][[colname]])
+        max_y_value <- max(rmsf.table.divided[[chain]][[colname]])
 
         # Plot stat graphs
-        png.name <- paste0("_rmsf_chain_", i, "_", colname, ".png")
+        png.name <- paste0("_rmsf_chain_", chain, "_", colname, ".png")
         out.name <- paste0(out.path, name, png.name)
 
-        cat("Ploting", colname, "for chain", i, '\n')
-        plot <- ggplot(chains.stat[[i]], aes_string(x = "residue", y = colname, group = 1)) +
+        cat("Ploting", colname, "for chain", chain, '\n')
+        plot <- ggplot(rmsf.table.divided[[chain]], aes_string(x = "residue_number", y = colname, group = 1)) +
             geom_line(color = if (is.na(colors.steps[colname][[1]])) "#000033" else colors.steps[colname][[1]], size = 1) +
-            geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-            geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
-            scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
-            scale_y_continuous(limits = if (j >= 4) steps.min_max else NULL) +
-            labs(title = paste("Chain", i, "RMSF", axis.names[j]), x = "Residue", y = axis.names[j]) +
+            geom_text(data = highlight.data, aes_string(x = "residue_number", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#800000", size = 5, lineheight = .7) +
+            geom_segment(data = highlight.data, aes_string(x = "residue_number", xend = "residue_number", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#800000", size = 1, linetype = "dashed") +
+            scale_x_continuous(breaks = if (length(rmsf.table.divided[[chain]]$residue) < 5) unique(rmsf.table.divided[[chain]]$residue) else breaks_pretty()) +
+            scale_y_continuous(limits = if (i >= 3) steps.min_max else NULL) +
+            labs(title = paste("Chain", chain, "RMSF", axis.names[i]), x = "Residue", y = paste("RMSF", axis.names[i])) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
             theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -296,101 +211,132 @@ for (i in seq_along(chains.stat)) {
 
 
     # Resolve SD steps
-    rmsf.chain.sd[[i]] <- select(chains.stat[[i]], residue, first, middle, last)
-    rmsf.chain.sd[[i]] <- gather(rmsf.chain.sd[[i]], sd, value, -residue)
-    rmsf.chain.sd[[i]]$sd <- factor(rmsf.chain.sd[[i]]$sd, levels = c("first", "middle", "last"))
+    rmsf.chain.steps <- select(rmsf.table.divided[[chain]], residue_number, rmsf_init, rmsf_middle, rmsf_final)
+    rmsf.chain.steps <- gather(rmsf.chain.steps, sd, value, -residue_number)
+    rmsf.chain.steps$sd <- factor(rmsf.chain.steps$sd, levels = c("rmsf_init", "rmsf_middle", "rmsf_final"))
 
 
     # Plot SD steps graphs
-    png.name <- paste0("_rmsf_chain_", i, "_steps.png")
+    png.name <- paste0("_rmsf_chain_", chain, "_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
-    min_y_value <- min(rmsf.chain.sd[[i]]$value)
-    max_y_value <- max(rmsf.chain.sd[[i]]$value)
+    min_y_value <- min(rmsf.chain.steps$value)
+    max_y_value <- max(rmsf.chain.steps$value)
 
-    cat("Ploting standard deviation for chain", i, '\n')
-    plot <- ggplot(rmsf.chain.sd[[i]], aes_string(x = "residue", y = "value")) +
+    cat("Ploting rmsf steps for chain", chain, '\n')
+    plot <- ggplot(rmsf.chain.steps, aes_string(x = "residue_number", y = "value")) +
         geom_line(aes_string(color = 'sd', group = "sd")) +
-        geom_text(data = catalytic.data[[i]], aes_string(x = "residue", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#b30000", size = 5, lineheight = .7) +
-        geom_segment(data = catalytic.data[[i]], aes_string(x = "residue", xend = "residue", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#b30000", size = 0.9, linetype = "dashed") +
-        scale_x_continuous(breaks = if (length(chains.stat[[i]]$residue) < 5) unique(chains.stat[[i]]$residue) else breaks_pretty()) +
-        labs(title = paste("Chain", i, "RMSF Steps"), x = "Residue", y = "Standard Deviation") +
+        geom_text(data = highlight.data, aes_string(x = "residue_number", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#800000", size = 5, lineheight = .7) +
+        geom_segment(data = highlight.data, aes_string(x = "residue_number", xend = "residue_number", y = min_y_value - max_y_value * 0.01, yend = colname), color = "#800000", size = 1, linetype = "dashed") +
+        scale_x_continuous(breaks = if (length(rmsf.chain.steps$residue) < 5) unique(rmsf.chain.steps$residue) else breaks_pretty()) +
+        labs(title = paste("Chain", chain, "RMSF Steps"), x = "Residue", y = "Standard Deviation") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
         theme(axis.title = element_text(size = 24), axis.text = element_text(size = 20)) +
         theme(legend.text = element_text(size = 20), legend.position = "top", legend.title = element_blank()) +
-        scale_color_manual(labels = c("Initial", "Middle", "Final"), values = c("green", "blue", "red"))
+        scale_color_manual(labels = c("Init", "Middle", "Final"), values = c("green", "blue", "red"))
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
 
 
-# Plot catalytic site rmsd
-if (nrow(catalytic) != 0) {
-    color.list <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
-    while (length(catalytic$resi) > length(color.list)) {
-        color.list <- append(color.list, sample(rainbow(20), 1))
-    }
-    colors <- setNames(color.list, gsub("\nNA", "", paste0(catalytic$resi, '\n', catalytic$resn)))
-
-    out.name <- paste0(out.path, name, "_catalytic_rmsd.png")
-
-    cat("Ploting catalytic site.\n")
-    plot <- ggplot(catalytic.stats, aes(x = frame)) +
-        labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 20)) +
-        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm")) +
-        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
-        scale_color_manual("Catalytic residues", values = colors)
+# Finnish
+cat("Done rmsf.\n")
+rm(rmsf.table)
+rm(rmsf.table.divided)
 
 
-    for (resi in catalytic$resi) {
-        plot <- plot + geom_smooth(aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
+# Plot highlight data rmsd
+if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
+
+    # Load residue rmsd
+    file.name <- paste0(out.path, name, "_residue_rmsd.csv")
+    if (!file.exists(file.name)) {
+        stop("Missing file ", file.name)
     }
 
-    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-
-    out.name <- paste0(out.path, name, "_catalytic_rmsd_trim.png")
-
-    cat("Ploting catalytic site without outliers.\n")
-    plot <- ggplot(catalytic.stats, aes(x = frame)) +
-        labs(title = 'Catalytic site RMSD', x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(catalytic.stats$frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 20)) +
-        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm")) +
-        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
-        scale_color_manual("Catalytic residues", values = colors)
+    residue.table <- read.table(file.name,
+                                header = TRUE,
+                                sep = ";",
+                                dec = ".",
+    )
 
 
-    for (resi in catalytic$resi) {
-        # Remove outliers
-        outliers <- boxplot(catalytic.stats[[resi]], plot = FALSE)$out
-        if (length(outliers) != 0) {
-            catalytic.stats.trim <- catalytic.stats[-which(catalytic.stats[[resi]] %in% outliers),]
+    # Use only residues in table
+    highlight.present <- highlight[which(paste0(highlight$chain, ".", highlight$resi) %in% colnames(residue.table)),]
+
+
+    # Create colors list
+    color.list <- c()
+    colors <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
+    while (length(highlight.present$resi) > length(color.list)) {
+        if (length(color.list) >= length(colors)) {
+            color.list <- append(color.list, sample(rainbow(20), 1))
         } else {
-            catalytic.stats.trim <- catalytic.stats
+            color.list <- append(color.list, colors[length(color.list) + 1])
         }
-        catalytic.stats.trim[1,]$frame <- min(catalytic.stats$frame)
+    }
+    color.list <- setNames(color.list, gsub("\nNA", "", paste0(highlight.present$resi, '\n', highlight.present$resn)))
 
-        plot <- plot + geom_smooth(data = catalytic.stats.trim, aes_(y = as.name(resi), color = gsub("\nNA", "", paste0(resi, '\n', catalytic$resn[match(resi, catalytic$resi)]))), size = 1, se = FALSE)
+    # Plot SD steps graphs
+    out.name <- paste0(out.path, name, "_highlight_rmsd.png")
+
+    cat("Ploting highlight residues rmsd separated.\n")
+    plot <- ggplot(residue.table, aes(x = frame)) +
+        labs(title = 'Residues RMSD', x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(residue.table$frame)), labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20)) +
+        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
+        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        scale_color_manual("Residues", values = color.list)
+
+    for (row in seq_len(nrow(highlight.present))) {
+        residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
+        plot <- plot + geom_smooth(aes_(y = as.name(residue),
+                                        color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))
+        ), size = 1, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-}
+
+    out.name <- paste0(out.path, name, "_highlight_rmsd_trim.png")
+
+    cat("Ploting highlight residues rmsd separated without outliers.\n")
+    plot <- ggplot(residue.table, aes(x = frame)) +
+        labs(title = 'Residues RMSD', x = "Frame", y = "RMSD Value") +
+        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(residue.table$frame)), labels = scales::comma_format()) +
+        theme_minimal() +
+        theme(text = element_text(family = "Times New Roman")) +
+        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+        theme(axis.title = element_text(size = 24)) +
+        theme(axis.text = element_text(size = 20)) +
+        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
+        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        scale_color_manual("Residues", values = color.list)
 
 
-# Plot with compare stats
-if (args[3] != "False") {
-    do.call(plot_compare_rmsf_stats, list(chains.stat, args))
+    for (row in seq_len(nrow(highlight.present))) {
+        residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
+
+        # Remove outliers
+        outliers <- boxplot(residue.table[[residue]], plot = FALSE)$out
+        if (length(outliers) != 0) {
+            residue.table.trim <- residue.table[-which(residue.table[[residue]] %in% outliers),]
+        } else {
+            residue.table.trim <- residue.table
+        }
+        residue.table.trim[1,]$frame <- min(residue.table$frame)
+
+        plot <- plot + geom_smooth(data = residue.table.trim, aes_(y = as.name(residue),
+                                                                   color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))
+        ), size = 1, se = FALSE)
+    }
+
+    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
 cat("Done.\n\n")

@@ -21,14 +21,14 @@ def finish_analysis(contact, energies, distances, rmsd, out, name, init):
 
     rename_models(out, name)
 
-    log('info', 'Excluding temp.')
+    log('info', 'Excluding temporary files.')
     remove(F'{out}temp*analysis.tcl')
 
     print()
 
 
 def finish_rmsd(out, name):
-    """Rename rmsd outputs and remove temps"""
+    """Rename RMSD outputs and remove temps"""
 
     log('info', 'Adjusting rmsd output.')
 
@@ -36,9 +36,36 @@ def finish_rmsd(out, name):
     new_rmsd = out + 'rmsd/' + name + '_all_rmsd.csv'
     rename(old_rmsd, new_rmsd)
 
-    old_rmsf = out + 'rmsd/residue_rmsd.csv'
-    new_rmsf = out + 'rmsd/' + name + '_residue_rmsd.csv'
-    rename(old_rmsf, new_rmsf)
+    old_residue = out + 'rmsd/residue_rmsd.csv'
+    new_residue = out + 'rmsd/' + name + '_residue_rmsd.csv'
+    rename(old_residue, new_residue)
+
+    create_rmsf_out(out, name, new_residue)
+
+
+def create_rmsf_out(out, name, new_residue):
+    """Calculate RMSF for each residue"""
+
+    from pandas import read_csv
+
+    residue_rmsd = read_csv(new_residue, sep=";")
+    third1 = round(len(residue_rmsd) / 3)
+    third2 = round((len(residue_rmsd) / 3) * 2)
+    third3 = round((len(residue_rmsd) / 3) * 3)
+
+    rmsf_out = out + 'rmsd/' + name + '_all_rmsf.csv'
+
+    with open(rmsf_out, 'w') as rmsf_file:
+        rmsf_file.write("residue;rmsf;rmsf_init;rmsf_middle;rmsf_final\n")
+
+        for column in residue_rmsd.columns[1:]:
+            sd_total = str(residue_rmsd[column].std())
+            sd_third1 = str(residue_rmsd[column][:third1].std())
+            sd_third2 = str(residue_rmsd[column][third1: third2].std())
+            sd_third3 = str(residue_rmsd[column][third2:third3].std())
+
+            residue_rmsf = [column, sd_total, sd_third1, sd_third2, sd_third3]
+            rmsf_file.write(";".join(residue_rmsf) + '\n')
 
 
 def finish_contact(out, name):

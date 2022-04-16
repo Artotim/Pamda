@@ -8,15 +8,15 @@ proc retrieve_mol_info {} {
 
     set residue_list [[atomselect $mol "name CA"] get resid]
 	set all_atoms [uplevel "#0" [list atomselect $mol all]]
-    set atoms_reference [uplevel "#0" [list atomselect $mol "name CA" frame 1]]
-    set atoms_selected [uplevel "#0" [list atomselect $mol "name CA"]]
+    set atoms_reference [uplevel "#0" [list atomselect $mol "backbone" frame 1]]
+    set atoms_selected [uplevel "#0" [list atomselect $mol "backbone"]]
 
-	set main_chain_reference [uplevel "#0" [list atomselect $mol "name CA and chain $main_chain" frame 1]]
-	set main_chain_atom [uplevel "#0" [list atomselect $mol "name CA and chain $main_chain"]]
+	set main_chain_reference [uplevel "#0" [list atomselect $mol "backbone and chain $main_chain" frame 1]]
+	set main_chain_atom [uplevel "#0" [list atomselect $mol "backbone and chain $main_chain"]]
 
 	if {$interaction == true} {
-		set peptide_reference [uplevel "#0" [list atomselect $mol "name CA and chain $peptide" frame 1]]
-		set peptide_atom [uplevel "#0" [list atomselect $mol "name CA and chain $peptide"]]
+		set peptide_reference [uplevel "#0" [list atomselect $mol "backbone and chain $peptide" frame 1]]
+		set peptide_atom [uplevel "#0" [list atomselect $mol "backbone and chain $peptide"]]
 	}
 
 }
@@ -29,18 +29,18 @@ proc create_res_dic {} {
 
     foreach residue $residue_list {
         dict set reference_dict $residue [uplevel "#0" [list \
-		    atomselect $mol "name CA and resid $residue and noh" frame 1]]
+		    atomselect $mol "backbone and resid $residue" frame 1]]
     }
 
     foreach residue $residue_list {
         dict set compare_dict $residue [uplevel "#0" [list \
-		    atomselect $mol "name CA and resid $residue and noh"]]
+		    atomselect $mol "backbone and resid $residue"]]
     }
 }
 
 
-proc create_rmsf_out_file {} {
-    global residue_list rmsf_out rmsd_out out_path interaction main_chain peptide
+proc create_rmsd_out_files {} {
+    global residue_list residue_out rmsd_out out_path interaction main_chain peptide mol
 
 	puts "Creating out files"
 
@@ -51,18 +51,30 @@ proc create_rmsf_out_file {} {
 	}
     puts $rmsd_out ""
 
-    set rmsf_out [open ${out_path}rmsd/residue_rmsd.csv w]
-    foreach residue $residue_list {
-        puts -nonewline $rmsf_out "$residue;"
+    set residue_out [open ${out_path}rmsd/residue_rmsd.csv w]
+    puts -nonewline $residue_out "frame"
+    
+    set chain_list [[atomselect $mol "name CA"] get chain]
+    set residues_length [llength $residue_list]
+    set idx 0
+
+    while {$idx < $residues_length} {
+        set resid [lindex $residue_list $idx]
+        set chain [lindex $chain_list $idx]
+        
+        puts -nonewline $residue_out ";$chain:$resid"
+        
+        set idx [expr $idx +1]
     }
-    puts $rmsf_out ""
+
+    puts $residue_out ""
 }
 
 
 proc close_rmsd_files {} {
-    global rmsf_out rmsd_out
+    global residue_out rmsd_out
 
-    close $rmsf_out
+    close $residue_out
     close $rmsd_out
 }
 
@@ -72,7 +84,7 @@ proc measure_rmsd_rmsf {frame} {
 
     $all_atoms move [measure fit $atoms_selected $atoms_reference]
 	measure_rmsd $frame
-	measure_rmsf
+	measure_residue $frame
 }
 
 
@@ -94,14 +106,17 @@ proc measure_rmsd {frame} {
 }
 
 
-proc measure_rmsf {} {
-	global residue_list compare_dict reference_dict rmsf_out
+proc measure_residue {frame} {
+	global residue_list compare_dict reference_dict residue_out
+
+    puts -nonewline $residue_out "$frame"
 
     foreach residue $residue_list {
         set resid_rmsd [measure rmsd [dict get $compare_dict $residue] [dict get $reference_dict $residue]]
-        puts -nonewline $rmsf_out "[format "%.4f" $resid_rmsd];"
+        puts -nonewline $residue_out ";[format "%.4f" $resid_rmsd]"
     }
-    puts $rmsf_out ""
+
+    puts $residue_out ""
 }
 
 
@@ -118,5 +133,5 @@ proc prepare_rmsd {dcd_path} {
 
     retrieve_mol_info
     create_res_dic
-    create_rmsf_out_file
+    create_rmsd_out_files
 }
