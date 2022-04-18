@@ -126,7 +126,7 @@ rm(rmsd.all)
 rm(rmsd.trim)
 
 
-# Load residue rmsd
+# Load rmsf
 file.name <- paste0(out.path, name, "_all_rmsf.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
@@ -298,8 +298,8 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
     for (row in seq_len(nrow(highlight.present))) {
         residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
         plot <- plot + geom_smooth(aes_(y = as.name(residue),
-                                        color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))
-        ), size = 1, se = FALSE)
+                                        color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
+                                   size = 1, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
@@ -332,9 +332,10 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         }
         residue.table.trim[1,]$frame <- min(residue.table$frame)
 
-        plot <- plot + geom_smooth(data = residue.table.trim, aes_(y = as.name(residue),
-                                                                   color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))
-        ), size = 1, se = FALSE)
+        plot <- plot + geom_smooth(data = residue.table.trim,
+                                   aes_(y = as.name(residue),
+                                        color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
+                                   size = 1, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
