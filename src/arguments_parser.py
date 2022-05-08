@@ -20,9 +20,9 @@ class SubcommandHelpFormatter(argparse.RawDescriptionHelpFormatter):
     def _format_args(self, action, default_metavar):
         parts = super(argparse.RawDescriptionHelpFormatter, self)._format_args(action, default_metavar)
         if action.nargs == '+':
-            parts = '[resi...]'
+            parts = '[resid list]'
         elif action.nargs == 2:
-            parts = '[all residue]'
+            parts = '[index pair]'
         return parts
 
 
