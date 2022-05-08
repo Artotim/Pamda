@@ -1,12 +1,30 @@
 # Energies Analysis
 
 
+proc load_initial_frames {dcd_path first mol} {
+    puts "Loading initial frames"
+
+    set loaded_frames 0
+    set next_frame 1
+    set load_interval [expr $first / 500 + 1]
+
+    while {$next_frame < $first} {
+        mol addfile $dcd_path type dcd first $next_frame last $next_frame waitfor all molid $mol
+        set next_frame [expr $next_frame + $load_interval]
+        set loaded_frames [expr $loaded_frames + 1]
+    }
+
+    return $loaded_frames
+}
+
+
 proc measure_energies {first last interaction first_analysis} {
     global main_chain peptide psf_path dcd_path out_path namdenergy_path wrapped
 
     puts "Measuring energy from $first to $last"
 
     set mol [mol new $psf_path type psf waitfor all]
+    set loaded_frames [load_initial_frames $dcd_path $first $mol]
 
     if {$first > 0 && $first_analysis == True} {
         mol addfile $dcd_path type dcd first [expr $first - 1] last $last waitfor all molid $mol
@@ -17,6 +35,11 @@ proc measure_energies {first last interaction first_analysis} {
     }
 
     pbc_wrap frames_all $wrapped
+
+    puts "Deleting initial frames"
+    if {$loaded_frames > 0 } {
+        animate delete beg 0 end [expr $loaded_frames - 1] skip 0 $mol
+    }
 
     set temp "${out_path}energies/all_temp_$last"
     set out "${out_path}energies/all_$last"
