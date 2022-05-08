@@ -65,12 +65,11 @@ for (i in 2:ncol(rmsd.all)) {
 
     # Choose file name
     if (colname %in% chain.names) {
-        chain.indx <- match(colname, chain.names)
-        png.name <- paste0("_rmsd_frame_chain_", chain.indx, ".png")
+        png.name <- paste0("_chain_", colname, "_rmsd", ".png")
         out.name <- paste0(out.path, name, png.name)
         plot.title <- paste0("RMSD chain ", colname)
     } else {
-        out.name <- paste0(out.path, name, "_rmsd_frame_all.png")
+        out.name <- paste0(out.path, name, "_all_rmsd.png")
         plot.title <- "RMSD All"
     }
 
@@ -190,7 +189,7 @@ for (chain in names(rmsf.table.divided)) {
         max_y_value <- max(rmsf.table.divided[[chain]][[colname]])
 
         # Plot stat graphs
-        png.name <- paste0("_rmsf_chain_", chain, "_", colname, ".png")
+        png.name <- paste0("_chain_", chain, "_", colname, ".png")
         out.name <- paste0(out.path, name, png.name)
 
         cat("Ploting", colname, "for chain", chain, '\n')
@@ -217,7 +216,7 @@ for (chain in names(rmsf.table.divided)) {
 
 
     # Plot SD steps graphs
-    png.name <- paste0("_rmsf_chain_", chain, "_steps.png")
+    png.name <- paste0("_chain_", chain, "_rmsf_steps.png")
     out.name <- paste0(out.path, name, png.name)
 
     min_y_value <- min(rmsf.chain.steps$value)
