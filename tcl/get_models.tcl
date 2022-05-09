@@ -1,7 +1,7 @@
 # Get Models
 
 
-proc pbc_wrap {frames wrapped {pbc_join "False"}} {
+proc pbc_wrap {frames wrapped} {
     global main_chain
 
     if {$frames == "frames_now"} {
@@ -14,9 +14,6 @@ proc pbc_wrap {frames wrapped {pbc_join "False"}} {
     } else {
         if {$wrapped == True} {
             pbc unwrap -all -sel "protein"
-            if {$pbc_join == True} {
-                pbc join res -ref "protein" -sel "protein" -all
-            }
         } else {
             pbc wrap -center com -centersel "protein and chain $main_chain" -compound residue -all
             pbc wrap -center com -centersel "protein" -compound residue -all
@@ -25,26 +22,29 @@ proc pbc_wrap {frames wrapped {pbc_join "False"}} {
 }
 
 
-proc get_models {psf_path pdb_path dcd_path out_path init last wrapped} {
+proc get_models {psf_path dcd_path out_path init last} {
 	package require pbctools
 
 	puts "Creating models"
 
     set mol [mol new $psf_path type psf waitfor all]
-    mol addfile $pdb_path type pdb waitfor all
 
 	mol addfile $dcd_path type dcd first $init last $init waitfor all molid $mol
-	pbc_wrap frames_all $wrapped True
+	pbc_wrap frames_all False
 	set writePdb [ atomselect $mol all frame last ]
 	set fileName "${out_path}models/first_model.pdb"
 	$writePdb writepdb $fileName
 
+    animate delete beg 0 end 1 skip 0 $mol
+
 	mol addfile $dcd_path type dcd first [expr $last -1] last [expr $last -1] waitfor all molid $mol
-	pbc_wrap frames_all $wrapped True
+	pbc_wrap frames_all False
 	set writePdb [ atomselect $mol all frame last ]
 	set fileName "${out_path}models/last_model.pdb"
 	$writePdb writepdb $fileName
+
+	animate delete beg 0 end 1 skip 0 $mol
 }
 
 
-get_models *psf_path* *pdb_path* *dcd_path* *out_path* *init* *last* *wrapped*
+get_models *psf_path* *dcd_path* *out_path* *init* *last*

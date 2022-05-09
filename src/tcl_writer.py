@@ -70,12 +70,10 @@ class TclWriter:
         with open(F'{self.dynamic_analysis.analysis_path}tcl/get_models.tcl', 'r') as get_chain:
             file = get_chain.readlines()
             file = set_argument(file, 'psf_path', self.dynamic_analysis.psf_path)
-            file = set_argument(file, 'pdb_path', self.dynamic_analysis.pdb_path)
             file = set_argument(file, 'dcd_path', self.dynamic_analysis.dcd_path)
             file = set_argument(file, 'out_path', self.dynamic_analysis.output)
             file = set_argument(file, 'init', str(self.dynamic_analysis.init_frame))
             file = set_argument(file, 'last', str(self.dynamic_analysis.last_frame))
-            file = set_argument(file, 'wrapped', str(self.dynamic_analysis.wrapped))
 
             script.extend(file)
 
