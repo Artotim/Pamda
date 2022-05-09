@@ -268,7 +268,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
 
     # Create colors list
     color.list <- c()
-    colors <- c('#ff0000', '#cccc00', '#660066', '#4d2600', '#00b300', '#003366', '#003300', '#990033')
+    colors <- c('#ff0000', '#cccc00', '#804000', '#660066', '#0059b3', '#00b300', '#003300', '#990033')
     while (length(highlight.present$resi) > length(color.list)) {
         if (length(color.list) >= length(colors)) {
             color.list <- append(color.list, sample(rainbow(20), 1))
@@ -290,15 +290,15 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
         theme(axis.title = element_text(size = 24)) +
         theme(axis.text = element_text(size = 20)) +
-        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
-        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        theme(legend.text = element_text(size = 17), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
+        theme(legend.title = element_text(size = 17, family = "Times New Roman")) +
         scale_color_manual("Residues", values = color.list)
 
     for (row in seq_len(nrow(highlight.present))) {
         residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
         plot <- plot + geom_smooth(aes_(y = as.name(residue),
                                         color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
-                                   size = 1, se = FALSE)
+                                   size = 1.3, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
@@ -314,8 +314,8 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
         theme(axis.title = element_text(size = 24)) +
         theme(axis.text = element_text(size = 20)) +
-        theme(legend.text = element_text(size = 15), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
-        theme(legend.title = element_text(size = 15, family = "Times New Roman")) +
+        theme(legend.text = element_text(size = 17), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
+        theme(legend.title = element_text(size = 17, family = "Times New Roman")) +
         scale_color_manual("Residues", values = color.list)
 
 
@@ -334,7 +334,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         plot <- plot + geom_smooth(data = residue.table.trim,
                                    aes_(y = as.name(residue),
                                         color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
-                                   size = 1, se = FALSE)
+                                   size = 1.3, se = FALSE)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
