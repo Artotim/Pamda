@@ -306,6 +306,7 @@ def get_pdb_by_idx(query, pdb, idx_type):
 
     query_info = query.split(':')
     query_number = query_info[0]
+    result = False
 
     with open(pdb, 'r') as pdb_file:
         for line in pdb_file:
