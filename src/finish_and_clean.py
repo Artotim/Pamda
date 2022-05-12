@@ -145,12 +145,12 @@ def rename_models(out, name):
 
     log('info', 'Renaming first and last models outputs.')
 
-    old_first = out + 'models/first_model.pdb'
-    new_first = out + 'models/' + name + '_first_model.pdb'
+    old_first = out + 'models/first_frame.pdb'
+    new_first = out + 'models/' + name + '_first_frame.pdb'
     rename(old_first, new_first)
 
-    old_last = out + 'models/last_model.pdb'
-    new_last = out + 'models/' + name + '_last_model.pdb'
+    old_last = out + 'models/last_frame.pdb'
+    new_last = out + 'models/' + name + '_last_frame.pdb'
     rename(old_last, new_last)
 
 
