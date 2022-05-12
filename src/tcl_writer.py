@@ -74,6 +74,7 @@ class TclWriter:
             file = set_argument(file, 'out_path', self.dynamic_analysis.output)
             file = set_argument(file, 'init', str(self.dynamic_analysis.init_frame))
             file = set_argument(file, 'last', str(self.dynamic_analysis.last_frame))
+            file = set_argument(file, 'wrapped', str(self.dynamic_analysis.wrapped))
 
             script.extend(file)
 

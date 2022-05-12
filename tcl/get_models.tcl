@@ -47,4 +47,4 @@ proc get_models {psf_path dcd_path out_path init last} {
 }
 
 
-get_models *psf_path* *dcd_path* *out_path* *init* *last*
+get_models *psf_path* *dcd_path* *out_path* *init* *last* *wrapped*

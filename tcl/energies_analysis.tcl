@@ -1,23 +1,6 @@
 # Energies Analysis
 
 
-proc load_initial_frames {dcd_path first mol} {
-    puts "Loading initial frames"
-
-    set loaded_frames 0
-    set next_frame 1
-    set load_interval [expr $first / 500 + 1]
-
-    while {$next_frame < $first} {
-        mol addfile $dcd_path type dcd first $next_frame last $next_frame waitfor all molid $mol
-        set next_frame [expr $next_frame + $load_interval]
-        set loaded_frames [expr $loaded_frames + 1]
-    }
-
-    return $loaded_frames
-}
-
-
 proc measure_energies {first last interaction first_analysis} {
     global main_chain peptide psf_path dcd_path out_path namdenergy_path wrapped
 
