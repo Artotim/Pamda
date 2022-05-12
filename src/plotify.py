@@ -117,7 +117,7 @@ def run_plot(cmd, plot, out, name):
             process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f)
 
             while process.poll() is None:
-                sleep(60)
+                sleep(30)
             else:
                 return
 

@@ -44,7 +44,7 @@ def run_vmd(vmd, vmd_file, log_file, err_file):
         with open(log_file, 'w') as log_f, open(err_file, "w") as err_f:
             process = subprocess.Popen(cmd, stdout=log_f, stderr=err_f, preexec_fn=os.setsid)
             while process.poll() is None:
-                sleep(60)
+                sleep(30)
 
     except (PermissionError, FileNotFoundError):
         log('error', 'VMD exe not found! Please specify path with -e.')
