@@ -49,7 +49,7 @@ proc get_models {psf_path dcd_path out_path init last wrapped} {
     set loaded_frames [load_initial_frames $dcd_path $init $mol]
 
 	mol addfile $dcd_path type dcd first $init last $init waitfor all molid $mol
-	pbc_wrap frames_now $wrapped
+	pbc_wrap frames_all $wrapped
 	set writePdb [ atomselect $mol all frame last ]
 	set fileName "${out_path}models/first_frame.pdb"
 	$writePdb writepdb $fileName
@@ -58,7 +58,7 @@ proc get_models {psf_path dcd_path out_path init last wrapped} {
     set loaded_frames [load_initial_frames $dcd_path $last $mol]
 
 	mol addfile $dcd_path type dcd first [expr $last -1] last [expr $last -1] waitfor all molid $mol
-	pbc_wrap frames_now $wrapped
+	pbc_wrap frames_all $wrapped
 	set writePdb [ atomselect $mol all frame last ]
 	set fileName "${out_path}models/last_frame.pdb"
 	$writePdb writepdb $fileName
