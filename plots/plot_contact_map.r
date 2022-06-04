@@ -30,7 +30,6 @@ highlight <- data.frame(
     resn = str_replace_all(str_extract(tail(args, -2), ":[aA-zZ]+:"), ":", ""),
     resi = str_extract(tail(args, -2), "[0-9]+"),
     chain = str_extract(tail(args, -2), "^[aA-zZ]+"))
-highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, resi = NaN, chain = NaN)
 
 
 # Load contact map
@@ -98,6 +97,7 @@ all.subset <- contact.all.hits[!(contact.all.hits$count == 0),]
 
 # Create data for highlight labels
 highlight <- highlight[which(highlight$chain == protein_chain),]
+highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, resi = NaN, chain = NaN)
 
 for (i in highlight$resi) {
     if (!(i %in% all.subset$protein) && !is.na(i)) {
