@@ -1,6 +1,7 @@
-from src.color_log import log, docker_logger
 import os
 import re
+
+from src.color_log import docker_logger, log
 
 
 def finish_analysis(contact, energies, distances, rmsd, out, name, init):

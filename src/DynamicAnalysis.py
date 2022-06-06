@@ -1,5 +1,8 @@
-from src.checkers import *
-from src.color_log import log, docker_logger
+import os
+
+from src.color_log import docker_logger, log
+from src.checkers import check_analysis_path, check_files, get_name, check_output, check_vmd, check_dependencies, \
+    check_r, check_last_frame, check_interval, create_outputs_dir, check_highlight, check_dist_names
 from src.tcl_writer import TclWriter
 from src.run_analysis import start_frame_analysis, start_energies_analysis
 from src.finish_and_clean import finish_analysis

@@ -1,6 +1,7 @@
 import os
-from src.color_log import log
 import subprocess
+
+from src.color_log import log
 
 
 def check_analysis_path(main_file):

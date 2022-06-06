@@ -1,6 +1,7 @@
-from src.color_log import log, docker_logger
-from time import sleep
 import subprocess
+from time import sleep
+
+from src.color_log import docker_logger, log
 
 
 def create_plots(boss_class):

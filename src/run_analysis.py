@@ -1,8 +1,9 @@
-from src.color_log import log, docker_logger
 import os
 import subprocess
-from time import sleep
 from signal import SIGTERM
+from time import sleep
+
+from src.color_log import log, docker_logger
 
 
 def start_frame_analysis(out, name, vmd):
