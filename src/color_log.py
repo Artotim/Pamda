@@ -54,3 +54,25 @@ def log(log_type, message):
             logger.error(line)
         elif log_type == 'critical':
             logger.critical(line)
+
+
+class DockerLogger:
+    def __init__(self):
+        self.docker_path = None
+        self.user_path = None
+
+    def __call__(self, *args, **kwargs):
+        log_type = kwargs['log_type']
+        message = kwargs['message']
+
+        if self.docker_path:
+            message = message.replace(self.user_path, self.docker_path)
+
+        log(log_type, message)
+
+    def set_paths(self, user_path, docker_path):
+        self.docker_path = docker_path
+        self.user_path = user_path or docker_path
+
+
+docker_logger = DockerLogger()

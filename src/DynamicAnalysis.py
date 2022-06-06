@@ -1,4 +1,5 @@
 from src.checkers import *
+from src.color_log import log, docker_logger
 from src.tcl_writer import TclWriter
 from src.run_analysis import start_frame_analysis, start_energies_analysis
 from src.finish_and_clean import finish_analysis
@@ -44,6 +45,8 @@ class DynamicAnalysis:
 
         self.keep_frame_interval = None
 
+        self._log_path = kwargs['log_path']
+
     def main(self):
         try:
             self.main_routine()
@@ -64,6 +67,9 @@ class DynamicAnalysis:
         self._enforce_output()
         create_outputs_dir(self.output, self.contact_analysis, self.energies_analysis,
                            self.rmsd_analysis, self.distances_analysis)
+
+        # Set docker logger path
+        docker_logger.set_paths(self.output, self._log_path)
 
         # Check programs
         self._get_vmd()

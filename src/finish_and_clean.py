@@ -1,4 +1,4 @@
-from src.color_log import log
+from src.color_log import log, docker_logger
 import os
 import re
 
@@ -160,7 +160,7 @@ def rename(old, new):
     try:
         os.rename(old, new)
     except FileNotFoundError:
-        log('warning', 'Missing file ' + old + '.')
+        docker_logger(log_type='warning', message='Missing file ' + old + '.')
 
 
 def remove(pattern):
@@ -172,9 +172,9 @@ def remove(pattern):
             try:
                 os.remove(file)
             except FileNotFoundError:
-                log('warning', 'Missing file ' + file + '.')
+                docker_logger(log_type='warning', message='Missing file ' + file + '.')
     else:
-        log('warning', 'Could not find files with pattern: ' + pattern + '.')
+        docker_logger(log_type='warning', message='Could not find files with pattern: ' + pattern + ' to delete.')
 
 
 def natural_sort(file_list):

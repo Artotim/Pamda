@@ -1,6 +1,6 @@
-from src.color_log import log
-import subprocess
+from src.color_log import log, docker_logger
 from time import sleep
+import subprocess
 
 
 def create_plots(boss_class):
@@ -110,7 +110,7 @@ def run_plot(cmd, plot, out, name):
 
     log_file = F"{out}logs/{name}_plot_{plot_name}.log"
     err_file = F"{out}logs/{name}_plot_{plot_name}.err"
-    log('info', 'Logging plot info to ' + log_file + '.')
+    docker_logger(log_type='info', message='Logging plot info to ' + log_file + '.')
 
     try:
         with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:

@@ -22,27 +22,13 @@ def check_files(path, file_type, silent=False):
         return False
 
     if not silent:
-        log('info', F'Checking {file_type} file')
+        log('info', F'Checking {file_type} file.')
 
-    if file_type == 'dcd':
-        if path.endswith('.dcd'):
-            return True
-        else:
-            log('error', 'Please input a valid .dcd file')
-
-    elif file_type == 'pdb':
-        if path.endswith('.pdb'):
-            return True
-        else:
-            log('error', 'Please input a valid .dcd file')
-
-    elif file_type == 'psf':
-        if path.endswith('.psf'):
-            return True
-        else:
-            log('error', 'Please input a valid .dcd file')
-
-    return False
+    if path.endswith(file_type):
+        return True
+    else:
+        log('error', F'Input "{path}" is not a valid {file_type} file.')
+        return False
 
 
 def get_name(name, dcd, silent=False):

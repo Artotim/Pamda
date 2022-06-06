@@ -96,4 +96,6 @@ def make_parser():
                           help='Unwraps molecule before analysis. '
                                'Use this flag only if you wrapped your protein during dynamic.')
 
+    optional.add_argument('--log_path', help=argparse.SUPPRESS)
+
     return parser

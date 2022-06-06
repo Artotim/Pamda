@@ -1,8 +1,8 @@
+from src.color_log import log, docker_logger
 import os
 import subprocess
 from time import sleep
 from signal import SIGTERM
-from src.color_log import log
 
 
 def start_frame_analysis(out, name, vmd):
@@ -14,7 +14,7 @@ def start_frame_analysis(out, name, vmd):
     err_file = out + 'logs/' + name + '_frame.err'
     vmd_file = out + 'temp_frame_analysis.tcl'
 
-    log('info', 'Logging frame analysis info to ' + log_file + '.')
+    docker_logger(log_type='info', message='Logging frame analysis info to ' + log_file + '.')
 
     run_vmd(vmd, vmd_file, log_file, err_file)
 
@@ -30,7 +30,7 @@ def start_energies_analysis(out, name, vmd):
     err_file = out + 'logs/' + name + '_energies.err'
     vmd_file = out + 'temp_energies_analysis.tcl'
 
-    log('info', 'Logging energies analysis info to ' + log_file + '.')
+    docker_logger(log_type='info', message='Logging energies analysis info to ' + log_file + '.')
 
     run_vmd(vmd, vmd_file, log_file, err_file)
 
