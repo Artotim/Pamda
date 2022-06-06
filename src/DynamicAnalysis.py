@@ -1,4 +1,4 @@
-import os
+from os.path import abspath
 
 from src.color_log import docker_logger, log
 from src.checkers import check_analysis_path, check_files, get_name, check_output, check_vmd, check_dependencies, \
@@ -13,9 +13,9 @@ class DynamicAnalysis:
     """Analysis a protein-peptide namd dynamics"""
 
     def __init__(self, **kwargs):
-        self.dcd_path = os.path.abspath(kwargs['dcd'])
-        self.pdb_path = os.path.abspath(kwargs['pdb'])
-        self.psf_path = os.path.abspath(kwargs['psf'])
+        self.dcd_path = abspath(kwargs['dcd'])
+        self.pdb_path = abspath(kwargs['pdb'])
+        self.psf_path = abspath(kwargs['psf'])
 
         self.analysis_path = check_analysis_path(__file__)
 
