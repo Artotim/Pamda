@@ -57,6 +57,8 @@ def log(log_type, message):
 
 
 class DockerLogger:
+    """Custom logger to  display correct path from inside docker container"""
+
     def __init__(self):
         self.docker_path = None
         self.user_path = None
