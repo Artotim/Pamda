@@ -43,7 +43,8 @@ proc get_contacts {frame} {
 		set resnameA [$atomA get resname]
 		set resnameB [$atomB get resname]
 
-		puts $contact_map_out "$frame;$atom_chainA;$nameA;$residA;$resnameA;$atom_chainB;$nameB;$residB;$resnameB"	}
+		puts $contact_map_out "$frame;$atom_chainA;$nameA;$residA;$resnameA;$atom_chainB;$nameB;$residB;$resnameB"
+	}
 
 	set count [llength [lindex $contacts 0]]
 	puts $contact_count_out "$frame;$count"

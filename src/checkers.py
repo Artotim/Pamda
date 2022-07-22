@@ -260,6 +260,8 @@ def check_highlight(highlight, pdb):
 
 
 def check_dist_names(dist_pairs, dist_type, pdb):
+    """Resolves names for plotting distances pairs"""
+
     dist_names = []
 
     for pair in dist_pairs:
@@ -292,7 +294,7 @@ def get_pdb_by_idx(query, pdb, idx_type):
     column = 1 if idx_type == 'atom' else 5
 
     query_info = query.split(':')
-    query_number = query_info[0]
+    query_number = query_info[0] if idx_type == 'resid' else str(int(query_info[0]) + 1)
     result = False
 
     with open(pdb, 'r') as pdb_file:
@@ -302,16 +304,16 @@ def get_pdb_by_idx(query, pdb, idx_type):
                 if line_elements[column] == query_number:
                     chain = line_elements[4]
                     resname = line_elements[3].replace('HSD', 'HIS')
+                    resid = line_elements[5]
                     atom = line_elements[2]
 
                     if len(query_info) > 1:
                         if chain != query_info[1]:
                             continue
 
-                    if idx_type == 'resid':
-                        result = [query_number, chain + ":" + resname + ":" + str(query_number)]
-                    else:
-                        result = [query_number, chain + ":" + resname + ":" + str(query_number) + ":" + atom]
+                    result = [query_number, chain + ":" + resname + ":" + resid]
+                    if idx_type == 'atom':
+                        result[1] += ":" + atom
 
                     break
 
