@@ -44,12 +44,12 @@ def finish_rmsd(out, name):
     create_rmsf_out(out, name, new_residue)
 
 
-def create_rmsf_out(out, name, new_residue):
+def create_rmsf_out(out, name, residue_rmsd_file):
     """Calculate RMSF for each residue"""
 
     from pandas import read_csv
 
-    residue_rmsd = read_csv(new_residue, sep=";")
+    residue_rmsd = read_csv(residue_rmsd_file, sep=";")
     third1 = round(len(residue_rmsd) / 3)
     third2 = round((len(residue_rmsd) / 3) * 2)
     third3 = round((len(residue_rmsd) / 3) * 3)

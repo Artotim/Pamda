@@ -198,13 +198,13 @@ class TclWriter:
 
         set_variable(self.energies_script, 'wrapped', self.dynamic_analysis.wrapped)
 
-    def write_tcl_tmp_file(self, script, name):
+    def write_tcl_tmp_file(self, tcl_script, name):
         """Saves script as temp file"""
 
-        filename = self.dynamic_analysis.output + 'temp_' + name + '_analysis.tcl'
-        with open(filename, 'w') as analysis:
-            analysis.write(''.join(script))
-            analysis.write("\nquit\n")
+        tmp_tcl_filename = self.dynamic_analysis.output + 'temp_' + name + '_analysis.tcl'
+        with open(tmp_tcl_filename, 'w') as tmp_tcl_file:
+            tmp_tcl_file.write(''.join(tcl_script))
+            tmp_tcl_file.write("\nquit\n")
 
 
 def set_variable(script, variable, value):

@@ -1,6 +1,23 @@
 # RMSD RMSF Analysis
 
 
+proc prepare_rmsd {dcd_path} {
+    global init mol wrapped
+
+    if {$init == 0} {
+        mol addfile $dcd_path type dcd first $init last $init waitfor all molid $mol
+    } else {
+        mol addfile $dcd_path type dcd first [expr $init - 1] last $init waitfor all molid $mol
+    }
+
+    pbc_wrap frames_now $wrapped
+
+    retrieve_mol_info
+    create_res_dic
+    create_rmsd_out_files
+}
+
+
 proc retrieve_mol_info {} {
     global mol residue_list all_atoms atoms_reference atoms_selected interaction main_chain peptide main_chain_atom main_chain_reference peptide_atom peptide_reference
 
@@ -18,7 +35,6 @@ proc retrieve_mol_info {} {
 		set peptide_reference [uplevel "#0" [list atomselect $mol "backbone and chain $peptide" frame 1]]
 		set peptide_atom [uplevel "#0" [list atomselect $mol "backbone and chain $peptide"]]
 	}
-
 }
 
 
@@ -117,21 +133,4 @@ proc measure_residue {frame} {
     }
 
     puts $residue_out ""
-}
-
-
-proc prepare_rmsd {dcd_path} {
-    global init mol wrapped
-
-    if {$init == 0} {
-        mol addfile $dcd_path type dcd first $init last $init waitfor all molid $mol
-    } else {
-        mol addfile $dcd_path type dcd first [expr $init - 1] last $init waitfor all molid $mol
-    }
-
-    pbc_wrap frames_now $wrapped
-
-    retrieve_mol_info
-    create_res_dic
-    create_rmsd_out_files
 }
