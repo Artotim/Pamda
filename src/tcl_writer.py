@@ -4,233 +4,133 @@ from src.color_log import log
 class TclWriter:
     """Class to write tcl files to use with vmd"""
 
-    def __init__(self, dynamic_analysis):
-        self.dynamic_analysis = dynamic_analysis
-        self.frame_script = []
-        self.energies_script = []
+    def __init__(self, nome_legal):
+        self.nome_legal = nome_legal
 
     def prepare_frame_analysis(self):
         """Write script to frame analysis"""
 
-        log('info', 'Preparing .tcl file for frame analysis.')
+        log('info', 'Preparing tcl file for frame analysis.')
 
-        self.frame_script = self.write_get_chain(self.frame_script)
-        self.frame_script = self.write_get_models(self.frame_script)
-        self.frame_script = self.write_prepare_mol(self.frame_script)
+        frame_script = initialize_namespace()
 
-        self.write_bigdcd_script()
+        frame_script = self.set_common_variables(frame_script)
+        frame_script = self.set_frame_variables(frame_script)
 
-        if self.dynamic_analysis.rmsd_analysis:
-            self.write_rmsd_rmsf_analysis()
+        if self.nome_legal.contacts_analysis:
+            frame_script = self.set_contacts_analysis_variables(frame_script)
 
-        if self.dynamic_analysis.contact_analysis:
-            self.write_contacts_analysis()
+        if self.nome_legal.distances_analysis:
+            frame_script = self.set_distances_analysis_variables(frame_script)
 
-        if self.dynamic_analysis.distances_analysis:
-            self.write_distances_analysis()
+        if self.nome_legal.sasa_analysis:
+            frame_script = self.set_sasa_analysis_variables(frame_script)
 
-        self.write_bigdcd_main()
+        frame_script = self.write_main_script_call(frame_script, "frame")
 
-        self.write_frame_variables()
-
-        script_call = "\nbigdcd_analysis_main " + self.dynamic_analysis.dcd_path
-        self.frame_script.append(script_call)
-
-        self.write_tcl_tmp_file(self.frame_script, 'frame')
+        self.write_tcl_tmp_file(frame_script, 'frame')
 
     def prepare_energies_analysis(self):
         """Write script to energy analysis"""
 
-        log('info', 'Preparing .tcl file for energies analysis.')
+        log('info', 'Preparing tcl file for energies analysis.')
 
-        self.energies_script = self.write_get_chain(self.energies_script)
-        self.energies_script = self.write_get_models(self.energies_script)
+        energies_script = initialize_namespace()
 
-        self.write_energies()
-        self.write_energies_variables()
+        energies_script = self.set_common_variables(energies_script)
 
-        script_call = "\nget_energies"
-        self.energies_script.append(script_call)
+        energies_script = self.write_main_script_call(energies_script, "energies")
 
-        self.write_tcl_tmp_file(self.energies_script, 'energies')
+        self.write_tcl_tmp_file(energies_script, 'energies')
 
-    def write_get_chain(self, script):
-        """Append get_chain routine to script"""
+    def set_common_variables(self, tcl_script):
+        """Set variables common to both frame and energies analysis"""
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_chain.tcl', 'r') as get_chain:
-            file = get_chain.readlines()
-            file = set_argument(file, 'pdb_path', self.dynamic_analysis.pdb_path)
-            script.extend(file)
+        tcl_script = set_variable(tcl_script, "md_path", self.nome_legal.md_path)
+        tcl_script = set_variable(tcl_script, "md_type", self.nome_legal.md_type)
+        tcl_script = set_variable(tcl_script, "str_path", self.nome_legal.str_path)
+        tcl_script = set_variable(tcl_script, "str_type", self.nome_legal.str_type)
+        tcl_script = set_variable(tcl_script, "program_src_path", self.nome_legal.program_src_path)
+        tcl_script = set_variable(tcl_script, "out_path", self.nome_legal.out_path)
+        tcl_script = set_variable(tcl_script, "out_name", self.nome_legal.out_name)
+        tcl_script = set_variable(tcl_script, "first_frame", self.nome_legal.first_frame)
+        tcl_script = set_variable(tcl_script, "last_frame", self.nome_legal.last_frame)
+        tcl_script = set_variable(tcl_script, "run_pbc", self.nome_legal.run_pbc)
+        return tcl_script
 
-        return script
+    def set_frame_variables(self, tcl_script):
+        """Set variables for frame analysis"""
 
-    def write_get_models(self, script):
-        """Append get_models routine to script"""
+        tcl_script = set_variable(tcl_script, "kfi", self.nome_legal.keep_frame_interval)
+        tcl_script = set_variable(tcl_script, "rms_analysis", self.nome_legal.rms_analysis)
+        tcl_script = set_variable(tcl_script, "contacts_analysis", self.nome_legal.contacts_analysis)
+        tcl_script = set_variable(tcl_script, "distances_analysis", self.nome_legal.distances_analysis)
+        tcl_script = set_variable(tcl_script, "sasa_analysis", self.nome_legal.sasa_analysis)
+        return tcl_script
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_models.tcl', 'r') as get_chain:
-            file = get_chain.readlines()
-            file = set_argument(file, 'psf_path', self.dynamic_analysis.psf_path)
-            file = set_argument(file, 'dcd_path', self.dynamic_analysis.dcd_path)
-            file = set_argument(file, 'out_path', self.dynamic_analysis.output)
-            file = set_argument(file, 'init', str(self.dynamic_analysis.init_frame))
-            file = set_argument(file, 'last', str(self.dynamic_analysis.last_frame))
-            file = set_argument(file, 'wrapped', str(self.dynamic_analysis.wrapped))
+    def set_contacts_analysis_variables(self, tcl_script):
+        """Set variables for contacts analysis"""
 
-            script.extend(file)
+        tcl_script = set_variable(tcl_script, "cci", self.nome_legal.contacts_interval)
+        tcl_script = set_variable(tcl_script, "contacts_cutoff", self.nome_legal.contacts_cutoff)
+        return tcl_script
 
-        return script
+    def set_distances_analysis_variables(self, tcl_script):
+        """Set variables for distances analysis"""
 
-    def write_prepare_mol(self, script):
-        """Append mol_create routine to script"""
+        dist_pairs_names = '{' + ' '.join(self.nome_legal.dist_pairs_names) + '}'
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/get_mol.tcl', 'r') as create:
-            script.extend(create.readlines())
-        return script
+        tcl_script = set_variable(tcl_script, "dist_type", self.nome_legal.dist_type)
+        tcl_script = set_variable(tcl_script, "dist_pairs", self.nome_legal.dist_pairs_tcl)
+        tcl_script = set_variable(tcl_script, "dist_pairs_names", dist_pairs_names)
+        return tcl_script
 
-    def write_bigdcd_script(self):
-        """Append bigdcd routine to script"""
+    def set_sasa_analysis_variables(self, tcl_script):
+        """Set variables for SASA analysis"""
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/bigdcd.tcl', 'r') as energies:
-            self.frame_script.extend(energies.readlines())
-
-    def write_rmsd_rmsf_analysis(self):
-        """Append rmsd_rmsf routine to script"""
-
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/rmsd_rmsf_analysis.tcl', 'r') as rmsd:
-            self.frame_script.extend(rmsd.readlines())
-
-    def write_contacts_analysis(self):
-        """Append get contacts routine to script"""
-
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/contact_analysis.tcl', 'r') as rmsd:
-            self.frame_script.extend(rmsd.readlines())
-
-    def write_distances_analysis(self):
-        """Append get contacts routine to script"""
-
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/distances_analysis.tcl', 'r') as distance:
-            file = distance.readlines()
-            file = set_argument(file, 'dist_type', self.dynamic_analysis.dist_type.replace('atom', 'atom_idx'))
-            file = set_argument(file, 'dist_names', '{' + ' '.join(self.dynamic_analysis.dist_names) + '}')
-
-            self.frame_script.extend(file)
-
-    def write_bigdcd_main(self):
-        """Append bigdcd_main routine to script"""
-    
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/bigdcd_main.tcl', 'r') as bigdcd_main:
-            file = bigdcd_main.readlines()
-
-            if not self.dynamic_analysis.rmsd_analysis:
-                file = remove_function_call(file, 'prepare_rmsd')
-                file = remove_function_call(file, 'measure_rmsd_rmsf')
-                file = remove_function_call(file, 'close_rmsd_files')
-                
-            if not self.dynamic_analysis.contact_analysis:
-                file = remove_function_call(file, 'create_contact_files')
-                file = remove_function_call(file, 'measure_contact_interval')
-                file = remove_function_call(file, 'close_contact_files')
-
-            if not self.dynamic_analysis.distances_analysis:
-                file = remove_function_call(file, 'prepare_distances')
-                file = remove_function_call(file, 'measure_distances')
-                file = remove_function_call(file, 'close_distances_files')
-
-            file = self.set_bigdcd_main_variables(file)
-
-            self.frame_script.extend(file)
-
-    def set_bigdcd_main_variables(self, file):
-        if not self.dynamic_analysis.rmsd_analysis and not self.dynamic_analysis.distances_analysis:
-            file = set_argument(file, 'call_pbc', 'True')
-            file = remove_function_call(file, 'pbc')
+        if self.nome_legal.highlight_residues:
+            hgl_residues = '{' + ' '.join(self.nome_legal.highlight_residues.keys()) + '}'
         else:
-            file = set_argument(file, 'call_pbc', 'False')
+            hgl_residues = '{}'
 
-            if self.dynamic_analysis.distances_analysis:
-                file = set_argument(file, 'dist_list', '{' + ' '.join(self.dynamic_analysis.dist_pairs) + '}')
+        tcl_script = set_variable(tcl_script, "sasa_radius", self.nome_legal.sasa_radius)
+        tcl_script = set_variable(tcl_script, "ssi", self.nome_legal.sasa_interval)
+        tcl_script = set_variable(tcl_script, "hgl_residues", hgl_residues)
+        return tcl_script
 
-        return file
+    def write_main_script_call(self, script, script_name):
+        """Append source and function call to tcl script"""
 
-    def write_pdb_writer(self, script):
-        """Append pdb_writer routine to script"""
+        script.append("}\n")
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/pdb_writer.tcl', 'r') as pdb_writer:
-            file = pdb_writer.readlines()
-            script.extend(file)
+        script_src = F"source {self.nome_legal.program_src_path}tcl/{script_name}_analysis.tcl\n"
+        script.append(script_src)
+
+        script_call = F"nome_legal::{script_name}_analysis_main\n"
+        script.append(script_call)
+
         return script
 
-    def write_energies(self):
-        """Append energies_analysis routine to script"""
+    def write_tcl_tmp_file(self, tcl_script, script_name):
+        """Saves tcl script as temp file"""
 
-        with open(F'{self.dynamic_analysis.analysis_path}tcl/energies_analysis.tcl', 'r') as energies:
-            self.energies_script.extend(energies.readlines())
-
-    def write_frame_variables(self):
-        """Write variables for frame analysis"""
-
-        set_variable(self.frame_script, 'psf_path', self.dynamic_analysis.psf_path)
-        set_variable(self.frame_script, 'pdb_path', self.dynamic_analysis.pdb_path)
-        set_variable(self.frame_script, 'out_path', self.dynamic_analysis.output)
-
-        set_variable(self.frame_script, 'init', self.dynamic_analysis.init_frame)
-        set_variable(self.frame_script, 'last', self.dynamic_analysis.last_frame)
-
-        set_variable(self.frame_script, 'wrapped', self.dynamic_analysis.wrapped)
-
-        set_variable(self.frame_script, 'kfi', self.dynamic_analysis.keep_frame_interval)
-
-        if self.dynamic_analysis.contact_analysis:
-            set_variable(self.frame_script, 'cci', self.dynamic_analysis.contact_interval)
-            set_variable(self.frame_script, 'cutoff', self.dynamic_analysis.contact_cutoff)
-
-    def write_energies_variables(self):
-        """Write variables for energies analysis"""
-
-        set_variable(self.energies_script, 'psf_path', self.dynamic_analysis.psf_path)
-        set_variable(self.energies_script, 'dcd_path', self.dynamic_analysis.dcd_path)
-        set_variable(self.energies_script, 'out_path', self.dynamic_analysis.output)
-        set_variable(self.energies_script, 'namdenergy_path',
-                     self.dynamic_analysis.analysis_path + 'dependencies/namdenergy/')
-
-        set_variable(self.energies_script, 'init', self.dynamic_analysis.init_frame)
-        set_variable(self.energies_script, 'last', self.dynamic_analysis.last_frame)
-
-        set_variable(self.energies_script, 'wrapped', self.dynamic_analysis.wrapped)
-
-    def write_tcl_tmp_file(self, tcl_script, name):
-        """Saves script as temp file"""
-
-        tmp_tcl_filename = self.dynamic_analysis.output + 'temp_' + name + '_analysis.tcl'
+        tmp_tcl_filename = self.nome_legal.out_path + 'temp_' + script_name + '_analysis.tcl'
         with open(tmp_tcl_filename, 'w') as tmp_tcl_file:
             tmp_tcl_file.write(''.join(tcl_script))
             tmp_tcl_file.write("\nquit\n")
 
 
-def set_variable(script, variable, value):
-    """Set a variables in script"""
+def initialize_namespace():
+    """Initializes tcl namespace"""
 
-    append = 'set ' + variable + ' ' + str(value) + '\n'
-    script.append(append)
-    return script
+    return ["namespace eval nome_legal {\n"]
 
 
-def set_argument(script, arg_name, arg):
-    """Set a function argument in script"""
+def set_variable(script, variable_name, value):
+    """Set a variable in namespace"""
 
-    arg_name = '*' + arg_name + '*'
-    for idx, line in enumerate(script):
-        if arg_name in line:
-            script[idx] = line.replace(arg_name, arg)
+    tab = "    "
 
-    return script
-
-
-def remove_function_call(script, fnc_call):
-    """Remove a call to an unrequested function in script"""
-
-    for idx, line in enumerate(script):
-        if fnc_call in line:
-            script[idx] = "# " + line
-
+    declare_variable = tab + 'variable ' + variable_name + ' ' + str(value) + '\n'
+    script.append(declare_variable)
     return script

@@ -1,4 +1,7 @@
-# Bigdcd
+# BigDCD-v2
+# Credits to Justin Gullingsrud
+# Src https://www.ks.uiuc.edu/Research/vmd/script_library/scripts/bigdcd/bigdcd.tcl
+# Modified to keep frames in memory for pbc reasons
 
 
 proc bigdcd { script type args } {

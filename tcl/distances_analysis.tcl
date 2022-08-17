@@ -1,92 +1,100 @@
-# Distance Analysis
+# Distances Analysis
 
 
-proc prepare_distances {dist_list} {
-    create_distances_list $dist_list
-    create_dist_out_file
+proc nome_legal::prepare_distances {} {
+    nome_legal::create_distances_list
+    nome_legal::create_distances_out_files
 }
 
 
-proc create_dist_out_file {} {
-    global dist_out	out_path dist_names_list
+proc nome_legal::create_distances_list {} {
+    variable dist_type
+    variable dist_pairs
+    variable dist_pairs_names
 
-	puts "Creating dist out file"
+    variable mol
 
-    set dist_out [open ${out_path}distances/all_distances.csv w]
+    variable dist_sel_dict
+
+    foreach dist_pair $dist_pairs pair_name $dist_pairs_names {
+        set pair1 [split [lindex $dist_pair 0] ":"]
+        set pair2 [split [lindex $dist_pair 1] ":"]
+
+        set pair1_sel "[lindex $pair1 0] and chain [lindex $pair1 1]"
+        set pair2_sel "[lindex $pair2 0] and chain [lindex $pair2 1]"
+
+        set dist_sel_list {}
+
+        if {$dist_type == "resid"} {
+            lappend dist_sel_list [uplevel "#0" [list \
+                atomselect $mol "notSolvent and resid ${pair1_sel}"]]
+            lappend dist_sel_list [uplevel "#0" [list \
+                atomselect $mol "notSolvent and resid ${pair2_sel}"]]
+        } else {
+            lappend dist_sel_list [uplevel "#0" [list \
+                atomselect $mol "index ${pair1_sel}"]]
+            lappend dist_sel_list [uplevel "#0" [list \
+                atomselect $mol "index ${pair2_sel}"]]
+        }
+
+        dict set dist_sel_dict $pair_name $dist_sel_list
+    }
+}
+
+
+proc nome_legal::create_distances_out_files {} {
+    variable out_path
+    variable out_name
+    variable dist_pairs_names
+
+    puts "Creating distances out files"
+
+    variable dist_out [open "${out_path}distances/${out_name}_all_distances.csv" w]
     puts -nonewline $dist_out "frame"
 
-    foreach name $dist_names_list {
-        puts -nonewline $dist_out  ";$name"
+    foreach pair_name $dist_pairs_names {
+        puts -nonewline $dist_out  ";${pair_name}"
     }
     puts $dist_out ""
 }
 
 
-proc create_distances_list {distances_list_in} {
-    global distances_list dist_type mol
+proc nome_legal::measure_distances {frame} {
+    puts "Measuring distances"
 
-    set distances_list {}
+    variable dist_type
+    variable dist_pairs_names
+    variable dist_sel_dict
+    variable dist_out
 
-    if {$dist_type == "resid"} {
-        foreach item $distances_list_in {
-            lappend distances_list [uplevel "#0" [list \
-                atomselect $mol "resid $item and protein"]]
+    puts -nonewline $dist_out "${frame}"
+
+    foreach pair_name $dist_pairs_names {
+        set pair1_sel [lindex [dict get $dist_sel_dict $pair_name] 0]
+        set pair2_sel [lindex [dict get $dist_sel_dict $pair_name] 1]
+
+        $pair1_sel frame last
+        $pair2_sel frame last
+
+        if {$dist_type == "resid"} {
+            set pair1_com [measure center $pair1_sel weight mass]
+            set pair2_com [measure center $pair2_sel weight mass]
+
+            set dist [veclength [vecsub $pair1_com $pair2_com]]
+        } else {
+            set pair1_idx [$pair1_sel get index]
+            set pair2_idx [$pair2_sel get index]
+
+            set dist [measure bond [list $pair1_idx $pair2_idx] frame last]
         }
-    } else {
-        foreach item $distances_list_in {
-            lappend distances_list [uplevel "#0" [list \
-                atomselect $mol "index $item"]]
-        }
-    }
-}
-
-
-proc measure_distances {frame} {
-	global mol distances_list dist_type dist_out
-
-	puts "Masuring distance for frame $frame"
-
-	foreach item [dict values $distances_list] {
-	    $item frame $frame
-	}
-
-    set distances_objs {}
-    if {$dist_type == "resid"} {
-        foreach item $distances_list {
-            lappend distances_objs [measure center $item weight mass]
-        }
-    } else {
-        foreach item $distances_list {
-            lappend distances_objs [$item get index]
-        }
+        
+        puts -nonewline $dist_out ";[format "%.4f" $dist]"
     }
 
-    set list_length [llength $distances_objs]
-    set index 0
-    puts -nonewline $dist_out "$frame"
-
-    if {$dist_type == "resid"} {
-        while {$index <  $list_length} {
-            set dist [veclength [vecsub [lindex $distances_objs $index] [lindex $distances_objs [expr $index + 1]]]]
-            set index [expr $index + 2]
-            puts -nonewline $dist_out ";$dist"
-        }
-    } else {
-        while {$index <  $list_length} {
-            set dist [measure bond [list [lindex $distances_objs $index] [lindex $distances_objs [expr $index + 1]]] frame $frame]
-            set index [expr $index + 2]
-            puts -nonewline $dist_out ";$dist"
-        }
-    }
     puts $dist_out ""
 }
 
 
-proc close_distances_files {} {
-	global dist_out
-
-	close $dist_out
+proc nome_legal::close_distances_files {} {
+    close $nome_legal::dist_out
 }
-
-set dist_type *dist_type*
-set dist_names_list *dist_names*

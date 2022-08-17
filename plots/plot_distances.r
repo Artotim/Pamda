@@ -67,33 +67,7 @@ for (i in 2:ncol(distance.all)) {
         theme(axis.text = element_text(size = 22))
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-
-
-    # Remove outliers
-    outliers <- boxplot(distance.all[[colname]], plot = FALSE)$out
-    if (length(outliers) != 0) {
-        distance.trim <- distance.all[-which(distance.all[[colname]] %in% outliers),]
-    } else {
-        distance.trim <- distance.all
-    }
-    distance.trim[1,]$frame <- min(distance.all$frame)
-
-    cat("Ploting distance between", pair1_name, "and", pair2_name, "without outliers.\n")
-
-    png.name <- paste0("_pair", i - 1, "_distance_trim.png")
-    out.name <- paste0(out.path, name, png.name)
-
-    plot <- ggplot(distance.trim, aes_string(x = 'frame', y = colname)) +
-        geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#009933", size = 2) +
-        labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance in Å") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.trim$frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 22))
-
-    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
+
+
 cat("Done.\n")

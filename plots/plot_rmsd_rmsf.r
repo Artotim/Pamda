@@ -32,7 +32,7 @@ set_frame_breaks <- function(original_func, data_range) {
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
 out.path <- args[1]
-out.path <- paste0(out.path, "rmsd/")
+out.path <- paste0(out.path, "rms/")
 
 name <- args[2]
 
@@ -59,56 +59,21 @@ rmsd.all <- read.table(file.name,
 
 
 # Loop through table to genrate plots
-chain.names <- tail(colnames(rmsd.all), -2)
 for (i in 2:ncol(rmsd.all)) {
     colname <- colnames(rmsd.all)[i]
 
     # Choose file name
-    if (colname %in% chain.names) {
-        png.name <- paste0("_chain_", colname, "_rmsd", ".png")
-        out.name <- paste0(out.path, name, png.name)
-        plot.title <- paste0("RMSD chain ", colname)
-    } else {
-        out.name <- paste0(out.path, name, "_all_rmsd.png")
-        plot.title <- "RMSD All"
-    }
-
+    png.name <- paste0("_", colname, "_rmsd", ".png")
+    out.name <- paste0(out.path, name, png.name)
+    plot.title <- paste(str_to_title(str_replace_all(colname, "_", " ")), "RMSD")
 
     # Plot rmsd graph
-    cat("Ploting selection", colname, "rmsd graph.\n")
+    cat("Ploting", str_replace_all(colname, "_", " "), "rmsd graph.\n")
     plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.all$frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 20))
-
-    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-
-
-    # Remove outliers
-    outliers <- boxplot(tail(rmsd.all[[colname]], 0.9 * nrow(rmsd.all)), plot = FALSE)$out
-    if (length(outliers) != 0) {
-        rmsd.trim <- rmsd.all[-which(rmsd.all[[colname]] %in% outliers),]
-    } else {
-        rmsd.trim <- rmsd.all
-    }
-    rmsd.trim[1,]$frame <- min(rmsd.all$frame)
-
-
-    # Plot rmsd graph without outliers
-    out.name <- str_replace(out.name, '.png', '_trim.png')
-
-    cat("Ploting selection", colname, "rmsd graph without outliers.\n")
-    plot <- ggplot(rmsd.trim, aes_string(x = "frame", y = colname, group = 1)) +
-        geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#000033", size = 2) +
-        labs(title = plot.title, x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.trim$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -267,16 +232,16 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
 
 
     # Create colors list
-    color.list <- c()
+    colors.list <- c()
     colors <- c('#ff0000', '#cccc00', '#804000', '#660066', '#0059b3', '#00b300', '#003300', '#990033')
-    while (length(highlight.present$resi) > length(color.list)) {
-        if (length(color.list) >= length(colors)) {
-            color.list <- append(color.list, sample(rainbow(20), 1))
+    while (length(highlight.present$resi) > length(colors.list)) {
+        if (length(colors.list) >= length(colors)) {
+            colors.list <- append(colors.list, sample(rainbow(20), 1))
         } else {
-            color.list <- append(color.list, colors[length(color.list) + 1])
+            colors.list <- append(colors.list, colors[length(color.list) + 1])
         }
     }
-    color.list <- setNames(color.list, gsub("\nNA", "", paste0(highlight.present$resi, '\n', highlight.present$resn)))
+    colors.list <- setNames(colors.list, gsub("\nNA", "", paste0(highlight.present$resi, '\n', highlight.present$resn)))
 
     # Plot SD steps graphs
     out.name <- paste0(out.path, name, "_highlight_rmsd.png")
@@ -292,7 +257,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         theme(axis.text = element_text(size = 20)) +
         theme(legend.text = element_text(size = 17), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
         theme(legend.title = element_text(size = 17, family = "Times New Roman")) +
-        scale_color_manual("Residues", values = color.list)
+        scale_color_manual("Residues", values = colors.list)
 
     for (row in seq_len(nrow(highlight.present))) {
         residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
@@ -302,41 +267,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-
-    out.name <- paste0(out.path, name, "_highlight_rmsd_trim.png")
-
-    cat("Ploting highlight residues rmsd separated without outliers.\n")
-    plot <- ggplot(residue.table, aes(x = frame)) +
-        labs(title = 'Residues RMSD', x = "Frame", y = "RMSD Value") +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(residue.table$frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 20)) +
-        theme(legend.text = element_text(size = 17), legend.key.size = unit(1.3, "cm"), legend.text.align = .5) +
-        theme(legend.title = element_text(size = 17, family = "Times New Roman")) +
-        scale_color_manual("Residues", values = color.list)
-
-
-    for (row in seq_len(nrow(highlight.present))) {
-        residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
-
-        # Remove outliers
-        outliers <- boxplot(residue.table[[residue]], plot = FALSE)$out
-        if (length(outliers) != 0) {
-            residue.table.trim <- residue.table[-which(residue.table[[residue]] %in% outliers),]
-        } else {
-            residue.table.trim <- residue.table
-        }
-        residue.table.trim[1,]$frame <- min(residue.table$frame)
-
-        plot <- plot + geom_smooth(data = residue.table.trim,
-                                   aes_(y = as.name(residue),
-                                        color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
-                                   size = 1.3, se = FALSE)
-    }
-
-    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
+
+
 cat("Done.\n\n")

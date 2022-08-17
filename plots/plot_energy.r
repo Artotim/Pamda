@@ -72,49 +72,20 @@ for (i in 2:ncol(energy.all)) {
 }
 
 
-# Iterate over each column to plot whithout outliers
-energy.trim <- list()
-for (i in 2:ncol(energy.all)) {
-    colname <- colnames(energy.all)[i]
-
-    outliers <- boxplot(energy.all[[colname]], plot = FALSE)$out
-    if (length(outliers) != 0) {
-        energy.trim[[i]] <- energy.all[-which(energy.all[[colname]] %in% outliers),]
-    } else {
-        energy.trim[[i]] <- energy.all
-    }
-    energy.trim[[i]][1,]$frame <- min(energy.all$frame)
-
-
-    # Plot graphs
-    png.name <- paste0("_all_", colname, "_energy_trim", ".png")
-    out.name <- paste0(out.path, name, png.name)
-
-    cat("Ploting", colname, "energy without outliers.", '\n')
-    plot <- ggplot(energy.trim[[i]], aes_string(x = "Frame", y = colname, group = 1)) +
-        geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#0072B2", size = 2) +
-        labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
-        scale_y_continuous(breaks = breaks_pretty(n = 5)) +
-        scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.trim[[i]]$Frame)), labels = scales::comma_format()) +
-        theme_minimal() +
-        theme(text = element_text(family = "Times New Roman")) +
-        theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-        theme(axis.title = element_text(size = 24)) +
-        theme(axis.text = element_text(size = 20))
-
-    ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-}
-
-
 rm(energy.all)
-rm(energy.trim)
 
 
-# Check for interaction table
-file.name <- paste0(out.path, name, "_interaction_energies.csv")
+# Check for interactions tables
+interactions <- tail(args, -2)
 
-if (file.exists(file.name)) {
+
+for (interaction in interactions) {
+
+    file.name <- paste0(out.path, name, "_", interaction, "_interaction_energies.csv")
+
+    if (!file.exists(file.name)) {
+        stop("Missing file ", file.name)
+    }
 
     # Loads table
     energy.interaction <- read.table(file.name,
@@ -134,56 +105,25 @@ if (file.exists(file.name)) {
 
 
         # Plot graphs
-        png.name <- paste0("_interaction_", colname, "_energy", ".png")
+        png.name <- paste0("_", interaction, "_interaction_", colname, "_energy", ".png")
         out.name <- paste0(out.path, name, png.name)
 
         cat("Ploting", colname, "interaction energy.", '\n')
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#bfbfbf") +
             geom_smooth(color = "#0072B2", size = 2) +
-            labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
+            labs(title = paste("Chains", interaction, "Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
             scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.interaction$Frame)), labels = scales::comma_format()) +
             theme_minimal() +
             theme(text = element_text(family = "Times New Roman")) +
-            theme(plot.title = element_text(size = 36, hjust = 0.5)) +
-            theme(axis.title = element_text(size = 24)) +
-            theme(axis.text = element_text(size = 20))
-
-        ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
-    }
-
-    # Iterate over each column to plot whithout ouliers
-    for (i in 2:ncol(energy.interaction)) {
-        colname <- colnames(energy.interaction)[i]
-
-        outliers <- boxplot(energy.interaction[[colname]], plot = FALSE)$out
-        if (length(outliers) != 0) {
-            energy.trim <- energy.interaction[-which(energy.interaction[[colname]] %in% outliers),]
-        } else {
-            energy.trim <- energy.interaction
-        }
-        energy.trim[1,]$frame <- min(energy.interaction$frame)
-
-
-        # Plot graphs
-        png.name <- paste0("_interaction_", colname, "_energy_trim", ".png")
-        out.name <- paste0(out.path, name, png.name)
-
-        cat("Ploting", colname, "interaction energy without outliers.", '\n')
-        plot <- ggplot(energy.trim, aes_string(x = "Frame", y = colname, group = 1)) +
-            geom_line(color = "#bfbfbf") +
-            geom_smooth(color = "#0072B2", size = 2) +
-            labs(title = paste("Interaction", colname, "Energy"), x = "Frame", y = colname) +
-            scale_y_continuous(breaks = breaks_pretty(n = 5)) +
-            scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.trim$Frame)), labels = scales::comma_format()) +
-            theme_minimal() +
-            theme(text = element_text(family = "Times New Roman")) +
-            theme(plot.title = element_text(size = 36, hjust = 0.5)) +
+            theme(plot.title = element_text(size = 32, hjust = 0.5)) +
             theme(axis.title = element_text(size = 24)) +
             theme(axis.text = element_text(size = 20))
 
         ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
     }
 }
+
+
 cat("Done.\n\n")

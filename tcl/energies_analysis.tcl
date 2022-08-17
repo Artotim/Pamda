@@ -1,69 +1,105 @@
 # Energies Analysis
 
 
-proc measure_energies {first last interaction first_analysis} {
-    global main_chain peptide psf_path dcd_path out_path namdenergy_path wrapped
-
-    puts "Measuring energy from $first to $last"
-
-    set mol [mol new $psf_path type psf waitfor all]
-    set loaded_frames [load_initial_frames $dcd_path $first $mol]
-
-    if {$first > 0 && $first_analysis == True} {
-        mol addfile $dcd_path type dcd first [expr $first - 1] last $last waitfor all molid $mol
-    } elseif {$first == 0} {
-        mol addfile $dcd_path type dcd first $first last $last waitfor all molid $mol
-    } else {
-        mol addfile $dcd_path type dcd first [expr $first + 1] last $last waitfor all molid $mol
-    }
-
-    pbc_wrap frames_all $wrapped
-
-    puts "Deleting initial frames"
-    if {$loaded_frames > 0 } {
-        animate delete beg 0 end [expr $loaded_frames - 1] skip 0 $mol
-    }
-
-    set temp "${out_path}energies/all_temp_$last"
-    set out "${out_path}energies/all_$last"
-
-    set sel_all [atomselect top protein]
-    namdenergy -sel $sel_all -exe ${namdenergy_path}namdenergy -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm -par ${namdenergy_path}params/toppar_water_ions.str -all -tempname $temp -ofile $out
-
-    if {$interaction == true} {
-        set temp "${out_path}energies/interaction_temp_$last"
-        set out "${out_path}energies/interaction_$last"
-
-        set sel_a [atomselect top "chain $main_chain"]
-        set sel_b [atomselect top "chain $peptide"]
-        namdenergy -sel $sel_a $sel_b -exe ${namdenergy_path}namdenergy -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm -par ${namdenergy_path}params/toppar_water_ions.str -vdw -elec -nonb -tempname $temp -ofile $out
-    }
+proc load_dependencies {program_src_path} {
+    source "${program_src_path}tcl/create_mol.tcl"
+    source "${program_src_path}tcl/run_pbc.tcl"
 }
 
 
-proc get_energies {} {
-    global init last interaction
+proc nome_legal::energies_analysis_main {} {
+    load_dependencies $nome_legal::program_src_path
 
-	package require namdenergy
-	package require pbctools
+    package require namdenergy
 
-	puts "Preparing to get energy"
+    variable first_frame
+    variable last_frame
+    variable mol
 
-    mol delete all
+    nome_legal::create_mol
 
-	set first_analysis True
-	set analysed_count $init
+    set current_frame $first_frame
+    set next_frame $first_frame
 
-    while {$analysed_count < $last} {
-        set next_analyse [expr {$analysed_count + 5000}]
-        if {$next_analyse > $last} {
-            set next_analyse $last
-        }
+    set frame_range 5000
+    set first_analysis True
 
-        measure_energies $analysed_count $next_analyse $interaction $first_analysis
-        mol delete top
+    while {$current_frame < [expr {$last_frame - 1}]} {
+        set next_frame [expr {$next_frame + $frame_range}]
+        if {$next_frame >= $last_frame} {set next_frame [expr {$last_frame - 1}]}
 
-        set analysed_count [expr {$analysed_count + 5000}]
+        nome_legal::measure_energies $current_frame $next_frame $first_analysis
+
+        set current_frame $next_frame
         set first_analysis False
+    }
+
+    mol delete $mol
+}
+
+
+proc nome_legal::measure_energies {current_frame next_frame first_analysis} {
+    variable out_path
+    variable out_name
+    variable md_path
+    variable md_type
+    variable run_pbc
+
+    variable mol
+    variable chain_interactions
+
+    set namdenergy_path "${::nome_legal::program_src_path}dependencies/namdenergy/"
+
+    puts "Measuring energy from $current_frame to $next_frame"
+
+    set loaded_frames [load_reference_frames $md_path $md_type $current_frame $mol]
+
+    nome_legal::load_analysis_frames $current_frame $next_frame $first_analysis
+
+    if {$run_pbc == "True"} {pbc_wrap "all_frames"}
+
+    if {$loaded_frames > 0 } {animate delete beg 0 end [expr $loaded_frames - 1] skip 0 $mol}
+
+    set temp_file "${out_path}energies/${out_name}_all_temp_$next_frame"
+    set out_file "${out_path}energies//${out_name}_all_$next_frame"
+    set sel_all [atomselect $mol "notSolvent"]
+
+    namdenergy -sel $sel_all -exe ${namdenergy_path}namdenergy \
+        -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm \
+        -par ${namdenergy_path}params/par_all36_lipid.prm -par ${namdenergy_path}params/toppar_water_ions.str \
+        -all -tempname $temp_file -ofile $out_file
+
+    foreach chain_pair $chain_interactions {
+
+        set pair_name "[lindex $chain_pair 0]-[lindex $chain_pair 1]"
+
+        set temp_file "${out_path}energies/${out_name}_${pair_name}_interaction_temp_$next_frame"
+        set out_file "${out_path}energies/${out_name}_${pair_name}_interaction_$next_frame"
+
+        set pair1_sel [atomselect top "notSolvent and chain [lindex $chain_pair 0]"]
+        set pair2_sel [atomselect top "notSolvent and chain [lindex $chain_pair 1]"]
+
+        namdenergy -sel $pair1_sel $pair2_sel -exe ${namdenergy_path}namdenergy \
+            -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm \
+            -par ${namdenergy_path}params/par_all36_lipid.prm -par ${namdenergy_path}params/toppar_water_ions.str \
+            -vdw -elec -nonb -tempname $temp_file -ofile $out_file
+    }
+
+    animate delete all
+}
+
+
+proc nome_legal::load_analysis_frames {current_frame next_frame first_analysis} {
+    variable md_path
+    variable md_type
+
+    variable mol
+
+    if {$current_frame > 0 && $first_analysis == True} {
+        mol addfile $md_path type $md_type first [expr $current_frame - 1] last $next_frame waitfor all molid $mol
+    } elseif {$current_frame == 0} {
+        mol addfile $md_path type $md_type first $current_frame last $next_frame waitfor all molid $mol
+    } else {
+        mol addfile $md_path type $md_type first [expr $current_frame + 1] last $next_frame waitfor all molid $mol
     }
 }
