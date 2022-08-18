@@ -6,19 +6,16 @@ from time import sleep
 from src.color_log import log, docker_logger
 
 
-def start_create_models(out_path, out_name, vmd, program_src_path, guess_chains, write_models_args):
+def start_create_models(out_path, out_name, vmd, program_src_path, create_models_args):
     """Runs vmd to create models for first and last requested frames"""
 
     log('info', 'Writing models for first and last requested frames.')
-
-    if guess_chains:
-        log('info', "Guessing chains.")
 
     log_file = out_path + 'logs/' + out_name + '_write_models.log'
     err_file = out_path + 'logs/' + out_name + '_write_models.err'
 
     cmd = [vmd, '-e', F'{program_src_path}tcl/write_models.tcl', "-args"]
-    cmd.extend(list(map(str, write_models_args)))
+    cmd.extend(list(map(str, create_models_args)))
 
     run_vmd(cmd, log_file, err_file)
 

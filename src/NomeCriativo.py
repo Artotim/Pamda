@@ -88,7 +88,7 @@ class NomeCriativo:
         self._check_dependencies()
 
         # Get md data
-        self._resolve_last_frame()
+        self._resolve_frame_range()
         self._resolve_frame_analysis_intervals()
 
         # Create models
@@ -166,8 +166,10 @@ class NomeCriativo:
                 not check_r(self._plot_graphs, self.out_path):
             exit(1)
 
-    def _resolve_last_frame(self):
+    def _resolve_frame_range(self):
         """Resolve last frame"""
+
+        log('info', 'First frame set to: ' + str(self.first_frame) + '.')
 
         self.last_frame = get_last_frame(self.last_frame, self.md_path, self.md_type, self.program_src_path)
         if not self.last_frame:
@@ -192,13 +194,15 @@ class NomeCriativo:
         """Create models for first and last frames"""
 
         print()
-        args = [self.str_path, self.str_type, self.md_path, self.md_type, self.out_path, self.out_name,
-                self.first_frame, self.last_frame, self.run_pbc, self.guess_chains, self.program_src_path]
+        create_models_args = [self.str_path, self.str_type, self.md_path, self.md_type, self.out_path, self.out_name,
+                              self.first_frame, self.last_frame, self.run_pbc, self.guess_chains, self.program_src_path]
 
-        start_create_models(self.out_path, self.out_name, self.vmd_exe, self.program_src_path, self.guess_chains, args)
+        start_create_models(self.out_path, self.out_name, self.vmd_exe, self.program_src_path, create_models_args)
         verify_write_models_out(self.out_path, self.out_name, "frame_models")
 
         if self.guess_chains:
+            log('info', "Guessing chains.")
+
             guess_chains_name = F"{self.out_name}_guessed_chains"
             verify_write_models_out(self.out_path, guess_chains_name, "guess_chains_models")
 

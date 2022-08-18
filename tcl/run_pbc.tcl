@@ -1,19 +1,15 @@
 # Run PBC
 
 
-proc load_reference_frames {md_path md_type target_frame mol} {
+proc load_pbc_reference_frames {md_path md_type mol target_frame} {
     puts "Loading reference frames"
 
-    set loaded_frames 0
-    set next_frame 0
-    set load_interval [expr $target_frame / 500 + 1]
+    set target_frame [expr $target_frame - 1]
+    set frame_step [expr $target_frame / 500 + 1]
 
-    while {$next_frame < $target_frame} {
-        mol addfile $md_path type $md_type first $next_frame last $next_frame waitfor all molid $mol
-        set next_frame [expr $next_frame + $load_interval]
-        set loaded_frames [expr $loaded_frames + 1]
-    }
+    mol addfile $md_path type $md_type first 0 last $target_frame step $frame_step waitfor all molid $mol
 
+    set loaded_frames [expr $target_frame / $frame_step + 1]
     return $loaded_frames
 }
 
@@ -22,10 +18,8 @@ proc pbc_wrap {frame_selection} {
     package ifneeded pbctools [package require pbctools]
 
     if {$frame_selection == "current_frame"} {
-        pbc unwrap -now -sel "notSolvent"
-        pbc wrap -center com -centersel "notSolvent" -compound fragment -now
+        pbc unwrap -now -sel "not solvent"
     } else {
-        pbc unwrap -all -sel "notSolvent"
-        pbc wrap -center com -centersel "notSolvent" -compound fragment -all
+        pbc unwrap -all -sel "not solvent"
     }
 }

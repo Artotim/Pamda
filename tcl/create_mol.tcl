@@ -15,9 +15,7 @@ proc nome_legal::create_mol {} {
 
 
 proc nome_legal::get_mol_info {mol} {
-    atomselect macro notSolvent {not (ion or resname HOH TIP3 TIP4 TP4E TP4V TP3E SPCE SPC SOL)}
-
-    set all_sell [atomselect $mol "notSolvent"]
+    set all_sell [atomselect $mol "not solvent"]
 
     variable chain_list [lsort -unique [$all_sell get chain]]
     puts "Found chains ${chain_list}"

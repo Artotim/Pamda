@@ -54,7 +54,7 @@ def make_parser():
     optional.add_argument("-n", "--name", metavar='',
                           help="Output name")
 
-    optional.add_argument('-f', '--first', default=0, type=int, metavar='',
+    optional.add_argument('-f', '--first', default=1, type=int, metavar='',
                           help='Start analysis frame (default: first)')
     optional.add_argument('-l', '--last', type=int, metavar='',
                           help='End analysis frame (default: last)')
@@ -93,7 +93,7 @@ def make_parser():
 
     optional.add_argument('--guess-chains', action='store_true', dest='guess_chains',
                           help='Automatically try to guess and split chains')
-    optional.add_argument('-pbc', action='store_true',
+    optional.add_argument('--pbc', action='store_true',
                           help='Unwraps molecule before analysis. '
                                'Use this flag only if you wrapped your protein during dynamic')
 

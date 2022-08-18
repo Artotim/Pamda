@@ -27,9 +27,9 @@ proc nome_legal::create_distances_list {} {
 
         if {$dist_type == "resid"} {
             lappend dist_sel_list [uplevel "#0" [list \
-                atomselect $mol "notSolvent and resid ${pair1_sel}"]]
+                atomselect $mol "not solvent and resid ${pair1_sel}"]]
             lappend dist_sel_list [uplevel "#0" [list \
-                atomselect $mol "notSolvent and resid ${pair2_sel}"]]
+                atomselect $mol "not solvent and resid ${pair2_sel}"]]
         } else {
             lappend dist_sel_list [uplevel "#0" [list \
                 atomselect $mol "index ${pair1_sel}"]]

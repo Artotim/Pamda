@@ -15,20 +15,22 @@ proc resolve_write_models {argv} {
     set src_path        [lindex $argv 10]
 
     source "${src_path}tcl/run_pbc.tcl"
-    atomselect macro notSolvent {not (ion or resname HOH TIP3 TIP4 TP4E TP4V TP3E SPCE SPC SOL)}
 
     set mol [mol new $str_path type $str_type waitfor all]
     get_models $md_path $md_type $out_path $out_name $first_frame $last_frame $run_pbc $mol
     mol delete $mol
 
     if {$guess_chains == "True"} {
-        set mol [mol new $str_path type $str_type waitfor all]
+        set tmp_pdb_file "${out_path}models/${out_name}_temp.pdb"
+        set mol [load_fixed_pdb_mol $str_path $str_type $out_path $out_name $tmp_pdb_file]
 
         set out_name "${out_name}_guessed_chains"
         guess_chains $mol
 
         get_models $md_path $md_type $out_path $out_name $first_frame $last_frame $run_pbc $mol
         mol delete $mol
+
+        file delete $tmp_pdb_file
     }
 }
 
@@ -37,26 +39,48 @@ proc get_models {md_path md_type out_path out_name first_frame last_frame run_pb
     puts "Creating models"
 
     animate delete all
+    set loaded_frames 0
 
-    set loaded_frames [load_reference_frames $md_path $md_type $first_frame $mol]
-    mol addfile $md_path type $md_type first $first_frame last $first_frame waitfor all molid $mol
+    if {$run_pbc == "True"} {load_pbc_reference_frames $md_path $md_type $mol $first_frame}
+    mol addfile $md_path type $md_type first [expr $first_frame -1] last [expr $first_frame -1] waitfor all molid $mol
+    if {$run_pbc == "True"} {
+        pbc_wrap "all_frames"
+        pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
+    }
 
-    if {$run_pbc == "True"} {pbc_wrap "all_frames"}
-    set firstFrame [ atomselect $mol all frame last ]
-    set fileName "${out_path}models/${out_name}_first_analysis_frame.pdb"
-    $firstFrame writepdb $fileName
+    set first_frame_sel [ atomselect $mol all frame last ]
+    set pdb_file_name "${out_path}models/${out_name}_first_analysis_frame.pdb"
+    $first_frame_sel writepdb $pdb_file_name
 
-    animate delete beg 0 end $loaded_frames skip 0 $mol
+    animate delete all
 
-    set loaded_frames [load_reference_frames $md_path $md_type $last_frame $mol]
-
+    if {$run_pbc == "True"} {load_pbc_reference_frames $md_path $md_type $mol $last_frame}
     mol addfile $md_path type $md_type first [expr $last_frame -1] last [expr $last_frame -1] waitfor all molid $mol
-    if {$run_pbc == "True"} {pbc_wrap "all_frames"}
-    set lastFrame [ atomselect $mol all frame last ]
-    set fileName "${out_path}models/${out_name}_last_analysis_frame.pdb"
-    $lastFrame writepdb $fileName
+    if {$run_pbc == "True"} {
+        pbc_wrap "all_frames"
+        pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
+    }
 
-    animate delete beg 0 end $loaded_frames skip 0 $mol
+    set last_frame_sel [ atomselect $mol all frame last ]
+    set pdb_file_name "${out_path}models/${out_name}_last_analysis_frame.pdb"
+    $last_frame_sel writepdb $pdb_file_name
+
+    animate delete all
+}
+
+
+proc load_fixed_pdb_mol {str_path str_type out_path out_name tmp_pdb_file} {
+    set mol [mol new $str_path type $str_type waitfor all]
+
+    if {[llength [[atomselect $mol "name OC1"] get name]] > 0} {
+        # Fix gromacs C-terminal so VMD can recognize it as a protein
+        [atomselect  $mol "name OC1"] set name "O"
+
+        [atomselect  $mol "all"] writepdb $tmp_pdb_file
+        set mol [mol new $tmp_pdb_file type pdb waitfor all]
+    }
+
+    return $mol
 }
 
 
@@ -76,7 +100,7 @@ proc guess_chains {mol} {
 
         puts "Guessed chain $chain_name: resid [lindex $chain_range 0] to [lindex $chain_range 1]"
 
-        set chain [atomselect $mol "notSolvent and resid [lindex $chain_range 0] to [lindex $chain_range 1]"]
+        set chain [atomselect $mol "not solvent and resid [lindex $chain_range 0] to [lindex $chain_range 1]"]
         $chain set chain $chain_name
         incr chain_idx
     }
@@ -84,7 +108,7 @@ proc guess_chains {mol} {
 
 
 proc get_chains_range {mol} {
-    set all [atomselect $mol "notSolvent"]
+    set all [atomselect $mol "not solvent"]
     set unique_list [lsort -integer -unique [$all get resid]]
 
     set first_resid [lindex $unique_list 0]

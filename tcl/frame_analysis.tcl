@@ -98,9 +98,7 @@ proc nome_legal::frame_analysis {frame} {
 
 
 proc should_run_analysis {frame first_frame interval} {
-    if {[expr $frame % $interval] == 0 ||
-        $frame == $first_frame ||
-        ($frame == 1 && $first_frame == 0) } {
+    if {[expr $frame % $interval] == 0 || $frame == $first_frame } {
         return "True"
     } else {
         return "False"

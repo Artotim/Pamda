@@ -12,24 +12,22 @@ proc nome_legal::create_rms_selections {} {
     variable chain_list
     variable residue_list
 
-    atomselect macro forceBackbone {backbone or (name C CA N O)}
-
     puts "Creating rms selections"
 
     variable all_atoms [uplevel "#0" [list atomselect $mol all]]
-    variable backbone_sel [uplevel "#0" [list atomselect $mol "forceBackbone"]]
+    variable backbone_sel [uplevel "#0" [list atomselect $mol "backbone"]]
 
     variable chain_sel_dict
     foreach chain $chain_list {
         dict set chain_sel_dict $chain [uplevel "#0" [list \
-            atomselect $mol "forceBackbone and chain $chain"]]
+            atomselect $mol "backbone and chain $chain"]]
     }
 
     variable resid_sel_dict
     foreach residue $residue_list {
         set resid_sel "chain [lindex [split $residue :] 0] and resid [lindex [split $residue :] 1]"
         dict set resid_sel_dict $residue [uplevel "#0" [list \
-            atomselect $mol "forceBackbone and ${resid_sel}"]]
+            atomselect $mol "backbone and ${resid_sel}"]]
     }
 }
 
@@ -41,19 +39,19 @@ proc nome_legal::create_reference_selections {reference_frame} {
 
     puts "Creating rms reference selections"
 
-    variable backbone_reference [uplevel "#0" [list atomselect $mol "forceBackbone" frame $reference_frame]]
+    variable backbone_reference [uplevel "#0" [list atomselect $mol "backbone" frame $reference_frame]]
 
     variable chain_reference_dict
     foreach chain $chain_list {
         dict set chain_reference_dict $chain [uplevel "#0" [list \
-            atomselect $mol "forceBackbone and chain $chain" frame $reference_frame]]
+            atomselect $mol "backbone and chain $chain" frame $reference_frame]]
     }
 
     variable resid_reference_dict
     foreach residue $residue_list {
         set resid_sel "chain [lindex [split $residue :] 0] and resid [lindex [split $residue :] 1]"
         dict set resid_reference_dict $residue [uplevel "#0" [list \
-            atomselect $mol "forceBackbone and ${resid_sel}" frame $reference_frame]]
+            atomselect $mol "backbone and ${resid_sel}" frame $reference_frame]]
     }
 }
 
@@ -91,7 +89,7 @@ proc nome_legal::measure_rms {frame} {
     variable backbone_sel
     variable backbone_reference
 
-    if {$frame == $first_frame || ( $first_frame == 0 && $frame == 1)} {
+    if {$frame == $first_frame} {
         variable mol
 
         set reference_frame [expr [molinfo $mol get numframes] -1]

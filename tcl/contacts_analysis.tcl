@@ -51,8 +51,8 @@ proc nome_legal::measure_contacts {frame} {
 
         set pair_name "${chain1}-${chain2}"
 
-        set chain1_sel [atomselect $mol "notSolvent and chain $chain1" frame last]
-        set chain2_sel [atomselect $mol "notSolvent and chain $chain2" frame last]
+        set chain1_sel [atomselect $mol "not solvent and chain $chain1" frame last]
+        set chain2_sel [atomselect $mol "not solvent and chain $chain2" frame last]
 
         set contacts [measure contacts $contacts_cutoff $chain1_sel $chain2_sel]
 

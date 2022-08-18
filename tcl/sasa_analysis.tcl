@@ -12,19 +12,19 @@ proc nome_legal::create_sasa_selections {} {
     variable chain_list
     variable hgl_residues
 
-    variable sasa_all_sel [uplevel "#0" [list atomselect $mol "notSolvent"]]
+    variable sasa_all_sel [uplevel "#0" [list atomselect $mol "not solvent"]]
 
     variable sasa_chain_sel_dict
     foreach chain $chain_list {
         dict set sasa_chain_sel_dict $chain [uplevel "#0" [list \
-            atomselect $mol "notSolvent and chain $chain"]]
+            atomselect $mol "not solvent and chain $chain"]]
     }
 
     variable sasa_hgl_sel_dict
     foreach resid $hgl_residues {
         set resid_sel "[lindex [split $resid :] 0] and chain [lindex [split $resid :] 1]"
         dict set sasa_hgl_sel_dict $resid [uplevel "#0" [list \
-            atomselect $mol "notSolvent and resid $resid_sel"]]
+            atomselect $mol "not solvent and resid $resid_sel"]]
     }
 }
 
