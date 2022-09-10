@@ -81,6 +81,9 @@ proc nome_legal::measure_energies {current_frame next_frame first_analysis} {
             -par ${namdenergy_path}params/par_all36_prot.prm -par ${namdenergy_path}params/par_all36_na.prm \
             -par ${namdenergy_path}params/par_all36_lipid.prm -par ${namdenergy_path}params/toppar_water_ions.str \
             -vdw -elec -nonb -tempname $temp_file -ofile $out_file
+
+        $pair1_sel delete
+        $pair2_sel delete
     }
 
     animate delete all
