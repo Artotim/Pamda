@@ -23,14 +23,14 @@ set_frame_breaks <- function(original_func, data_range) {
 
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
-out.path <- args[1]
-out.path <- paste0(out.path, "sasa/")
 
+csv.out.path <- paste0(args[1], "sasa/")
+plot.out.path <- paste0(args[1], "graphs/sasa/")
 name <- args[2]
 
 
 # Load SASA file
-file.name <- paste0(out.path, name, "_all_sasa.csv")
+file.name <- paste0(csv.out.path, name, "_all_sasa.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -44,7 +44,7 @@ sasa.all <- read.table(file.name,
 
 
 # Check for SASA hgl file
-file.name <- paste0(out.path, name, "_hgl_sasa.csv")
+file.name <- paste0(csv.out.path, name, "_hgl_sasa.csv")
 if (file.exists(file.name)) {
 
     sasa.hgl <- read.table(file.name,
@@ -74,15 +74,15 @@ for (i in 2:ncol(sasa.all)) {
     plot.title <- paste(str_to_title(str_replace_all(sel_name, "_", " ")), "SASA and BSA")
 
     png.name <- paste0("_", str_replace_all(sel_name, ":", ""), "_sasa_bsa_area.png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     cat("Ploting sasa for selection", str_replace_all(sel_name, "_", " "), ".\n")
 
     plot <- ggplot(sasa.all, aes(frame)) +
         geom_line(aes_string(y = sasa_colname), color = "#bfbfbf") +
-        geom_smooth(aes_(y = sasa.all[[sasa_colname]], color = "SASA"), size = 2, se = FALSE) +
+        geom_smooth(aes_(y = sasa.all[[sasa_colname]], color = "SASA"), size = 2, se = FALSE, span = 0.2) +
         geom_line(aes_string(y = bsa_colname), color = "#bfbfbf") +
-        geom_smooth(aes_(y = sasa.all[[bsa_colname]], color = "BSA"), size = 2, se = FALSE) +
+        geom_smooth(aes_(y = sasa.all[[bsa_colname]], color = "BSA"), size = 2, se = FALSE, span = 0.2) +
         labs(title = paste(plot.title, "Area"), x = "Frame", y = "Area in Å") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(sasa.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
@@ -105,13 +105,13 @@ for (i in 2:ncol(sasa.all)) {
     )
 
     png.name <- paste0("_", str_replace_all(sel_name, ":", ""), "_sasa_bsa_percentage.png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     plot <- ggplot(sasa.percentage, aes(x = sasa.all$frame)) +
         geom_line(aes(y = SASA), color = "#bfbfbf") +
-        geom_smooth(aes(y = SASA, color = "SASA"), size = 2, se = FALSE) +
+        geom_smooth(aes(y = SASA, color = "SASA"), size = 2, se = FALSE, span = 0.2) +
         geom_line(aes(y = BSA), color = "#bfbfbf") +
-        geom_smooth(aes(y = BSA, color = "BSA"), size = 2, se = FALSE) +
+        geom_smooth(aes(y = BSA, color = "BSA"), size = 2, se = FALSE, span = 0.2) +
         labs(title = paste(plot.title, "Percentage"), x = "Frame", y = "Area in percentage") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(sasa.all$frame)), labels = scales::comma_format()) +
         scale_y_continuous(limits = c(-0.009, 1.009), labels = label_percent()) +

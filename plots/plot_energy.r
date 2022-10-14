@@ -23,14 +23,14 @@ set_frame_breaks <- function(original_func, data_range) {
 
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
-out.path <- args[1]
-out.path <- paste0(out.path, "energies/")
 
+csv.out.path <- paste0(args[1], "energies/")
+plot.out.path <- paste0(args[1], "graphs/energies/")
 name <- args[2]
 
 
 # Load table
-file.name <- paste0(out.path, name, "_all_energies.csv")
+file.name <- paste0(csv.out.path, name, "_all_energies.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -53,12 +53,12 @@ for (i in 2:ncol(energy.all)) {
 
     # Plot graphs
     png.name <- paste0("_all_", colname, "_energy", ".png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     cat("Ploting", colname, "energy.", '\n')
     plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#0072B2", size = 2) +
+        geom_smooth(color = "#0072B2", size = 2, se = FALSE, span = 0.2) +
         labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
         scale_y_continuous(breaks = breaks_pretty(n = 5)) +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.all$Frame)), labels = scales::comma_format()) +
@@ -81,7 +81,7 @@ interactions <- tail(args, -2)
 
 for (interaction in interactions) {
 
-    file.name <- paste0(out.path, name, "_", interaction, "_interaction_energies.csv")
+    file.name <- paste0(csv.out.path, name, "_", interaction, "_interaction_energies.csv")
 
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
@@ -106,12 +106,12 @@ for (interaction in interactions) {
 
         # Plot graphs
         png.name <- paste0("_", interaction, "_interaction_", colname, "_energy", ".png")
-        out.name <- paste0(out.path, name, png.name)
+        out.name <- paste0(plot.out.path, name, png.name)
 
         cat("Ploting", colname, "interaction energy.", '\n')
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#bfbfbf") +
-            geom_smooth(color = "#0072B2", size = 2) +
+            geom_smooth(color = "#0072B2", size = 2, se = FALSE, span = 0.2) +
             labs(title = paste("Chains", interaction, "Interaction", colname, "Energy"), x = "Frame", y = colname) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
             scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.interaction$Frame)), labels = scales::comma_format()) +

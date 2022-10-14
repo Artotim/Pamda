@@ -31,9 +31,9 @@ set_frame_breaks <- function(original_func, data_range) {
 
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
-out.path <- args[1]
-out.path <- paste0(out.path, "rms/")
 
+csv.out.path <- paste0(args[1], "rms/")
+plot.out.path <- paste0(args[1], "graphs/rms/")
 name <- args[2]
 
 
@@ -46,7 +46,7 @@ highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, res
 
 
 # Load all rmsd
-file.name <- paste0(out.path, name, "_all_rmsd.csv")
+file.name <- paste0(csv.out.path, name, "_all_rmsd.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -64,14 +64,14 @@ for (i in 2:ncol(rmsd.all)) {
 
     # Choose file name
     png.name <- paste0("_", colname, "_rmsd", ".png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
     plot.title <- paste(str_to_title(str_replace_all(colname, "_", " ")), "RMSD")
 
     # Plot rmsd graph
     cat("Ploting", str_replace_all(colname, "_", " "), "rmsd graph.\n")
     plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#000033", size = 2) +
+        geom_smooth(color = "#000033", size = 2, se = FALSE, span = 0.2) +
         labs(title = plot.title, x = "Frame", y = "RMSD Value") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
@@ -87,11 +87,10 @@ for (i in 2:ncol(rmsd.all)) {
 # Finnish
 cat("Done rmsd.\n")
 rm(rmsd.all)
-rm(rmsd.trim)
 
 
 # Load rmsf
-file.name <- paste0(out.path, name, "_all_rmsf.csv")
+file.name <- paste0(csv.out.path, name, "_all_rmsf.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -155,7 +154,7 @@ for (chain in names(rmsf.table.divided)) {
 
         # Plot stat graphs
         png.name <- paste0("_chain_", chain, "_", colname, ".png")
-        out.name <- paste0(out.path, name, png.name)
+        out.name <- paste0(plot.out.path, name, png.name)
 
         cat("Ploting", colname, "for chain", chain, '\n')
         plot <- ggplot(rmsf.table.divided[[chain]], aes_string(x = "residue_number", y = colname, group = 1)) +
@@ -182,7 +181,7 @@ for (chain in names(rmsf.table.divided)) {
 
     # Plot SD steps graphs
     png.name <- paste0("_chain_", chain, "_rmsf_steps.png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     min_y_value <- min(rmsf.chain.steps$value)
     max_y_value <- max(rmsf.chain.steps$value)
@@ -215,7 +214,7 @@ rm(rmsf.table.divided)
 if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
 
     # Load residue rmsd
-    file.name <- paste0(out.path, name, "_residue_rmsd.csv")
+    file.name <- paste0(csv.out.path, name, "_residue_rmsd.csv")
     if (!file.exists(file.name)) {
         stop("Missing file ", file.name)
     }
@@ -238,13 +237,13 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         if (length(colors.list) >= length(colors)) {
             colors.list <- append(colors.list, sample(rainbow(20), 1))
         } else {
-            colors.list <- append(colors.list, colors[length(color.list) + 1])
+            colors.list <- append(colors.list, colors[length(colors.list) + 1])
         }
     }
-    colors.list <- setNames(colors.list, gsub("\nNA", "", paste0(highlight.present$resi, '\n', highlight.present$resn)))
+    colors.list <- setNames(colors.list, gsub("\nNA", "", paste0(highlight.present$chain, ":", highlight.present$resi, '\n', highlight.present$resn)))
 
     # Plot SD steps graphs
-    out.name <- paste0(out.path, name, "_highlight_rmsd.png")
+    out.name <- paste0(plot.out.path, name, "_highlight_rmsd.png")
 
     cat("Ploting highlight residues rmsd separated.\n")
     plot <- ggplot(residue.table, aes(x = frame)) +
@@ -263,7 +262,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
         residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
         plot <- plot + geom_smooth(aes_(y = as.name(residue),
                                         color = gsub("\nNA", "", paste0(highlight.present[row,]$resi, '\n', highlight.present[row,]$resn))),
-                                   size = 1.3, se = FALSE)
+                                   size = 1.3, se = FALSE, span = 0.2)
     }
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)

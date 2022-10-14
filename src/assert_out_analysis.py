@@ -67,13 +67,17 @@ def verify_contacts_analysis_out(out_path, out_name, chains_list, log_file):
     base_path = F"{out_path}contacts/{out_name}"
 
     for chain_pair in list(itertools.combinations(chains_list, 2)):
-        pair_path = base_path + F"_{chain_pair[0]}-{chain_pair[1]}"
-        expected_files = [F"{pair_path}_contacts_count.csv", F"{pair_path}_contacts_map.csv"]
+        expected_files = []
+        pair_out_path = base_path + F"_{chain_pair[0]}-{chain_pair[1]}"
 
-        for file in expected_files:
-            if not check_file_exits(file):
-                log("error", F'Failed to measure contacts between chains {chain_pair[0]} and {chain_pair[1]}.')
-                analysis_failed = True
+        contact_types = ["nonbond", "hbonds", "sbridges"]
+        for contact_type in contact_types:
+            base_out_path = pair_out_path + F"_{contact_type}"
+            expected_files.extend([F"{base_out_path}_contacts_count.csv", F"{base_out_path}_contacts_map.csv"])
+
+        if any(not check_file_exits(file) for file in expected_files):
+            log("error", F'Failed to measure contacts between chains {chain_pair[0]} and {chain_pair[1]}.')
+            analysis_failed = True
 
     if analysis_failed:
         docker_logger(log_type="error", message=F"Check logs in {log_file} for more details.")

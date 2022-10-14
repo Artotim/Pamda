@@ -8,6 +8,8 @@ from src.color_log import docker_logger, log
 def create_plots(analysis_request, program_src_path, out_path, out_name, chains_list, hgl):
     """Create plots for each analysis"""
 
+    print()
+
     if analysis_request["rms_analysis"]:
         plot_rms(program_src_path, out_path, out_name, hgl)
 
@@ -22,6 +24,8 @@ def create_plots(analysis_request, program_src_path, out_path, out_name, chains_
 
     if analysis_request["energies_analysis"]:
         plot_energies(program_src_path, out_path, out_name, chains_list)
+
+    copy_results_html(program_src_path, out_path)
 
 
 def plot_rms(program_path, out_path, out_name, hgl):
@@ -41,37 +45,47 @@ def plot_contacts(program_path, out_path, out_name, chains_list, hgl):
 
     map_script = program_path + 'plots/plot_contacts_map.r'
     count_script = program_path + 'plots/plot_contacts_count.r'
+    contact_types = ["nonbond", "hbonds", "sbridges"]
 
     for chain_pair in list(itertools.combinations(chains_list, 2)):
-        plot_name = F"{out_name}_{chain_pair[0]}-{chain_pair[1]}"
+        log('info', F'Creating plots for contacts maps between chains {chain_pair[0]} and {chain_pair[1]}.')
+        silent = False
 
-        cmd = ['Rscript', '--vanilla', map_script, out_path, plot_name]
-        cmd = plot_highlight_residues(cmd, hgl)
+        for contact_type in contact_types:
+            plot_name = F"{out_name}_{chain_pair[0]}-{chain_pair[1]}_{contact_type}"
 
-        log('info', F'Creating plots for contacts map between chains {chain_pair[0]} and {chain_pair[1]}.')
-        run_plot(cmd, 'contacts', out_path, out_name)
+            cmd = ['Rscript', '--vanilla', map_script, out_path, plot_name]
+            cmd = plot_highlight_residues(cmd, hgl)
 
-        cmd = ['Rscript', '--vanilla', count_script, out_path, plot_name]
+            run_plot(cmd, 'contacts', out_path, out_name, silent)
+            run_ffmpeg(out_path, out_name, plot_name, contact_type)
+            silent = True
 
-        log('info', F'Creating plots for contacts count between chains {chain_pair[0]} and {chain_pair[1]}.')
-        run_plot(cmd, 'contacts', out_path, out_name)
+    for chain_pair in list(itertools.combinations(chains_list, 2)):
+        log('info', F'Creating plots for contacts counts between chains {chain_pair[0]} and {chain_pair[1]}.')
+        silent = False
 
-        run_ffmpeg(out_path, out_name, plot_name)
+        for contact_type in contact_types:
+            plot_name = F"{out_name}_{chain_pair[0]}-{chain_pair[1]}_{contact_type}"
+            cmd = ['Rscript', '--vanilla', count_script, out_path, plot_name]
+
+            run_plot(cmd, 'contacts', out_path, out_name, silent)
+            silent = True
 
 
-def run_ffmpeg(out_path, out_name, plot_name):
+def run_ffmpeg(out_path, out_name, plot_name, contact_type):
     """Run ffmpeg to convert contacts map steps to mp4"""
 
     from os.path import exists
 
-    out_file = F"{out_path}contacts/{plot_name}_contacts_map_steps.mp4"
+    out_file = F"{out_path}graphs/contacts/{plot_name}_contacts_map_steps.mp4"
 
     log_file = F"{out_path}logs/{out_name}_contacts_plot.log"
     err_file = F"{out_path}logs/{out_name}_contacts_plot.err"
 
     cmd = [
         "ffmpeg", "-framerate", "1", "-pattern_type", "glob",
-        "-i", F"{out_path}contacts/{plot_name}_contacts_map_step_*.png",
+        "-i", F"{out_path}graphs/contacts/{plot_name}_contacts_map_step_*.png",
         "-y", "-c:v", "libx264", "-r", "30",
         "-pix_fmt", "yuv420p", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
         out_file
@@ -87,9 +101,9 @@ def run_ffmpeg(out_path, out_name, plot_name):
         log('warning', 'Could not find installed ffmpeg to plot contacts.')
 
     if exists(out_file):
-        remove_file_pattern(F'{out_path}contacts/*step_*.png')
+        remove_file_pattern(F'{out_path}graphs/contacts/*step_*.png')
     else:
-        log('warning', 'Could not run ffmpeg on contacts plots.')
+        log('warning', F'Could not run ffmpeg on {contact_type} contacts plots.')
 
 
 def remove_file_pattern(pattern):
@@ -153,12 +167,14 @@ def plot_highlight_residues(cmd, highlight):
     return cmd
 
 
-def run_plot(cmd, log_name, out_path, out_name):
+def run_plot(cmd, log_name, out_path, out_name, silent=False):
     """Run command with Rscript"""
 
     log_file = F"{out_path}logs/{out_name}_{log_name}_plot.log"
     err_file = F"{out_path}logs/{out_name}_{log_name}_plot.err"
-    docker_logger(log_type='info', message='Logging plot info to ' + log_file + '.')
+
+    if not silent:
+        docker_logger(log_type='info', message='Logging plot info to ' + log_file + '.')
 
     try:
         with open(log_file, 'a+') as log_f, open(err_file, "a+") as err_f:
@@ -171,3 +187,10 @@ def run_plot(cmd, log_name, out_path, out_name):
 
     except (PermissionError, FileNotFoundError):
         log('error', 'Failed to plot ' + log_name + '.')
+
+
+def copy_results_html(program_src_path, out_path):
+    """Copy results html page to output folder"""
+
+    import shutil
+    shutil.copy(F"{program_src_path}plots/results_viewer.html", F"{out_path}graphs/")

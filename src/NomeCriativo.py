@@ -2,7 +2,7 @@ import os
 
 from src.color_log import docker_logger, log
 from src.pre_run_routines import get_program_src_path, check_input_molecule_files, resolve_out_name, \
-    create_output_dir, create_outputs_sub_dir, check_vmd, check_dependencies, check_r
+    create_output_main_dir, create_outputs_dir, check_vmd, check_dependencies, check_r, write_parameters_json
 from src.md_info_routines import get_last_frame, decide_interval, get_molecule_chains, get_dist_pair_info, get_hgl_info
 from src.tcl_writer import TclWriter
 from src.vmd_runner import start_create_models, start_frame_analysis, start_energies_analysis
@@ -36,6 +36,7 @@ class NomeCriativo:
         self.contacts_analysis = kwargs['contacts']
         self.contacts_interval = kwargs['contacts_interval']
         self.contacts_cutoff = kwargs['contacts_cutoff']
+        self.contacts_h_angle = kwargs['contacts_h_angle']
 
         self._dist_pairs = kwargs['dist_pair']
         self.distances_analysis = True if len(self._dist_pairs) > 0 else False
@@ -48,7 +49,7 @@ class NomeCriativo:
 
         self.energies_analysis = kwargs['energies']
 
-        self._plot_graphs = kwargs['graphs']
+        self.plot_graphs = kwargs['graphs']
 
         self.guess_chains = kwargs['guess_chains']
         self.run_pbc = kwargs['pbc']
@@ -102,6 +103,9 @@ class NomeCriativo:
         # Create tcl writer
         tcl_writer = TclWriter(self)
 
+        # Write analysis parameters
+        self._resolve_write_parameters()
+
         # Start frame analysis
         self._resolve_frame_analysis(tcl_writer)
 
@@ -112,7 +116,7 @@ class NomeCriativo:
         delete_temp_files(self.out_path, self.frame_analysis, self.energies_analysis)
 
         # Run R plots and analysis
-        if self._plot_graphs:
+        if self.plot_graphs:
             create_plots(self.analysis_request, self.program_src_path, self.out_path, self.out_name,
                          self.chains_list, self.highlight_residues)
 
@@ -150,11 +154,11 @@ class NomeCriativo:
     def _create_outputs_directories(self):
         """Create an output directory and necessary subdirectories"""
 
-        self.out_path = create_output_dir(self.out_path, self.out_name)
+        self.out_path = create_output_main_dir(self.out_path, self.out_name)
         if not self.out_path:
             exit(1)
 
-        create_outputs_sub_dir(self.out_path, self.analysis_request)
+        create_outputs_dir(self.out_path, self.analysis_request, self.plot_graphs)
 
     def _check_dependencies(self):
         """Check if dependencies are working"""
@@ -163,7 +167,7 @@ class NomeCriativo:
 
         if not self.vmd_exe or \
                 not check_dependencies(self.energies_analysis, self.program_src_path) or \
-                not check_r(self._plot_graphs, self.out_path):
+                not check_r(self.plot_graphs, self.out_path):
             exit(1)
 
     def _resolve_frame_range(self):
@@ -240,6 +244,45 @@ class NomeCriativo:
         self._dist_pairs, self.dist_pairs_names = get_dist_pair_info(self._dist_pairs, self.dist_type, first_frame_pdb)
         if not self._dist_pairs or not self.dist_pairs_names:
             exit(1)
+
+    def _resolve_write_parameters(self):
+        """Writes analysis request parameters to json file"""
+
+        requested_analysis = []
+        for analysis, requested in self.analysis_request.items():
+            if requested:
+                analysis = analysis.split("_")[0].capitalize().replace("Rms", "RMS").replace("Sasa", "SASA")
+                requested_analysis.append(analysis)
+
+        parameters = {
+            "Name": self.out_name,
+            "Md type": self.md_type,
+            "Run pbc": str(self.run_pbc),
+            "First analysed frame": f"{self.first_frame:,}",
+            "Last analysed frame": f"{self.last_frame:,}",
+            "Requested analysis": ", ".join(requested_analysis),
+            "Chains": ", ".join(self.chains_list),
+            "Guess chains": str(self.guess_chains)
+        }
+
+        if self.highlight_residues:
+            parameters["Highlight residues"] = ", ".join(self.highlight_residues.values())
+        if self.contacts_analysis:
+            parameters["Contacts cutoff"] = str(self.contacts_cutoff)
+        if self.contacts_analysis:
+            parameters["Hydrogen Bonds angle cutoff"] = str(self.contacts_h_angle)
+        if self.contacts_analysis:
+            parameters["Contacts measurement interval"] = str(self.contacts_interval)
+        if self.distances_analysis:
+            parameters["Distances type"] = self.dist_type
+        if self.distances_analysis:
+            parameters["Distances pairs"] = ", ".join([pair.replace("to", " ") for pair in self.dist_pairs_names])
+        if self.sasa_analysis:
+            parameters["SASA radius"] = str(self.sasa_radius)
+        if self.sasa_analysis:
+            parameters["SASA measurement interval"] = str(self.sasa_interval)
+
+        write_parameters_json(self.out_path, parameters)
 
     def _resolve_frame_analysis(self, tcl_writer):
         """Prepare and run frame analysis"""

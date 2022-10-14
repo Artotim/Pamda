@@ -23,14 +23,14 @@ set_frame_breaks <- function(original_func, data_range) {
 
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
-out.path <- args[1]
-out.path <- paste0(out.path, "distances/")
 
+csv.out.path <- paste0(args[1], "distances/")
+plot.out.path <- paste0(args[1], "graphs/distances/")
 name <- args[2]
 
 
 # Load distance file
-file.name <- paste0(out.path, name, "_all_distances.csv")
+file.name <- paste0(csv.out.path, name, "_all_distances.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -53,11 +53,11 @@ for (i in 2:ncol(distance.all)) {
     cat("Ploting distance between", pair1_name, "and", paste0(pair2_name, ".\n"))
 
     png.name <- paste0("_pair", i - 1, "_distance.png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     plot <- ggplot(distance.all, aes_string(x = 'frame', y = colname)) +
         geom_line(color = "#bfbfbf") +
-        geom_smooth(color = "#009933", size = 2) +
+        geom_smooth(color = "#009933", size = 2, se = FALSE, span = 0.2) +
         labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance in Å") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +

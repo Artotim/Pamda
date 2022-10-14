@@ -54,8 +54,8 @@ def resolve_out_name(out_name, md_path, silent=False):
     return out_name
 
 
-def create_output_dir(out_path, out_name, silent=False):
-    """Create output directory if not exist"""
+def create_output_main_dir(out_path, out_name, silent=False):
+    """Create output main directory if not exist"""
 
     if not out_path:
         out_path = os.path.abspath(out_name) + '/'
@@ -74,16 +74,21 @@ def create_output_dir(out_path, out_name, silent=False):
     return out_path
 
 
-def create_outputs_sub_dir(out_path, analysis_request):
-    """Create the subdirectories inside output folder"""
-
-    def create_dir(dir_path):
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+def create_outputs_dir(out_path, analysis_request, plot_graphs):
+    """Create the directories inside output main folder"""
 
     create_dir(out_path + 'logs')
     create_dir(out_path + 'models')
 
+    create_outputs_sub_dir(out_path, analysis_request)
+
+    if plot_graphs:
+        create_dir(out_path + 'graphs')
+        create_outputs_sub_dir(out_path + 'graphs/', analysis_request)
+
+
+def create_outputs_sub_dir(out_path, analysis_request):
+    """Create the subdirectories inside output folder"""
     if analysis_request["rms_analysis"]:
         create_dir(out_path + 'rms')
 
@@ -98,6 +103,13 @@ def create_outputs_sub_dir(out_path, analysis_request):
 
     if analysis_request["energies_analysis"]:
         create_dir(out_path + 'energies')
+
+
+def create_dir(dir_path):
+    """Creates a directory if not exists"""
+
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
 
 def check_vmd(vmd, silent=False):
@@ -193,3 +205,11 @@ def check_r(run_r, out_path):
         log('error', 'R not found.')
         finish_test(r_test, r_file_path)
         return False
+
+
+def write_parameters_json(out_path, parameters):
+    """Write requested parameters to json file"""
+
+    import json
+    with open(out_path + 'analysis_request_parameters.json', 'w') as request_parameters_file:
+        json.dump(parameters, request_parameters_file, indent=4)

@@ -19,11 +19,10 @@ library('extrafont')
 
 # Resolve file names
 args <- commandArgs(trailingOnly = TRUE)
-out.path <- args[1]
-out.path <- paste0(out.path, "contacts/")
 
+csv.out.path <- paste0(args[1], "contacts/")
+plot.out.path <- paste0(args[1], "graphs/contacts/")
 name <- args[2]
-interaction.name <- str_split_fixed(name, '_', 2)[2]
 
 
 # Resolve highlight residues
@@ -34,7 +33,7 @@ highlight <- data.frame(
 
 
 # Load contact map
-file.name <- paste0(out.path, name, "_contacts_map.csv")
+file.name <- paste0(csv.out.path, name, "_contacts_map.csv")
 if (!file.exists(file.name)) {
     stop("Missing file ", file.name)
 }
@@ -46,32 +45,58 @@ contacts.map <- read.table(file.name,
 )
 
 
-# Define main chain by size
-if (max(contacts.map[4]) - min(contacts.map[4]) >= max(contacts.map[8]) - min(contacts.map[8])) {
-    chain1_idx <- 4
-    chain2_idx <- 8
+# Organize chains in same columns
+chains <- unique(c(as.character(contacts.map[[6]]), as.character(contacts.map[[11]])))
+
+if (grepl("all", name, fixed = TRUE)) {
+    contacts.map.ordered <- contacts.map
 } else {
-    chain1_idx <- 8
+    contacts.map.ordered <- contacts.map[FALSE,]
+    for (row_idx in 1:nrow(contacts.map)) {
+        row <- contacts.map[row_idx,]
+        if (contacts.map[row_idx,][6] != chains[1]) {
+            row[2:6] <- contacts.map[row_idx,][7:11]
+            row[7:11] <- contacts.map[row_idx,][2:6]
+        }
+
+        contacts.map.ordered <- rbind(contacts.map.ordered, row)
+    }
+}
+rm(contacts.map)
+
+
+# Define main chain by size
+if (max(contacts.map.ordered[4]) - min(contacts.map.ordered[4]) >= max(contacts.map.ordered[9]) - min(contacts.map.ordered[9])) {
+    chain1_idx <- 4
+    chain2_idx <- 9
+} else {
+    chain1_idx <- 9
     chain2_idx <- 4
 }
 
 
 # Get contacting residues
-chain1_resid <- colnames(contacts.map)[chain1_idx]
-chain2_resid <- colnames(contacts.map)[chain2_idx]
-contact.residues <- contacts.map[c("frame", chain1_resid, chain2_resid)]
+chain1_resid <- colnames(contacts.map.ordered)[chain1_idx]
+chain2_resid <- colnames(contacts.map.ordered)[chain2_idx]
+contact.residues <- contacts.map.ordered[c("frame", chain1_resid, chain2_resid)]
+
+
+# Set count equal to 1 per frame for saline bridges
+if (grepl("sbridges", name, fixed = TRUE)) {
+    contact.residues <- unique(contact.residues)
+}
 
 
 # Get chain residues length
 chain1_first <- min(contact.residues[chain1_resid])
 chain1_last <- max(contact.residues[chain1_resid])
 chain1_length <- length(chain1_first:chain1_last)
-chain1_name <- str_replace(chain1_resid, "resid_", "")
+chain1_name <- as.character(contacts.map.ordered[chain1_idx + 2][1,])
 
 chain2_first <- min(contact.residues[chain2_resid])
 chain2_last <- max(contact.residues[chain2_resid])
 chain2_length <- length(chain2_first:chain2_last)
-chain2_name <- str_replace(chain2_resid, "resid_", "")
+chain2_name <- as.character(contacts.map.ordered[chain2_idx + 2][1,])
 
 
 # Create matrix for residue contact
@@ -107,7 +132,7 @@ highlight <- if (nrow(highlight) != 0) highlight else data.frame(resn = NaN, res
 for (i in highlight$resi) {
     if (!(i %in% all.subset[[chain1_name]]) && !is.na(i)) {
         append.resi <- data.frame(chain1 = i, chain2 = chain2_first, count = 0)
-        colnames(append.resi) <- c(chain1_name, chain2_name, "count")
+        colnames(append.resi) <- colnames(all.subset)
         all.subset <- rbind(all.subset, append.resi)
     }
 }
@@ -116,34 +141,50 @@ highlight$label <- with(highlight, paste0(resi, '\n', resn))
 highlight$label <- gsub("\nNA", "", highlight$label)
 
 all.subset[[chain1_name]] <- ordered(all.subset[[chain1_name]], levels = str_sort(unique(all.subset[[chain1_name]]), numeric = TRUE))
+all.subset$count[all.subset$count == 0] <- NA
+
+
+# Get chain1 labels
+chain1_labels <- unique(str_sort(all.subset[[chain1_name]], numeric = TRUE))
+if (length(chain1_labels) > 40) {
+    chain1_labels[c(FALSE, TRUE)] <- ""
+}
 
 
 # Get chain2 labels info
-if (chain2_length <= 20) {
+if (length(unique(contact.residues[[chain2_resid]])) <= 20) {
     chain2_residues <- ''
     for (i in unique(str_sort(all.subset[[chain2_name]], numeric = TRUE))) {
-        resid <- as.character(contacts.map[[9]][match(i, contact.residues[[chain2_resid]])])
+        resid <- as.character(contacts.map.ordered[[10]][match(i, contact.residues[[chain2_resid]])])
         chain2_residues <- paste0(chain2_residues, i, "\n", resid, " ")
     }
     chain2_labels <- str_split(chain2_residues, " ")
 } else {
     chain2_labels <- unique(str_sort(all.subset[[chain2_name]], numeric = TRUE))
 }
+chain2_contacts_len <- length(unique(all.subset[[chain2_name]]))
+
+
+# Get interactions name for plot titles
+interaction.name <- paste(str_replace(tail(str_split(name, '_')[[1]], 2), "_", " "), collapse = " ")
+interaction.name <- str_replace(interaction.name, 'nonbond', "Non-bonded")
+interaction.name <- str_replace(interaction.name, 'hbonds', "Hydrogen Bonds")
+interaction.name <- str_replace(interaction.name, 'sbridges', "Salt Bridges")
 
 
 # Plot all graph
-out.name <- paste0(out.path, name, "_contacts_map.png")
+out.name <- paste0(plot.out.path, name, "_contacts_map.png")
 
 cat("Ploting contact map.\n")
 plot <- ggplot(all.subset, aes_string(chain2_name, chain1_name)) +
     geom_raster(aes(fill = count)) +
     geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-    geom_text(data = highlight, aes_string(x = chain2_length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
-    geom_vline(xintercept = seq(1.5, chain2_length - 0.5, 1), lwd = 0.5, colour = "black") +
-    scale_fill_gradient(low = "white", high = "red") +
-    scale_y_discrete(breaks = unique(str_sort(all.subset[[chain1_name]], numeric = TRUE))) +
+    geom_text(data = highlight, aes_string(x = chain2_contacts_len + 0.7, y = "resi", label = "label"), color = "#b30000", size = 3.3, lineheight = 1) +
+    geom_vline(xintercept = seq(1.5, chain2_contacts_len - 0.5, 1), lwd = 0.5, colour = "black") +
+    scale_fill_gradient(low = "white", high = "red", limits = c(0, max(all.subset$count)), na.value = "transparent") +
+    scale_y_discrete(breaks = unique(str_sort(all.subset[[chain1_name]], numeric = TRUE)), labels = chain1_labels) +
     scale_x_discrete(breaks = unique(str_sort(all.subset[[chain2_name]], numeric = TRUE)), labels = chain2_labels) +
-    labs(title = paste("Chains", interaction.name, "Contacts Map"), x = paste("Chain", chain2_name, "residues"), y = paste("Chain", chain1_name, "residues")) +
+    labs(title = paste("Chains", interaction.name, "Map"), x = paste("Chain", chain2_name, "residues"), y = paste("Chain", chain1_name, "residues")) +
     coord_cartesian(clip = 'off') +
     theme_minimal() +
     theme(text = element_text(family = "Times New Roman")) +
@@ -151,13 +192,13 @@ plot <- ggplot(all.subset, aes_string(chain2_name, chain1_name)) +
     theme(axis.title = element_text(size = 24)) +
     theme(axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 14)) +
     theme(panel.grid.major.x = element_blank()) +
-    labs(fill = "Contacts #")
+    theme(legend.title = element_text(size = 14)) +
+    labs(fill = "No. Contacts \nin Trajectory")
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 
 
 # Function to get frame ranges per step
-
 
 get_step_range <- function(step, first_frame, last_frame, frame_range) {
     if (first_frame == 1) first_frame <- 0
@@ -220,38 +261,47 @@ for (i in seq_along(contact.hits)) {
 
 # Plot graph
 for (i in seq_along(contact.hits)) {
+
+    # Prepare step subset
+    step.subset <- contact.hits[[i]][!(contact.hits[[i]]$count == 0),]
+    step.subset$count[step.subset$count == 0] <- NA
+
+    for (res in append(as.character(highlight$resi), as.character(unique(all.subset[[chain1_name]])))) {
+        if (!(res %in% step.subset[[chain1_name]]) && !is.na(res)) {
+            append.resi <- data.frame(chain1 = res, chain2 = chain2_first, count = 0)
+            colnames(append.resi) <- colnames(all.subset)
+            step.subset <- rbind(step.subset, append.resi)
+        }
+    }
+    for (res in as.character(unique(all.subset[[chain2_name]]))) {
+        if (!(res %in% step.subset[[chain2_name]])) {
+            append.resi <- data.frame(chain1 = chain1_first, chain2 = res, count = 0)
+            colnames(append.resi) <- colnames(all.subset)
+            step.subset <- rbind(step.subset, append.resi)
+        }
+    }
+
+    #Define plot name and title
     png.name <- paste0("_contacts_map_step_", sprintf("%02d", i), ".png")
-    out.name <- paste0(out.path, name, png.name)
+    out.name <- paste0(plot.out.path, name, png.name)
 
     step_range <- get_step_range(i, first_frame, last_frame, frame_range)
 
-    plot.title.prefix <- paste("Chains", interaction.name, "Contacts Map\nFrames: ")
+    plot.title.prefix <- paste("Chains", interaction.name, "Map\nFrames: ")
     if (step_range[2] >= 1000) {
         plot.title <- paste0(plot.title.prefix, round(step_range[1] / 1000, 1), "-", round(step_range[2] / 1000, 1), 'k')
     } else {
         plot.title <- paste0(plot.title.prefix, step_range[1], "-", step_range[2])
     }
 
-    step.subset <- contact.hits[[i]][contact.hits[[i]][[chain1_name]] %in% all.subset[[chain1_name]],]
-    step.subset$count[step.subset$count == 0] <- NA
-
-    for (res in highlight$resi) {
-        if (!(res %in% step.subset[[chain1_name]]) && !is.na(res)) {
-            append.resi <- data.frame(chain1 = i, chain2 = chain2_first, count = 0)
-            colnames(append.resi) <- c(chain1_name, chain2_name, "count")
-            step.subset <- rbind(step.subset, append.resi)
-        }
-    }
-    step.subset[[chain1_name]] <- ordered(step.subset[[chain1_name]], levels = str_sort(unique(step.subset[[chain1_name]]), numeric = TRUE))
-
     cat("Ploting contact map for step", i, '\n')
     plot <- ggplot(step.subset, aes_string(chain2_name, chain1_name)) +
         geom_raster(aes(fill = count)) +
         geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
-        geom_text(data = highlight, aes_string(x = chain2_length + 0.7, y = "resi", label = "label"), color = "#b30000", size = 4, lineheight = 1) +
-        geom_vline(xintercept = seq(1.5, chain2_length - 0.5, 1), lwd = 0.5, colour = "black") +
+        geom_text(data = highlight, aes_string(x = chain2_contacts_len + 0.7, y = "resi", label = "label"), color = "#b30000", size = 3.3, lineheight = 1) +
+        geom_vline(xintercept = seq(1.5, chain2_contacts_len - 0.5, 1), lwd = 0.5, colour = "black") +
         scale_fill_gradient(low = "white", high = "red", limits = max.range, na.value = "transparent") +
-        scale_y_discrete(breaks = unique(str_sort(all.subset[[chain1_name]], numeric = TRUE))) +
+        scale_y_discrete(breaks = unique(str_sort(all.subset[[chain1_name]], numeric = TRUE)), labels = chain1_labels) +
         scale_x_discrete(breaks = unique(str_sort(all.subset[[chain2_name]], numeric = TRUE)), labels = chain2_labels) +
         labs(title = plot.title, x = paste("Chain", chain2_name, "residues"), y = paste("Chain", chain1_name, "residues")) +
         coord_cartesian(clip = 'off') +
@@ -262,11 +312,11 @@ for (i in seq_along(contact.hits)) {
         theme(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 12)) +
         theme(panel.grid.major.x = element_blank()) +
         theme(plot.background = element_rect(fill = 'white', colour = 'white')) +
-        labs(fill = "Contacts #")
+        theme(legend.title = element_text(size = 14)) +
+        labs(fill = "No. Contacts \nin Frames")
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }
 
 
 cat("Done.\n\n")
-

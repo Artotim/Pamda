@@ -2,8 +2,34 @@
 
 
 proc nome_legal::prepare_rms {} {
-    nome_legal::create_rms_selections
     nome_legal::create_rms_out_files
+    nome_legal::create_rms_selections
+}
+
+
+proc nome_legal::create_rms_out_files {} {
+    puts "Creating rms out files"
+
+    variable out_path
+    variable out_name
+
+    variable mol
+    variable chain_list
+    variable residue_list
+
+    variable all_rmsd_out [open ${out_path}rms/${out_name}_all_rmsd.csv w]
+    puts -nonewline $all_rmsd_out "frame;all"
+    foreach chain $chain_list {
+        puts -nonewline $all_rmsd_out ";chain_${chain}_fit;chain_${chain}_no_fit"
+    }
+    puts $all_rmsd_out ""
+
+    variable residue_rmsd_out [open ${out_path}rms/${out_name}_residue_rmsd.csv w]
+    puts -nonewline $residue_rmsd_out "frame"
+    foreach residue $residue_list {
+        puts -nonewline $residue_rmsd_out ";${residue}"
+    }
+    puts $residue_rmsd_out ""
 }
 
 
@@ -56,32 +82,6 @@ proc nome_legal::create_reference_selections {reference_frame} {
 }
 
 
-proc nome_legal::create_rms_out_files {} {
-    puts "Creating rms out files"
-
-    variable out_path
-    variable out_name
-
-    variable mol
-    variable chain_list
-    variable residue_list
-
-    variable all_rmsd_out [open ${out_path}rms/${out_name}_all_rmsd.csv w]
-    puts -nonewline $all_rmsd_out "frame;all"
-    foreach chain $chain_list {
-        puts -nonewline $all_rmsd_out ";chain_$chain"
-    }
-    puts $all_rmsd_out ""
-
-    variable residue_rmsd_out [open ${out_path}rms/${out_name}_residue_rmsd.csv w]
-    puts -nonewline $residue_rmsd_out "frame"
-    foreach residue $residue_list {
-        puts -nonewline $residue_rmsd_out ";${residue}"
-    }
-    puts $residue_rmsd_out ""
-}
-
-
 proc nome_legal::measure_rms {frame} {
     variable first_frame
 
@@ -95,7 +95,6 @@ proc nome_legal::measure_rms {frame} {
         set reference_frame [expr [molinfo $mol get numframes] -1]
         nome_legal::create_reference_selections $reference_frame
         animate dup $mol
-
     }
 
     $all_atoms frame last
@@ -111,6 +110,8 @@ proc nome_legal::measure_all_rmsd {frame} {
 
     variable chain_list
     variable all_rmsd_out
+
+    variable all_atoms
     variable backbone_sel
     variable backbone_reference
     variable chain_sel_dict
@@ -120,8 +121,13 @@ proc nome_legal::measure_all_rmsd {frame} {
     puts -nonewline $all_rmsd_out "${frame};[format "%.4f" $all_rmsd]"
 
     foreach chain $chain_list {
-        set chain_rmsd [measure rmsd [dict get $chain_sel_dict $chain] [dict get $chain_reference_dict $chain]]
-        puts -nonewline $all_rmsd_out ";[format "%.4f" $chain_rmsd]"
+        set chain_no_fit_rmsd [measure rmsd [dict get $chain_sel_dict $chain] [dict get $chain_reference_dict $chain]]
+
+        $all_atoms move [measure fit [dict get $chain_sel_dict $chain] [dict get $chain_reference_dict $chain]]
+        set chain_fit_rmsd [measure rmsd [dict get $chain_sel_dict $chain] [dict get $chain_reference_dict $chain]]
+
+        $all_atoms move [measure fit $backbone_sel $backbone_reference]
+        puts -nonewline $all_rmsd_out ";[format "%.4f" $chain_fit_rmsd];[format "%.4f" $chain_no_fit_rmsd]"
     }
 
     puts $all_rmsd_out ""

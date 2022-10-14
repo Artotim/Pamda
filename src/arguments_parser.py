@@ -67,8 +67,10 @@ def make_parser():
 
     optional.add_argument('-C', '--contacts', action='store_true',
                           help='Run contacts analysis')
-    optional.add_argument('--contacts-cutoff', default=3, type=float, dest='contacts_cutoff', metavar='',
-                          help='Max Angstroms range to look for contacts (default: 3)')
+    optional.add_argument('--contacts-cutoff', default=3.3, type=float, dest='contacts_cutoff', metavar='',
+                          help='Max distance in Angstrom to consider a contact (default: 3.3)')
+    optional.add_argument('--contacts-hbond-angle', default=30, type=int, choices=range(1, 180), dest='contacts_h_angle'
+                          , metavar='', help='Max angle to consider a hydrogen bond (default: 30º)')
     optional.add_argument('-cci', '--contacts-interval', dest='contacts_interval', type=int, metavar='',
                           help='Frame interval to analyse contacts')
 
@@ -81,7 +83,7 @@ def make_parser():
     optional.add_argument('-S', '--sasa', action='store_true',
                           help='Run SASA analysis')
     optional.add_argument('--sasa-radius', dest='sasa_radius', type=float, metavar='', default=1.4,
-                          help='Radius to analyze SASA (default: 1.4')
+                          help='Radius to analyze SASA (default: 1.4)')
     optional.add_argument('-ssi', '--sasa-interval', dest='sasa_interval', type=int, metavar='',
                           help='Frame interval to analyse SASA')
 

@@ -21,7 +21,7 @@ proc nome_legal::energies_analysis_main {} {
     set current_frame $first_frame
     set next_frame $first_frame
 
-    set frame_range 5000
+    set frame_range 3000
     set first_analysis True
 
     while {$current_frame < [expr {$last_frame - 1}]} {

@@ -69,7 +69,7 @@ proc nome_legal::frame_analysis {frame} {
     variable distances_analysis
     variable sasa_analysis
 
-    if {[expr $frame % $kfi] == 0} {
+    if {[expr $frame % $kfi] == 0 && $frame <= $last_frame} {
         # Must duplicate frame before align and delete aligned one for pbc to work
         if {$run_pbc == "True"} {pbc_wrap "current_frame"}
         set bigdcd_keepframe "True"
