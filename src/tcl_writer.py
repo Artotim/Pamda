@@ -73,6 +73,7 @@ class TclWriter:
 
         tcl_script = set_variable(tcl_script, "cci", self.nome_legal.contacts_interval)
         tcl_script = set_variable(tcl_script, "contacts_cutoff", self.nome_legal.contacts_cutoff)
+        tcl_script = set_variable(tcl_script, "contacts_hbond_angle", self.nome_legal.contacts_h_angle)
         return tcl_script
 
     def set_distances_analysis_variables(self, tcl_script):
