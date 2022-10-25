@@ -1,5 +1,5 @@
 # Nome Legal
-Visit our [home page](http://biodados.icb.ufmg.br/nome_legal/)
+Visit our [home page](http://biodados.icb.ufmg.br/nome_legal/)!
 
 This program was created to facilitate the study and analysis of molecular dynamics without the need for programming. It has the advantage of being able to analyze very large dynamics, which would not fit in memory for a traditional analysis.
 
