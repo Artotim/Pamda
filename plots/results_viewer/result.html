@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="dynamic_data.css">
+    <link rel="stylesheet" type="text/css" href="header_nav_bars.css">
+    <link rel="stylesheet" type="text/css" href="html_elements.css">
+
+    <link rel="stylesheet" href="flickity.css" media="screen">
+    <link rel="stylesheet" href="https://unpkg.com/flickity-fullscreen@1/fullscreen.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <title>Dynamic analysis data</title>
+
+    <meta charset="ISO-8859-1">
+    <meta name="description" content="Data from Coronavirus spike convertases dynamic analysis.">
+    <meta name="keywords" content="coronavirus, coronavirus data, covid-19, convertase">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="helper_functions.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+
+<body>
+
+<header class="topBar top">
+    <div class="topBar-title pageTitle">Dynamic Analysis Results</div>
+    <a href="javascript:void(0)" class="button topButton hide-large" onclick="openSideBar()" title="open side menu">
+        <i class="fa fa-bars"></i>
+    </a>
+    <div id="my-name">generated automatically by
+        <a target="_blank" href="http://biodados.icb.ufmg.br/nome_legal/" id="my-name-link">
+            <b>Nome Legal</b>
+        </a>
+    </div>
+</header>
+
+<nav class="sidebar collapse" id="mySidebar">
+    <div class="navContainer">
+        <i onclick="closeSideBar()" class="fa fa-remove hide-large button fa-lg sideButton" title="close side menu"></i>
+        <h3 class="pageTitle">
+            <b>Index</b></h3>
+    </div>
+    <div id="nav-titles"></div>
+</nav>
+
+<div class="overlay hide-large" onclick="closeSideBar()" style="cursor:pointer" title="close side menu"
+     id="myOverlay">
+</div>
+
+<div id="content"></div>
+<div id="infoTooltip"></div>
+
+<script src="dynamic_info_tooltip.js" type="text/babel"></script>
+<script src="flickity.pkgd.min.js"></script>
+<script src="dynamic_data.js" type="text/babel"></script>
+<script src="header_nav_bars.js" type="text/babel"></script>
+<script src="https://unpkg.com/flickity-fullscreen@1/fullscreen.js"></script>
+
+</body>
+</html>
+

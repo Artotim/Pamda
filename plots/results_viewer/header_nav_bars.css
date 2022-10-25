@@ -1,0 +1,176 @@
+.topBar {
+    width: 100vw;
+    padding: 8px 16px;
+    float: left;
+    border: none;
+    display: block;
+    outline: 0;
+    color: #fff;
+    background-color: #000;
+    font-size: 1.5em;
+    height: 22vmin;
+    z-index: 2;
+}
+
+.topBar-title, .topButton {
+    padding-top: 18px;
+    padding-bottom: 21px;
+    padding-left: 16px;
+    color: #fff;
+}
+
+@media (max-width: 660px) {
+    .topBar {
+        font-size: 1.1em;
+    }
+
+    .topBar-title, .topButton {
+        padding-top: 0;
+    }
+}
+
+.top {
+    position: fixed;
+    width: 100%;
+}
+
+.pageTitle {
+    letter-spacing: 4px;
+}
+
+#my-name {
+    margin-top: -1.3em;
+    padding-left: 16px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.7em;
+    letter-spacing: 1px;
+}
+
+#my-name-link {
+    color: #002db3;
+    text-decoration: none;
+}
+
+#my-name-link:hover {
+    background-color: white;
+    border-radius: 3px;
+}
+
+.topBar-menu-holder {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    padding-left: .5em;
+}
+
+.topBar-menu {
+    min-width: 50%;
+    font-size: .8em;
+}
+
+.topBar-menu-link {
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.topBar-menu-link:hover {
+    background-color: white;
+    color: black;
+    border-radius: 3px;
+}
+
+.sidebar {
+    height: 80vh;
+    margin-top: 23vmin;
+    width: 250px;
+    background-color: #fff;
+    position: fixed;
+    z-index: 3;
+    overflow-y: scroll;
+    scroll-padding-top: 30vh;
+}
+
+.sidebar-item {
+    width: 100%;
+    display: block;
+    padding: 8px 16px;
+    text-align: left;
+    border: none;
+    vertical-align: middle;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.sidebar-item.subtitle {
+    color: #8c8c8c;
+    margin-top: -.9em;
+    padding-left: 1.9em;
+    font-size: .8em;
+}
+
+.sidebar-item-now {
+    background-color: #e6e6e6;
+}
+
+.sidebar-item:hover {
+    color: #000;
+    background-color: #ccc
+}
+
+
+.navContainer {
+    padding: 12px;
+}
+
+#title-holder {
+    color: #757575;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 62px;
+}
+
+.button {
+    position: absolute;
+    right: .5em;
+    top: 1em;
+    border: none;
+    display: inline-block;
+    padding: 8px 16px;
+    vertical-align: middle;
+    cursor: pointer
+}
+
+.button:hover {
+    color: #000;
+    background-color: #ccc
+}
+
+.sideButton {
+    top: 1.3em;
+}
+
+.overlay {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2
+}
+
+@media (min-width: 993px) {
+    .sidebar.collapse {
+        display: block !important
+    }
+
+    .hide-large {
+        display: none !important
+    }
+}
+
+@media (max-width: 992px) {
+    .sidebar.collapse {
+        display: none
+    }
+}

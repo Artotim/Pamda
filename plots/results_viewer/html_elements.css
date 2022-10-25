@@ -1,0 +1,52 @@
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #e6e6e6;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+html {
+    box-sizing: border-box;
+    scroll-padding-top: 23vmin; /* height of sticky header */
+}
+
+*, *:before, *:after {
+    box-sizing: inherit
+}
+
+body {
+    margin: 0
+}
+
+html, body {
+    font-family: Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.5
+}
+
+h3 {
+    font-size: 24px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-weight: 400;
+    margin: 10px 0
+}
+
+a {
+    color: inherit
+}
+
+
+@media (max-width: 330px) {
+    body {
+        font-size: 12px;
+    }
+}
