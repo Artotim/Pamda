@@ -190,7 +190,30 @@ def run_plot(cmd, log_name, out_path, out_name, silent=False):
 
 
 def copy_results_html(program_src_path, out_path):
-    """Copy results html page to output folder"""
+    """Merge dependencies and copy results html page to output folder"""
 
-    import shutil
-    shutil.copy(F"{program_src_path}plots/results_viewer.html", F"{out_path}graphs/")
+    from bs4 import BeautifulSoup
+    from os.path import exists
+
+    results_viewer_folder = F"{program_src_path}plots/results_viewer/"
+
+    soup = BeautifulSoup(open(F"{results_viewer_folder}results_viewer.html", "r"))
+
+    for tag in soup.find_all(['link', 'script']):
+        if tag.has_attr('href') or tag.has_attr('src'):
+            file_path = tag["href"] if tag.name == "link" else tag["src"]
+
+            if not exists(file_path):
+                continue
+
+            file_text = open(results_viewer_folder + file_path, "r").read()
+            new_tag = soup.new_tag("style") if tag.name == "link" else soup.new_tag("script")
+            new_tag.string = file_text
+
+            if tag.name == "script" and tag.has_attr("type"):
+                new_tag["type"] = tag["type"]
+
+            tag.replace_with(new_tag)
+
+    with open(F"{out_path}graphs/results_viewer.html", "w") as user_result_html:
+        user_result_html.write(str(soup))
