@@ -1,134 +1,33 @@
-# Protein-peptide `.dcd` dynamics analysis
-This software generates analysis data from a dynamic run in `.dcd` format for a protein-peptide complex, or a single protein.
+# Nome legal
+This program was created to facilitate the study and analysis of molecular dynamics without the need for programming. It has the advantage of being able to analyze very large dynamics, which would not fit in memory for a traditional analysis.
 
-It can generate *csv* and plot files with information about contact hits between chains; map contacts between chain residues; RMSD general and for individual chains or residues; RMSF for each residue; complex energies; interaction energies; and distances between set of atoms or residues.
+This program is contained within a Docker container, and mostly uses VMD to perform the analysis. Both are not provided by us and must be obtained and installed separately. 
 
-## Contacts
-Analyze contacts between chains every frame interval. Reports number of contacts for each frame and maps which residues and atoms are contacting for the entire simulation.
- 
-`-C` Enables contact analysis.  
-`-cti` Defines interval for running contact analysis.
-`--cutoff` Defines max Ångström to look for contacts.
+With this program you will be able to perform analysis of **RMS**, **contacts between chains**, **distances**, **SASA**, **BSA** and **energies**. Currently it only supports Gromacs and NAMD dynamics. 
 
-## RMSD and RMSF
-Measures RMSD in each frame, for the entire complex and separated chains, and measure RMSF for each residue. 
-
-`-R` Enables RMSD and RMSF analysis.
-
-## Energies
-Measures angles, bond, conformational, dihedrals, electrostatic , impropers, nonbond, vdW, and total energies in the complex and between chains interaction.
-
-`-E` Enables energies analysis.
-
-## Distances
-Measures distances in Ångström between a pair of atom os residues.
-
-`-dpair` Specify a pair of residues, or atoms, to measure distances. More than one pair can be passed. You can pecify the chains using comma notation (i.e. 25:A).  
-`-dtype` Type of indexes passed as pairs to measure distance.
-
-## Plots
-Optionally you can plot the analysis results to a *png* file.
-
-`-R` Enables analysis plotting.
 
 ## Installation
-This software uses third party programs and requires you to first install/obtain them.
+This program requires Docker and VMD installed to run. After you installed the dependencies you can run it with the following commands:
 
-VMD must be obtained from [University of Illinois](https://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD).  
-
-After this, send an email with both licenses to [pyrthur@gmail.com](pyrthur@gmail.com) to get access to the download link.
-
-Download the program and untar it with:
-
-    tar -zxvf path/to/program.tar.gz
-
-Then give it executable permissions:
- 
-    chmod +x path/to/program/dynamic_analysis
-
-## Usage
-You can set the program to your path or simply run it with ./dynamic_analysis
-
-Basic usage: 
-```
-dynamic_analysis -dcd <dcd_file.dcd> -pdb <pdb_file.pdb> -psf <psf_file.pdf> -<analysis>`
+```shell
+wget http://biodados.icb.ufmg.br/nome_legal/nome_legal
+chmod -x nome_legal
+./nome_legal -h
 ```
 
-## Options
+A fully installation guide and **documentation** can be found on our home page [here](http://biodados.icb.ufmg.br/nome_legal/). 
 
-### Required:
-`-dcd` `DCD_PATH`  
-Indicates the path to your `dcd` file.
 
-`-pdb` `PDB_PATH`  
-Indicates the path to your `pdb` file.  
+## Contributing
+You can help by fixing bugs, implementing new features, improving analysis, keeping docs clean and up to date, in short, any contribution is always welcome.
 
-`-psf` `PSF_PATH`  
-Indicates the path to your `pdf` file.
+We use GitHub, so all code changes happen through pull requests.
 
-### Optional:
-`-h`, `--help`  
-Show help message and exit.
-***
+1. Fork the repository and create your branch from master.
+1. If you've changed the functionality, also issue a documentation update.
+3. Issue the pull request! 🎉
 
-`-n`, `--name` `NAME`  
-Prefix to name output files (default: same as `dcd`).
 
-`-o`, `--output` `OUTPUT_PATH`  
-Path to output folder. Creates one if not exist.
-***
-
-` -i`, `--init` `INT`  
-Frame to start analysis (default: first).
-
-`-l`, `--last` `INT`  
-Frame to end analysis (default: last).
-***
-
-`-vmd`, `--vmd-exe` `VMD_PATH`  
-Indicates the path to your vmd executable.
-***
-
-`-dpair`, `--dist-pair`  `IDX IDX`
-Index pairs to measure distances. Use this argument once for each pair. Specify the chains using comma notation (i.e. 25:A).
-
-`-dtype`, `--dist-type` `INT`  
-Type of index passed as distance pairs. Must be atom or resid (default:resid).
-***
-
-`-C`, `--contact`  
-Run contact count and map analysis (default: False).
-
-`-cti`, `--contact-interval` `INT`  
-Frame interval number to perform contact analysis.
-
-`-cutoff`, `INT`  
-Max angstroms range to look for contacts (default: 3).
-***
-
-`-R`, `--rmsd`   
-Run rmsd and rmsf analysis default: False).
-***
-
-`-E`, `--energies`  
-Run energies analysis (default: False).
-***
-
-`-G`, `--graphs`
-Plot analysis graphs (default: False).
-
-***
-`--compare-rmsd` `ALL.CSV` `RESIDUE.CSV`  
-Path to compare output rmsd files to plot compare stats (must include all and residue `csv`).
-
-`--compare-energies` `ENERGIES.CSV`  
-Path to compare output energies file to compare stats.
-***
-
-`-cat`, `--catalytic-site` `INT` `INT` `...`  
-Pass a list of residues to highlight on plots and also get specific plots.
-***
-     
 ## Disclaimer
 
 This product comes with no warranty whatsoever.  
@@ -138,6 +37,3 @@ This product is not an official VMD release or has any affiliation to it.
 This software includes code developed by the Theoretical and Computational Biophysics Group in the Beckman Institute for Advanced Science and Technology at the University of Illinois at Urbana-Champaign.
  
 Third party licenses not obtained by the user are provided with its software. 
-
-### Known issues and improvements to do
-- Provide full standalone program
