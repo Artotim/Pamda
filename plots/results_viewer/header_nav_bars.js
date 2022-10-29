@@ -1,15 +1,19 @@
 async function fetchRequestedAnalysis() {
-    const response = await fetch("../analysis_request_parameters.json");
-    const json = await response.json();
+    let parameters
+    if (analysis_request_parameters) {
+        parameters = analysis_request_parameters
+    } else {
+        return []
+    }
 
     let referenceList = ["Analysis Parameters"];
-    const requestedAnalysis = json["Requested analysis"].split(", ")
+    const requestedAnalysis = parameters["Requested analysis"].split(", ")
 
     if (requestedAnalysis.includes("RMS")) referenceList.push(...["RMSD", "RMSF"])
     if (requestedAnalysis.includes("Contacts")) referenceList.push("Contacts")
     if (requestedAnalysis.includes("Energies")) {
         referenceList.push("All Energies")
-        json["Chains"].split(", ").length >= 2 && referenceList.push("Interaction Energies")
+        parameters["Chains"].split(", ").length >= 2 && referenceList.push("Interaction Energies")
     }
     if (requestedAnalysis.includes("Distances")) referenceList.push("Distances")
     if (requestedAnalysis.includes("SASA")) referenceList.push("SASA")

@@ -25,7 +25,7 @@ def create_plots(analysis_request, program_src_path, out_path, out_name, chains_
     if analysis_request["energies_analysis"]:
         plot_energies(program_src_path, out_path, out_name, chains_list)
 
-    copy_results_html(program_src_path, out_path)
+    write_results_html(program_src_path, out_path)
 
 
 def plot_rms(program_path, out_path, out_name, hgl):
@@ -189,7 +189,7 @@ def run_plot(cmd, log_name, out_path, out_name, silent=False):
         log('error', 'Failed to plot ' + log_name + '.')
 
 
-def copy_results_html(program_src_path, out_path):
+def write_results_html(program_src_path, out_path):
     """Merge dependencies and copy results html page to output folder"""
 
     from bs4 import BeautifulSoup
@@ -197,16 +197,17 @@ def copy_results_html(program_src_path, out_path):
 
     results_viewer_folder = F"{program_src_path}plots/results_viewer/"
 
-    soup = BeautifulSoup(open(F"{results_viewer_folder}results_viewer.html", "r"))
+    soup = BeautifulSoup(open(F"{results_viewer_folder}results_viewer.html", "r"), "html.parser")
 
     for tag in soup.find_all(['link', 'script']):
         if tag.has_attr('href') or tag.has_attr('src'):
-            file_path = tag["href"] if tag.name == "link" else tag["src"]
+            file_name = tag["href"] if tag.name == "link" else tag["src"]
+            file_path = results_viewer_folder + file_name
 
             if not exists(file_path):
                 continue
 
-            file_text = open(results_viewer_folder + file_path, "r").read()
+            file_text = open(file_path, "r").read()
             new_tag = soup.new_tag("style") if tag.name == "link" else soup.new_tag("script")
             new_tag.string = file_text
 
@@ -215,5 +216,19 @@ def copy_results_html(program_src_path, out_path):
 
             tag.replace_with(new_tag)
 
+    soup = write_analysis_parameters_to_html(out_path, soup)
+
     with open(F"{out_path}graphs/results_viewer.html", "w") as user_result_html:
         user_result_html.write(str(soup))
+
+
+def write_analysis_parameters_to_html(out_path, soup):
+    with open(out_path + "analysis_request_parameters.json", "r") as parameters_file:
+        parameters_text = "analysis_request_parameters = " + parameters_file.read()
+
+    parameters_tag = soup.new_tag("script")
+    parameters_tag.string = parameters_text
+
+    soup.head.append(parameters_tag)
+
+    return soup

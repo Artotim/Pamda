@@ -41,15 +41,6 @@ const dynamic_data_legends = {
 };
 
 
-const toTitleCase = (phrase) => {
-    return phrase
-        .toLowerCase()
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-};
-
-
 function getCombinations(chainsList) {
     return chainsList.flatMap(
         (v, i) => chainsList.slice(i + 1).map(w => v + '-' + w)
@@ -82,17 +73,21 @@ class ConvertasePage extends React.Component {
     }
 
     async componentDidMount() {
-        const response = await fetch("../analysis_request_parameters.json");
-        const dynamicInfo = await response.json();
+        let parameters
+        if (analysis_request_parameters) {
+            parameters = analysis_request_parameters
+        } else {
+            return
+        }
 
         this.setState({
-            'name': dynamicInfo["Name"],
-            'dynamicInfo': dynamicInfo,
-            'requestedAnalysis': dynamicInfo["Requested analysis"].split(", "),
-            'chains': dynamicInfo["Chains"].split(", "),
+            'name': parameters["Name"],
+            'dynamicInfo': parameters,
+            'requestedAnalysis': parameters["Requested analysis"].split(", "),
+            'chains': parameters["Chains"].split(", "),
         }, componentUpdated());
 
-        document.title = dynamicInfo["Name"] + " - Dynamic Analysis Results";
+        document.title = parameters["Name"] + " - Dynamic Analysis Results";
     }
 
     componentDidUpdate() {
@@ -103,7 +98,7 @@ class ConvertasePage extends React.Component {
         return (
             <div id='content-holder'>
                 <div id="Title">
-                    <h1>{toTitleCase(this.state.name)} Analysis Results</h1>
+                    <h1>{this.state.name} Analysis Results</h1>
                 </div>
                 <div id="content-body">
                     <Info name={this.state.name} dynamicInfo={this.state.dynamicInfo}/>
