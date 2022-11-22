@@ -88,9 +88,6 @@ proc nome_legal::measure_distances {frame} {
             set dist [measure bond [list $pair1_idx $pair2_idx] frame last]
         }
 
-        $pair1_sel delete
-        $pair2_sel delete
-
         puts -nonewline $dist_out ";[format "%.4f" $dist]"
     }
 
