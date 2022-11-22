@@ -5,7 +5,7 @@ import itertools
 from src.color_log import log
 
 
-def create_rmsf_out(out_path, out_name):
+def create_rmsd_sd_out(out_path, out_name):
     """Calculate RMSF for each residue"""
 
     from pandas import read_csv
@@ -19,10 +19,10 @@ def create_rmsf_out(out_path, out_name):
     third2 = round((len(residue_rmsd) / 3) * 2)
     third3 = round((len(residue_rmsd) / 3) * 3)
 
-    rmsf_out = F"{out_path}rms/{out_name}_all_rmsf.csv"
+    rmsf_out = F"{out_path}rms/{out_name}_residue_rmsd_sd.csv"
 
     with open(rmsf_out, 'w') as rmsf_file:
-        rmsf_file.write("residue;rmsf;rmsf_init;rmsf_middle;rmsf_final\n")
+        rmsf_file.write("residue;total_rmsd_sd;init_rmsd_sd;middle_rmsd_sd;final_rmsd_sd\n")
 
         for column in residue_rmsd.columns[1:]:
             sd_total = str(residue_rmsd[column].std())

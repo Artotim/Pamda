@@ -6,7 +6,7 @@ from src.pre_run_routines import get_program_src_path, check_input_molecule_file
 from src.md_info_routines import get_last_frame, decide_interval, get_molecule_chains, get_dist_pair_info, get_hgl_info
 from src.tcl_writer import TclWriter
 from src.vmd_runner import start_create_models, start_frame_analysis, start_energies_analysis
-from src.analysis_helpers import create_rmsf_out, merge_energies, delete_temp_files
+from src.analysis_helpers import create_rmsd_sd_out, merge_energies, delete_temp_files
 from src.assert_out_analysis import verify_write_models_out, verify_frame_analysis_out, verify_energies_analysis_out
 from src.plot_creator import create_plots
 
@@ -297,7 +297,7 @@ class NomeCriativo:
                                       self.highlight_residues)
 
             if self.rms_analysis:
-                create_rmsf_out(self.out_path, self.out_name)
+                create_rmsd_sd_out(self.out_path, self.out_name)
 
     def _resolve_energies_analysis(self, tcl_writer):
         """Prepare and run energies analysis"""

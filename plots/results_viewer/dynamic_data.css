@@ -22,6 +22,10 @@
     }
 }
 
+.Title-name {
+    margin-bottom: -1em;
+}
+
 .dynamic-data {
     column-count: 2;
     width: 90%;

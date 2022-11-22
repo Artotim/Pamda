@@ -7,10 +7,8 @@ const dynamic_data_legends = {
     ],
     "RMSF": [
         "Chain x RMSF",
-        "Chain x RMSF for each step",
-        "Chain x RMSF initial 1/3 analysed frames",
-        "Chain x RMSF middle of analysed frames",
-        "Chain x RMSF last 1/3 analysed frames",
+        "Chain x no fit RMSD standard deviation for each residue, in entire dynamic",
+        "Chain x no fit RMSD standard deviation for each residue, divided between dynamics slices",
     ],
     "Contacts": [
         "Number of contactType contacts per frame between chains chainComb",
@@ -201,11 +199,9 @@ const Rmsf = props => {
 
     props.chains.forEach(chain => {
         const rmsfImages = [
-            '_chain_' + chain + '_rmsf.png',
-            '_chain_' + chain + '_rmsf_steps.png',
-            '_chain_' + chain + '_rmsf_init.png',
-            '_chain_' + chain + '_rmsf_middle.png',
-            '_chain_' + chain + '_rmsf_final.png',
+            '_chain_' + chain + '_residues_rmsf.png',
+            '_chain_' + chain + '_total_rmsd_sd.png',
+            '_chain_' + chain + '_portions_rmsd_sd.png'
         ];
 
         legend.push(...dynamic_data_legends["RMSF"].map(x => x.replace("x", chain)));

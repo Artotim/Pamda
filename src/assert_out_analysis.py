@@ -51,7 +51,7 @@ def verify_rms_analysis_out(out_path, out_name, log_file):
 
     base_path = F"{out_path}rms/{out_name}"
 
-    expected_files = [F"{base_path}_all_rmsd.csv", F"{base_path}_residue_rmsd.csv"]
+    expected_files = [F"{base_path}_all_rmsd.csv", F"{base_path}_residue_rmsd.csv", F"{base_path}_residue_rmsf.csv"]
 
     for file in expected_files:
         if not check_file_exits(file):
