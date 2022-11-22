@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 
 class CustomFormatter(logging.Formatter):
@@ -54,6 +55,9 @@ def log(log_type, message):
             logger.error(line)
         elif log_type == 'critical':
             logger.critical(line)
+
+    if log_type == 'warning':
+        sleep(1)
 
 
 class DockerLogger:
