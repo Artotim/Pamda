@@ -7,7 +7,7 @@ proc nome_legal::create_mol {} {
 
     puts "Creating molecule"
 
-    variable l
+    variable mol [mol new $str_path type $str_type waitfor all]
     animate delete beg 0 end -1 skip 0 $mol
 
     nome_legal::get_mol_info $mol
