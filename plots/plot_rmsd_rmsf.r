@@ -116,19 +116,6 @@ colors.steps <- c("init_rmsd_sd" = 'green', "middle_rmsd_sd" = 'blue', "final_rm
 # For each chain
 for (chain in names(rmsd.sd.table.divided)) {
 
-    # Get range for steps
-    steps.min_max <- c(+Inf, -Inf)
-    for (col_step in names(colors.steps)) {
-        range <- range(rmsd.sd.table.divided[[chain]][[col_step]])
-        if (range[2] > steps.min_max[2]) {
-            steps.min_max[2] <- range[2]
-        }
-        if (range[1] - range[2] * 0.06 < steps.min_max[1]) {
-            steps.min_max[1] <- range[1] - range[2] * 0.06
-        }
-    }
-
-
     # Create data for highlight labels
     highlight.data <- data.frame(matrix(ncol = 8, nrow = 0, dimnames = list(NULL, c(colnames(rmsd.sd.table), "label"))))
     for (row in seq_len(nrow(highlight))) {
@@ -142,7 +129,7 @@ for (chain in names(rmsd.sd.table.divided)) {
             highlight.data$label <- gsub("\nNA", "", highlight.data$label)
         }
     }
-    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 8, nrow = 1)
+    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 5, nrow = 1)
 
 
     # Plot total rmsd sd
@@ -240,7 +227,7 @@ for (chain in names(rmsf.table.divided)) {
             highlight.data$label <- gsub("\nNA", "", highlight.data$label)
         }
     }
-    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 8, nrow = 1)
+    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 5, nrow = 1)
 
     min_y_value <- min(rmsf.table.divided[[chain]]$rmsf)
     max_y_value <- max(rmsf.table.divided[[chain]]$rmsf)
