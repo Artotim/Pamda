@@ -46,7 +46,7 @@ contact.count <- read.table(file.name,
 
 # Get interactions name for plot titles
 interaction.name <- paste(str_replace(tail(str_split(name, '_')[[1]], 2), "_", " "), collapse = " ")
-interaction.name <- str_replace(interaction.name, 'all', "All")
+interaction.name <- str_replace(interaction.name, 'all', "All Contacts")
 interaction.name <- str_replace(interaction.name, 'hbonds', "Hydrogen Bonds")
 interaction.name <- str_replace(interaction.name, 'sbridges', "Salt Bridges")
 
