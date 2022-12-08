@@ -83,7 +83,7 @@ for (i in 2:ncol(sasa.all)) {
         geom_smooth(aes_(y = sasa.all[[sasa_colname]], color = "SASA"), size = 2, se = FALSE, span = 0.2) +
         geom_line(aes_string(y = bsa_colname), color = "#bfbfbf") +
         geom_smooth(aes_(y = sasa.all[[bsa_colname]], color = "BSA"), size = 2, se = FALSE, span = 0.2) +
-        labs(title = paste(plot.title, "Area"), x = "Frame", y = "Area in Å") +
+        labs(title = paste(plot.title, "Area"), x = "Frame", y = "Area (Å)") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(sasa.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
@@ -112,7 +112,7 @@ for (i in 2:ncol(sasa.all)) {
         geom_smooth(aes(y = SASA, color = "SASA"), size = 2, se = FALSE, span = 0.2) +
         geom_line(aes(y = BSA), color = "#bfbfbf") +
         geom_smooth(aes(y = BSA, color = "BSA"), size = 2, se = FALSE, span = 0.2) +
-        labs(title = paste(plot.title, "Percentage"), x = "Frame", y = "Area in percentage") +
+        labs(title = paste(plot.title, "Percentage"), x = "Frame", y = "Area (%)") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(sasa.all$frame)), labels = scales::comma_format()) +
         scale_y_continuous(limits = c(-0.009, 1.009), labels = label_percent()) +
         theme_minimal() +

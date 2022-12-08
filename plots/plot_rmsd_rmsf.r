@@ -72,7 +72,7 @@ for (i in 2:ncol(rmsd.all)) {
     plot <- ggplot(rmsd.all, aes_string(x = "frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#000033", size = 2, se = FALSE, span = 0.2) +
-        labs(title = plot.title, x = "Frame", y = "RMSD Value") +
+        labs(title = plot.title, x = "Frame", y = "RMSD (Å)") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(rmsd.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
@@ -159,7 +159,7 @@ for (chain in names(rmsd.sd.table.divided)) {
         geom_text(data = highlight.data, aes_string(x = "residue_number", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#800000", size = 5, lineheight = .7) +
         geom_segment(data = highlight.data, aes_string(x = "residue_number", xend = "residue_number", y = min_y_value - max_y_value * 0.01, yend = "total_rmsd_sd"), color = "#800000", size = 1, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(rmsd.sd.table.divided[[chain]]$residue) < 5) unique(rmsd.sd.table.divided[[chain]]$residue) else breaks_pretty()) +
-        labs(title = paste("Chain", chain, "no fit RMSD SD total"), x = "Residue", y = paste("RMSD Standard Deviation")) +
+        labs(title = paste("Chain", chain, "no fit RMSD SD total"), x = "Residue", y = "RMSD Standard Deviation (Å)") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -187,7 +187,7 @@ for (chain in names(rmsd.sd.table.divided)) {
         geom_text(data = highlight.data, aes_string(x = "residue_number", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#800000", size = 5, lineheight = .7) +
         geom_segment(data = highlight.data, aes_string(x = "residue_number", xend = "residue_number", y = min_y_value - max_y_value * 0.01, yend = "total_rmsd_sd"), color = "#800000", size = 1, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(rmsd.sd.chain.steps$residue) < 5) unique(rmsd.sd.chain.steps$residue) else breaks_pretty()) +
-        labs(title = paste("Chain", chain, "no fit RMSD SD per portions"), x = "Residue", y = "RMSD Standard Deviation") +
+        labs(title = paste("Chain", chain, "no fit RMSD SD per portions"), x = "Residue", y = "RMSD Standard Deviation (Å)") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -255,8 +255,7 @@ for (chain in names(rmsf.table.divided)) {
         geom_text(data = highlight.data, aes_string(x = "residue_number", y = min_y_value - max_y_value * 0.05, label = "label"), color = "#800000", size = 5, lineheight = .7) +
         geom_segment(data = highlight.data, aes_string(x = "residue_number", xend = "residue_number", y = min_y_value - max_y_value * 0.01, yend = "rmsf"), color = "#800000", size = 1, linetype = "dashed") +
         scale_x_continuous(breaks = if (length(rmsf.table.divided[[chain]]$residue) < 5) unique(rmsf.table.divided[[chain]]$residue) else breaks_pretty()) +
-        #scale_y_continuous(limits = if (i >= 3) steps.min_max else NULL) +
-        labs(title = paste("Chain", chain, "RMSF"), x = "Residue index", y = paste("RMSF value")) +
+        labs(title = paste("Chain", chain, "RMSF"), x = "Residue index", y = "RMSF (Å)") +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +
         theme(plot.title = element_text(size = 36, hjust = 0.5)) +
@@ -309,7 +308,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
 
     cat("Ploting highlight residues rmsd separated.\n")
     plot <- ggplot(residue.table, aes(x = frame)) +
-        labs(title = 'Residues RMSD', x = "Frame", y = "RMSD Value") +
+        labs(title = 'Residues RMSD', x = "Frame", y = "RMSD (Å)") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(residue.table$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +

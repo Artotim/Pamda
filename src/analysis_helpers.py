@@ -25,10 +25,10 @@ def create_rmsd_sd_out(out_path, out_name):
         rmsf_file.write("residue;total_rmsd_sd;init_rmsd_sd;middle_rmsd_sd;final_rmsd_sd\n")
 
         for column in residue_rmsd.columns[1:]:
-            sd_total = str(residue_rmsd[column].std())
-            sd_third1 = str(residue_rmsd[column][:third1].std())
-            sd_third2 = str(residue_rmsd[column][third1: third2].std())
-            sd_third3 = str(residue_rmsd[column][third2:third3].std())
+            sd_total = str(round(residue_rmsd[column].std(), 4))
+            sd_third1 = str(round(residue_rmsd[column][:third1].std(), 4))
+            sd_third2 = str(round(residue_rmsd[column][third1: third2].std(), 4))
+            sd_third3 = str(round(residue_rmsd[column][third2:third3].std(), 4))
 
             residue_rmsf = [column, sd_total, sd_third1, sd_third2, sd_third3]
             rmsf_file.write(";".join(residue_rmsf) + '\n')

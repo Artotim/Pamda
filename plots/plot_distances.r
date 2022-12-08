@@ -58,7 +58,7 @@ for (i in 2:ncol(distance.all)) {
     plot <- ggplot(distance.all, aes_string(x = 'frame', y = colname)) +
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#009933", size = 2, se = FALSE, span = 0.2) +
-        labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance in Å") +
+        labs(title = paste("Distance\n", pair1_name, "to", pair2_name), x = "Frame", y = "Distance (Å)") +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(distance.all$frame)), labels = scales::comma_format()) +
         theme_minimal() +
         theme(text = element_text(family = "Times New Roman")) +

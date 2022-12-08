@@ -59,7 +59,7 @@ for (i in 2:ncol(energy.all)) {
     plot <- ggplot(energy.all, aes_string(x = "Frame", y = colname, group = 1)) +
         geom_line(color = "#bfbfbf") +
         geom_smooth(color = "#0072B2", size = 2, se = FALSE, span = 0.2) +
-        labs(title = paste("All", colname, "Energy"), x = "Frame", y = colname) +
+        labs(title = paste("All", colname, "Energy"), x = "Frame", y = paste(colname, "Energy", "(kcal/mol)")) +
         scale_y_continuous(breaks = breaks_pretty(n = 5)) +
         scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.all$Frame)), labels = scales::comma_format()) +
         theme_minimal() +
@@ -112,7 +112,7 @@ for (interaction in interactions) {
         plot <- ggplot(energy.interaction, aes_string(x = "Frame", y = colname, group = 1)) +
             geom_line(color = "#bfbfbf") +
             geom_smooth(color = "#0072B2", size = 2, se = FALSE, span = 0.2) +
-            labs(title = paste("Chains", interaction, "Interaction", colname, "Energy"), x = "Frame", y = colname) +
+            labs(title = paste("Chains", interaction, "Interaction", colname, "Energy"), x = "Frame", y = paste(colname, "Energy", "(kcal/mol)")) +
             scale_y_continuous(breaks = breaks_pretty(n = 5)) +
             scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(energy.interaction$Frame)), labels = scales::comma_format()) +
             theme_minimal() +

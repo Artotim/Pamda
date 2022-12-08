@@ -48,7 +48,7 @@ contacts.map <- read.table(file.name,
 # Organize chains in same columns
 chains <- unique(c(as.character(contacts.map[[6]]), as.character(contacts.map[[11]])))
 
-if (grepl("all", name, fixed = TRUE)) {
+if (grepl("nonbond", name, fixed = TRUE)) {
     contacts.map.ordered <- contacts.map
 } else {
     contacts.map.ordered <- contacts.map[FALSE,]
@@ -175,7 +175,7 @@ interaction.name <- str_replace(interaction.name, 'sbridges', "Salt Bridges")
 # Plot all graph
 out.name <- paste0(plot.out.path, name, "_contacts_map.png")
 
-cat("Ploting contact map.\n")
+cat("Ploting", interaction.name, "contact map.\n")
 plot <- ggplot(all.subset, aes_string(chain2_name, chain1_name)) +
     geom_raster(aes(fill = count)) +
     geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
@@ -192,8 +192,8 @@ plot <- ggplot(all.subset, aes_string(chain2_name, chain1_name)) +
     theme(axis.title = element_text(size = 24)) +
     theme(axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 14)) +
     theme(panel.grid.major.x = element_blank()) +
-    theme(legend.title = element_text(size = 14)) +
-    labs(fill = "No. Contacts \nin Trajectory")
+    theme(legend.title = element_text(size = 16), legend.text=element_text(size=14)) +
+    labs(fill = "Contacts No. \nin Trajectory")
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 
@@ -294,7 +294,7 @@ for (i in seq_along(contact.hits)) {
         plot.title <- paste0(plot.title.prefix, step_range[1], "-", step_range[2])
     }
 
-    cat("Ploting contact map for step", i, '\n')
+    cat("Ploting", interaction.name, "contact map for step", i, '\n')
     plot <- ggplot(step.subset, aes_string(chain2_name, chain1_name)) +
         geom_raster(aes(fill = count)) +
         geom_hline(yintercept = highlight$resi, color = "#b30000", size = 0.7, linetype = "dashed") +
@@ -312,8 +312,8 @@ for (i in seq_along(contact.hits)) {
         theme(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 12)) +
         theme(panel.grid.major.x = element_blank()) +
         theme(plot.background = element_rect(fill = 'white', colour = 'white')) +
-        theme(legend.title = element_text(size = 14)) +
-        labs(fill = "No. Contacts \nin Frames")
+        theme(legend.title = element_text(size = 16), legend.text=element_text(size=14)) +
+        labs(fill = "Contacts No. \nin Range")
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
 }

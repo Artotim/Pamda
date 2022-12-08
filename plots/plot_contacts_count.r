@@ -58,7 +58,7 @@ cat("Ploting contacts count.\n")
 plot <- ggplot(contact.count, aes_string(x = "frame", y = names(contact.count)[2], group = 1)) +
     geom_line(color = "#bfbfbf") +
     geom_smooth(color = "#cc0000", size = 2, se = FALSE, span = 0.2) +
-    labs(title = paste("Chains", interaction.name, "Count"), x = "Frame", y = "Contacts") +
+    labs(title = paste("Chains", interaction.name, "Count"), x = "Frame", y = "Contacts No.") +
     scale_y_continuous(breaks = function(x) unique(floor(pretty(seq((min(x) - 1), (max(x) + 1)), 10)))) +
     scale_x_continuous(breaks = set_frame_breaks(breaks_pretty(), range(contact.count$frame)), labels = scales::comma_format()) +
     theme_minimal() +
