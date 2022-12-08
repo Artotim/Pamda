@@ -167,7 +167,7 @@ chain2_contacts_len <- length(unique(all.subset[[chain2_name]]))
 
 # Get interactions name for plot titles
 interaction.name <- paste(str_replace(tail(str_split(name, '_')[[1]], 2), "_", " "), collapse = " ")
-interaction.name <- str_replace(interaction.name, 'nonbond', "All Contacts")
+interaction.name <- str_replace(interaction.name, 'nonbond', "Non-bonded")
 interaction.name <- str_replace(interaction.name, 'hbonds', "Hydrogen Bonds")
 interaction.name <- str_replace(interaction.name, 'sbridges', "Salt Bridges")
 
