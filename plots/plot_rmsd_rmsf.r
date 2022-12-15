@@ -129,7 +129,7 @@ for (chain in names(rmsd.sd.table.divided)) {
             highlight.data$label <- gsub("\nNA", "", highlight.data$label)
         }
     }
-    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 5, nrow = 1)
+    if (nrow(highlight.data) == 0) highlight.data[1,] <- matrix(NaN, ncol = 8, nrow = 1)
 
 
     # Plot total rmsd sd
@@ -309,7 +309,7 @@ if (nrow(highlight[(!is.na(highlight$resi)),]) != 0) {
     for (row in seq_len(nrow(highlight.present))) {
         residue <- paste0(highlight.present[row,]$chain, ".", highlight.present[row,]$resi)
         plot <- plot + geom_smooth(aes_(y = as.name(residue),
-                                    color = gsub("\nNA", "", paste0(str_replace(residue, "\\.", ":"), '\n', highlight.present[row,]$resn))),
+                                        color = gsub("\nNA", "", paste0(str_replace(residue, "\\.", ":"), '\n', highlight.present[row,]$resn))),
                                    size = 1.3, se = FALSE, span = 0.2)
     }
 
