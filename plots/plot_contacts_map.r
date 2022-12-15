@@ -192,7 +192,7 @@ plot <- ggplot(all.subset, aes_string(chain2_name, chain1_name)) +
     theme(axis.title = element_text(size = 24)) +
     theme(axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 14)) +
     theme(panel.grid.major.x = element_blank()) +
-    theme(legend.title = element_text(size = 16), legend.text=element_text(size=14)) +
+    theme(legend.title = element_text(size = 16), legend.text = element_text(size = 14)) +
     labs(fill = "Contacts No. \nin Trajectory")
 
 ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
@@ -312,7 +312,7 @@ for (i in seq_along(contact.hits)) {
         theme(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 12)) +
         theme(panel.grid.major.x = element_blank()) +
         theme(plot.background = element_rect(fill = 'white', colour = 'white')) +
-        theme(legend.title = element_text(size = 16), legend.text=element_text(size=14)) +
+        theme(legend.title = element_text(size = 16), legend.text = element_text(size = 14)) +
         labs(fill = "Contacts No. \nin Range")
 
     ggsave(out.name, plot, width = 350, height = 150, units = 'mm', dpi = 320, limitsize = FALSE)
