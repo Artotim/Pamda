@@ -10,7 +10,7 @@ def create_rmsd_sd_out(out_path, out_name):
 
     from pandas import read_csv
 
-    log('info', 'Calculating RMSF from output.')
+    log('info', 'Calculating RMSD SD from output.')
 
     residue_rmsd_file = F"{out_path}rms/{out_name}_residue_rmsd.csv"
 
