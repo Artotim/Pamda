@@ -58,7 +58,7 @@ def create_output_main_dir(out_path, out_name, silent=False):
     """Create output main directory if not exist"""
 
     if not out_path:
-        out_path = os.path.abspath(out_name) + '/'
+        out_path = os.path.abspath(out_name) + '_results/'
     else:
         out_path = os.path.abspath(out_path) + '/'
 
