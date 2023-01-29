@@ -36,6 +36,8 @@ proc resolve_write_models {argv} {
 
 
 proc get_models {md_path md_type out_path out_name first_frame last_frame run_pbc mol} {
+    package ifneeded pbctools [package require pbctools]
+
     puts "Creating models"
 
     animate delete all
@@ -45,8 +47,8 @@ proc get_models {md_path md_type out_path out_name first_frame last_frame run_pb
     mol addfile $md_path type $md_type first [expr $first_frame -1] last [expr $first_frame -1] waitfor all molid $mol
     if {$run_pbc == "True"} {
         pbc_wrap "all_frames"
-        pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
     }
+    pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
 
     set first_frame_sel [ atomselect $mol all frame last ]
     set pdb_file_name "${out_path}models/${out_name}_first_analysis_frame.pdb"
@@ -58,8 +60,8 @@ proc get_models {md_path md_type out_path out_name first_frame last_frame run_pb
     mol addfile $md_path type $md_type first [expr $last_frame -1] last [expr $last_frame -1] waitfor all molid $mol
     if {$run_pbc == "True"} {
         pbc_wrap "all_frames"
-        pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
     }
+    pbc wrap -center com -centersel "not solvent" -compound fragment -now -sel "solvent"
 
     set last_frame_sel [ atomselect $mol all frame last ]
     set pdb_file_name "${out_path}models/${out_name}_last_analysis_frame.pdb"
