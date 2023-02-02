@@ -1,13 +1,13 @@
 # Distances Analysis
 
 
-proc nome_legal::prepare_distances {} {
-    nome_legal::create_distances_list
-    nome_legal::create_distances_out_files
+proc pamda::prepare_distances {} {
+    pamda::create_distances_list
+    pamda::create_distances_out_files
 }
 
 
-proc nome_legal::create_distances_list {} {
+proc pamda::create_distances_list {} {
     variable dist_type
     variable dist_pairs
     variable dist_pairs_names
@@ -42,7 +42,7 @@ proc nome_legal::create_distances_list {} {
 }
 
 
-proc nome_legal::create_distances_out_files {} {
+proc pamda::create_distances_out_files {} {
     variable out_path
     variable out_name
     variable dist_pairs_names
@@ -59,7 +59,7 @@ proc nome_legal::create_distances_out_files {} {
 }
 
 
-proc nome_legal::measure_distances {frame} {
+proc pamda::measure_distances {frame} {
     puts "Measuring distances"
 
     variable dist_type
@@ -95,6 +95,6 @@ proc nome_legal::measure_distances {frame} {
 }
 
 
-proc nome_legal::close_distances_files {} {
-    close $nome_legal::dist_out
+proc pamda::close_distances_files {} {
+    close $pamda::dist_out
 }

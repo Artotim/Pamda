@@ -7,8 +7,8 @@ proc load_dependencies {program_src_path} {
 }
 
 
-proc nome_legal::energies_analysis_main {} {
-    load_dependencies $nome_legal::program_src_path
+proc pamda::energies_analysis_main {} {
+    load_dependencies $pamda::program_src_path
 
     package require namdenergy
 
@@ -16,7 +16,7 @@ proc nome_legal::energies_analysis_main {} {
     variable last_frame
     variable mol
 
-    nome_legal::create_mol
+    pamda::create_mol
 
     set current_frame $first_frame
     set next_frame $first_frame
@@ -28,7 +28,7 @@ proc nome_legal::energies_analysis_main {} {
         set next_frame [expr {$next_frame + $frame_range}]
         if {$next_frame >= $last_frame} {set next_frame [expr {$last_frame - 1}]}
 
-        nome_legal::measure_energies $current_frame $next_frame $first_analysis
+        pamda::measure_energies $current_frame $next_frame $first_analysis
 
         set current_frame $next_frame
         set first_analysis False
@@ -38,7 +38,7 @@ proc nome_legal::energies_analysis_main {} {
 }
 
 
-proc nome_legal::measure_energies {current_frame next_frame first_analysis} {
+proc pamda::measure_energies {current_frame next_frame first_analysis} {
     variable out_path
     variable out_name
     variable md_path
@@ -48,13 +48,13 @@ proc nome_legal::measure_energies {current_frame next_frame first_analysis} {
     variable mol
     variable chain_interactions
 
-    set namdenergy_path "${::nome_legal::program_src_path}dependencies/namdenergy/"
+    set namdenergy_path "${::pamda::program_src_path}dependencies/namdenergy/"
     set loaded_frames 0
 
     puts "Measuring energy from $current_frame to $next_frame"
 
     if {$run_pbc == "True"} {set loaded_frames [load_pbc_reference_frames $md_path $md_type $mol $current_frame]}
-    nome_legal::load_analysis_frames $current_frame $next_frame $first_analysis
+    pamda::load_analysis_frames $current_frame $next_frame $first_analysis
     if {$run_pbc == "True"} {pbc_wrap "all_frames"}
 
     if {$loaded_frames > 0 } {animate delete beg 0 end [expr $loaded_frames - 1] skip 0 $mol}
@@ -90,7 +90,7 @@ proc nome_legal::measure_energies {current_frame next_frame first_analysis} {
 }
 
 
-proc nome_legal::load_analysis_frames {current_frame next_frame first_analysis} {
+proc pamda::load_analysis_frames {current_frame next_frame first_analysis} {
     variable md_path
     variable md_type
 

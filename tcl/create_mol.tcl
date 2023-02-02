@@ -1,7 +1,7 @@
 # Create mol
 
 
-proc nome_legal::create_mol {} {
+proc pamda::create_mol {} {
     variable str_path
     variable str_type
 
@@ -10,11 +10,11 @@ proc nome_legal::create_mol {} {
     variable mol [mol new $str_path type $str_type waitfor all]
     animate delete beg 0 end -1 skip 0 $mol
 
-    nome_legal::get_mol_info $mol
+    pamda::get_mol_info $mol
 }
 
 
-proc nome_legal::get_mol_info {mol} {
+proc pamda::get_mol_info {mol} {
     set all_sell [atomselect $mol "not solvent"]
 
     variable chain_list [lsort -unique [$all_sell get chain]]

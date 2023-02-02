@@ -1,13 +1,13 @@
 # SASA Analysis
 
 
-proc nome_legal::prepare_sasa {} {
-    nome_legal::create_sasa_selections
-    nome_legal::create_sasa_out_files
+proc pamda::prepare_sasa {} {
+    pamda::create_sasa_selections
+    pamda::create_sasa_out_files
 }
 
 
-proc nome_legal::create_sasa_selections {} {
+proc pamda::create_sasa_selections {} {
     variable mol
     variable chain_list
     variable hgl_residues
@@ -29,7 +29,7 @@ proc nome_legal::create_sasa_selections {} {
 }
 
 
-proc nome_legal::create_sasa_out_files {} {
+proc pamda::create_sasa_out_files {} {
     puts "Creating sasa out files"
 
     variable out_path
@@ -58,7 +58,7 @@ proc nome_legal::create_sasa_out_files {} {
 }
 
 
-proc nome_legal::measure_sasa {frame} {
+proc pamda::measure_sasa {frame} {
     puts "Measuring sasa"
 
     variable hgl_residues
@@ -74,11 +74,11 @@ proc nome_legal::measure_sasa {frame} {
 
     $sasa_all_sel frame last
 
-    set all_sasa_bsa [nome_legal::calculate_sasa_bsa $sasa_all_sel]
+    set all_sasa_bsa [pamda::calculate_sasa_bsa $sasa_all_sel]
     puts -nonewline $sasa_all_out "${frame};[lindex $all_sasa_bsa 0];[lindex $all_sasa_bsa 1]"
 
     foreach chain $chain_list {
-        set chain_sasa_bsa [nome_legal::calculate_sasa_bsa [dict get $sasa_chain_sel_dict $chain]]
+        set chain_sasa_bsa [pamda::calculate_sasa_bsa [dict get $sasa_chain_sel_dict $chain]]
         puts -nonewline $sasa_all_out ";[lindex $chain_sasa_bsa 0];[lindex $chain_sasa_bsa 1]"
     }
     puts $sasa_all_out ""
@@ -87,7 +87,7 @@ proc nome_legal::measure_sasa {frame} {
         puts -nonewline $sasa_hgl_out "${frame}"
 
         foreach resid $hgl_residues {
-            set resid_sasa_bsa [nome_legal::calculate_sasa_bsa [dict get $sasa_hgl_sel_dict $resid]]
+            set resid_sasa_bsa [pamda::calculate_sasa_bsa [dict get $sasa_hgl_sel_dict $resid]]
             puts -nonewline $sasa_hgl_out ";[lindex $resid_sasa_bsa 0];[lindex $resid_sasa_bsa 1]"
         }
         puts $sasa_hgl_out ""
@@ -95,7 +95,7 @@ proc nome_legal::measure_sasa {frame} {
 }
 
 
-proc nome_legal::calculate_sasa_bsa {current_sel} {
+proc pamda::calculate_sasa_bsa {current_sel} {
     variable sasa_radius
 
     variable sasa_all_sel
@@ -113,7 +113,7 @@ proc nome_legal::calculate_sasa_bsa {current_sel} {
 }
 
 
-proc nome_legal::close_sasa_files {} {
-    close $nome_legal::sasa_all_out
-    close $nome_legal::sasa_hgl_out
+proc pamda::close_sasa_files {} {
+    close $pamda::sasa_all_out
+    close $pamda::sasa_hgl_out
 }

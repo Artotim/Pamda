@@ -12,55 +12,55 @@ proc load_dependencies {program_src_path} {
 }
 
 
-proc nome_legal::frame_analysis_main {} {
-    load_dependencies $nome_legal::program_src_path
+proc pamda::frame_analysis_main {} {
+    load_dependencies $pamda::program_src_path
 
     variable md_path
     variable md_type
     variable rms_analysis
 
-    nome_legal::create_mol
+    pamda::create_mol
 
-    nome_legal::prepare_analysis
+    pamda::prepare_analysis
 
-    bigdcd nome_legal::frame_analysis $md_type $md_path
+    bigdcd pamda::frame_analysis $md_type $md_path
     bigdcd_wait
 
-    if {$nome_legal::rms_analysis == "True"} {
-        nome_legal::prepare_rmsf
-        bigdcd nome_legal::rmsf_analysis $md_type $md_path
+    if {$pamda::rms_analysis == "True"} {
+        pamda::prepare_rmsf
+        bigdcd pamda::rmsf_analysis $md_type $md_path
         bigdcd_wait
     }
 
-    nome_legal::close_analysis
+    pamda::close_analysis
 
-    mol delete $nome_legal::mol
+    mol delete $pamda::mol
 }
 
 
-proc nome_legal::prepare_analysis {} {
+proc pamda::prepare_analysis {} {
     variable md_path
     variable md_type
     variable mol
 
     mol addfile $md_path type $md_type first 0 last 0 waitfor all molid $mol
 
-    if {$nome_legal::rms_analysis == "True"} {nome_legal::prepare_rms}
-    if {$nome_legal::contacts_analysis == "True"} {nome_legal::prepare_contacts}
-    if {$nome_legal::distances_analysis == "True"} {nome_legal::prepare_distances}
-    if {$nome_legal::sasa_analysis == "True"} {nome_legal::prepare_sasa}
+    if {$pamda::rms_analysis == "True"} {pamda::prepare_rms}
+    if {$pamda::contacts_analysis == "True"} {pamda::prepare_contacts}
+    if {$pamda::distances_analysis == "True"} {pamda::prepare_distances}
+    if {$pamda::sasa_analysis == "True"} {pamda::prepare_sasa}
 }
 
 
-proc nome_legal::close_analysis {} {
-    if {$nome_legal::rms_analysis == "True"} {nome_legal::finish_and_close_rms_files}
-    if {$nome_legal::contacts_analysis == "True"} {nome_legal::close_contacts_files}
-    if {$nome_legal::distances_analysis == "True"} {nome_legal::close_distances_files}
-    if {$nome_legal::sasa_analysis == "True"} {nome_legal::close_sasa_files}
+proc pamda::close_analysis {} {
+    if {$pamda::rms_analysis == "True"} {pamda::finish_and_close_rms_files}
+    if {$pamda::contacts_analysis == "True"} {pamda::close_contacts_files}
+    if {$pamda::distances_analysis == "True"} {pamda::close_distances_files}
+    if {$pamda::sasa_analysis == "True"} {pamda::close_sasa_files}
 }
 
 
-proc nome_legal::frame_analysis {frame} {
+proc pamda::frame_analysis {frame} {
     variable first_frame
     variable last_frame
     variable run_pbc
@@ -72,7 +72,7 @@ proc nome_legal::frame_analysis {frame} {
     variable distances_analysis
     variable sasa_analysis
 
-    nome_legal::keep_frame $frame
+    pamda::keep_frame $frame
 
     if {$frame >= $first_frame && $frame <= $last_frame && (
             $rms_analysis == "True" ||
@@ -88,10 +88,10 @@ proc nome_legal::frame_analysis {frame} {
 
     if {$run_pbc == "True"} {pbc_wrap "current_frame"}
 
-    if {$rms_analysis == "True"} {nome_legal::measure_rms $frame}
-    if {$contacts_analysis == "True" && [should_run_analysis $frame $first_frame $cci] == "True"} {nome_legal::measure_contacts $frame}
-    if {$distances_analysis == "True"} {nome_legal::measure_distances $frame}
-    if {$sasa_analysis == "True" && [should_run_analysis $frame $first_frame $ssi] == "True"} {nome_legal::measure_sasa $frame}
+    if {$rms_analysis == "True"} {pamda::measure_rms $frame}
+    if {$contacts_analysis == "True" && [should_run_analysis $frame $first_frame $cci] == "True"} {pamda::measure_contacts $frame}
+    if {$distances_analysis == "True"} {pamda::measure_distances $frame}
+    if {$sasa_analysis == "True" && [should_run_analysis $frame $first_frame $ssi] == "True"} {pamda::measure_sasa $frame}
 }
 
 
@@ -104,22 +104,22 @@ proc should_run_analysis {frame first_frame interval} {
 }
 
 
-proc nome_legal::rmsf_analysis {frame} {
+proc pamda::rmsf_analysis {frame} {
     variable first_frame
     variable last_frame
     variable mol
     variable run_pbc
 
-    nome_legal::keep_frame $frame
+    pamda::keep_frame $frame
 
     if {$frame >= $first_frame && $frame <= $last_frame} {
         if {$run_pbc == "True"} {pbc_wrap "current_frame"}
-        nome_legal::measure_residue_rmsf $frame
+        pamda::measure_residue_rmsf $frame
     }
 }
 
 
-proc nome_legal::keep_frame {frame} {
+proc pamda::keep_frame {frame} {
     global bigdcd_keepframe
 
     variable kfi

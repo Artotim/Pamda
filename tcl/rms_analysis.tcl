@@ -1,13 +1,13 @@
 # RMS Analysis
 
 
-proc nome_legal::prepare_rms {} {
-    nome_legal::create_rms_out_files
-    nome_legal::create_rms_selections
+proc pamda::prepare_rms {} {
+    pamda::create_rms_out_files
+    pamda::create_rms_selections
 }
 
 
-proc nome_legal::create_rms_out_files {} {
+proc pamda::create_rms_out_files {} {
     puts "Creating rms out files"
 
     variable out_path
@@ -36,7 +36,7 @@ proc nome_legal::create_rms_out_files {} {
 }
 
 
-proc nome_legal::create_rms_selections {} {
+proc pamda::create_rms_selections {} {
     variable mol
     variable chain_list
     variable residue_list
@@ -63,7 +63,7 @@ proc nome_legal::create_rms_selections {} {
 }
 
 
-proc nome_legal::create_reference_selections {reference_frame} {
+proc pamda::create_reference_selections {reference_frame} {
     variable mol
     variable chain_list
     variable residue_list
@@ -97,7 +97,7 @@ proc nome_legal::create_reference_selections {reference_frame} {
 }
 
 
-proc nome_legal::measure_rms {frame} {
+proc pamda::measure_rms {frame} {
     variable first_frame
 
     variable all_atoms
@@ -108,20 +108,20 @@ proc nome_legal::measure_rms {frame} {
         variable mol
 
         set reference_frame [expr [molinfo $mol get numframes] -1]
-        nome_legal::create_reference_selections $reference_frame
+        pamda::create_reference_selections $reference_frame
         animate dup $mol
     }
 
     $all_atoms frame last
     $all_atoms move [measure fit $backbone_sel $backbone_reference]
 
-    nome_legal::measure_all_rmsd $frame
-    nome_legal::measure_residue_rmsd $frame
-    nome_legal::sum_points_to_avg
+    pamda::measure_all_rmsd $frame
+    pamda::measure_residue_rmsd $frame
+    pamda::sum_points_to_avg
 }
 
 
-proc nome_legal::measure_all_rmsd {frame} {
+proc pamda::measure_all_rmsd {frame} {
     puts "Measuring rms"
 
     variable chain_list
@@ -150,7 +150,7 @@ proc nome_legal::measure_all_rmsd {frame} {
 }
 
 
-proc nome_legal::measure_residue_rmsd {frame} {
+proc pamda::measure_residue_rmsd {frame} {
     variable residue_list
     variable residue_rmsd_out
     variable resid_sel_dict
@@ -167,7 +167,7 @@ proc nome_legal::measure_residue_rmsd {frame} {
 }
 
 
-proc nome_legal::sum_points_to_avg {} {
+proc pamda::sum_points_to_avg {} {
     variable residue_list
     variable resid_sel_dict
 
@@ -189,7 +189,7 @@ proc nome_legal::sum_points_to_avg {} {
 }
 
 
-proc nome_legal::prepare_rmsf {} {
+proc pamda::prepare_rmsf {} {
     variable md_path
     variable md_type
     variable mol
@@ -225,7 +225,7 @@ proc nome_legal::prepare_rmsf {} {
 }
 
 
-proc nome_legal::measure_residue_rmsf {frame} {
+proc pamda::measure_residue_rmsf {frame} {
     variable first_frame
     variable residue_list
 
@@ -240,7 +240,7 @@ proc nome_legal::measure_residue_rmsf {frame} {
         variable mol
 
         set reference_frame [expr [molinfo $mol get numframes] -1]
-        nome_legal::create_reference_selections $reference_frame
+        pamda::create_reference_selections $reference_frame
         animate dup $mol
     }
 
@@ -256,16 +256,16 @@ proc nome_legal::measure_residue_rmsf {frame} {
 }
 
 
-proc nome_legal::finish_and_close_rms_files {} {
-    nome_legal::calculate_final_rmsf
+proc pamda::finish_and_close_rms_files {} {
+    pamda::calculate_final_rmsf
 
-    close $nome_legal::all_rmsd_out
-    close $nome_legal::residue_rmsd_out
-    close $nome_legal::residue_rmsf_out
+    close $pamda::all_rmsd_out
+    close $pamda::residue_rmsd_out
+    close $pamda::residue_rmsf_out
 }
 
 
-proc nome_legal::calculate_final_rmsf {} {
+proc pamda::calculate_final_rmsf {} {
     variable residue_list
 
     variable residue_rmsf_out

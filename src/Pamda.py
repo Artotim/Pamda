@@ -11,7 +11,7 @@ from src.assert_out_analysis import verify_write_models_out, verify_frame_analys
 from src.plot_creator import create_plots
 
 
-class NomeCriativo:
+class Pamda:
     """Analysis a molecular dynamics"""
 
     def __init__(self, **kwargs):

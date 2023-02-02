@@ -1,7 +1,7 @@
 # Contact Analysis
 
 
-proc nome_legal::prepare_contacts {} {
+proc pamda::prepare_contacts {} {
     puts "Creating contacts out files"
 
     variable out_path
@@ -25,7 +25,7 @@ proc nome_legal::prepare_contacts {} {
 			puts $count_file "frame;${contact_type}_count"
 
 			set map_file [open "${out_path}contacts/${out_name}_${pair_name}_${contact_type}_contacts_map.csv" w]
-			puts $map_file [nome_legal::define_map_out_header $contact_type]
+			puts $map_file [pamda::define_map_out_header $contact_type]
 
 			dict set pair_count_outs $contact_type $count_file
 			dict set pair_maps_out $contact_type $map_file
@@ -37,7 +37,7 @@ proc nome_legal::prepare_contacts {} {
 }
 
 
-proc nome_legal::define_map_out_header {contact_type} {
+proc pamda::define_map_out_header {contact_type} {
 	set header "frame"
 
 	if {$contact_type == "nonbond"} {
@@ -58,7 +58,7 @@ proc nome_legal::define_map_out_header {contact_type} {
 }
 
 
-proc nome_legal::measure_contacts {frame} {
+proc pamda::measure_contacts {frame} {
     puts "Measuring contacts"
 
     variable contacts_cutoff
@@ -76,9 +76,9 @@ proc nome_legal::measure_contacts {frame} {
         set chain1_sel [atomselect $mol "not solvent and chain $chain1" frame last]
         set chain2_sel [atomselect $mol "not solvent and chain $chain2" frame last]
 
-        nome_legal::get_nonbond_contact $frame $pair_name $chain1_sel $chain2_sel
-		nome_legal::get_hbond_contact $frame $pair_name $chain1_sel $chain2_sel
-		nome_legal::get_salt_bridges_contacts $frame $pair_name [$chain1_sel text] [$chain2_sel text]
+        pamda::get_nonbond_contact $frame $pair_name $chain1_sel $chain2_sel
+		pamda::get_hbond_contact $frame $pair_name $chain1_sel $chain2_sel
+		pamda::get_salt_bridges_contacts $frame $pair_name [$chain1_sel text] [$chain2_sel text]
 
         $chain1_sel delete
         $chain2_sel delete
@@ -86,7 +86,7 @@ proc nome_legal::measure_contacts {frame} {
 }
 
 
-proc nome_legal::get_nonbond_contact {frame pair_name chain1_sel chain2_sel} {
+proc pamda::get_nonbond_contact {frame pair_name chain1_sel chain2_sel} {
     variable contacts_cutoff
 
     variable contacts_count_out
@@ -98,12 +98,12 @@ proc nome_legal::get_nonbond_contact {frame pair_name chain1_sel chain2_sel} {
 	puts [dict get [dict get $contacts_count_out $pair_name] "nonbond"] "${frame};${count}"
 
 	foreach atom1_index [lindex $nonbond_contacts 0] atom2_index [lindex $nonbond_contacts 1] {
-		puts [dict get [dict get $contacts_map_out $pair_name] "nonbond"] "${frame};[nome_legal::get_contact_data $atom1_index $atom2_index]"
+		puts [dict get [dict get $contacts_map_out $pair_name] "nonbond"] "${frame};[pamda::get_contact_data $atom1_index $atom2_index]"
 	}
 }
 
 
-proc nome_legal::get_hbond_contact {frame pair_name chain1_sel chain2_sel} {
+proc pamda::get_hbond_contact {frame pair_name chain1_sel chain2_sel} {
     variable contacts_cutoff
 	variable contacts_hbond_angle
 
@@ -125,12 +125,12 @@ proc nome_legal::get_hbond_contact {frame pair_name chain1_sel chain2_sel} {
 	puts [dict get [dict get $contacts_count_out $pair_name] "hbonds"] "${frame};${count}"
 
 	foreach donor_index $donors acceptor_index $acceptors hydrogen_index $hydrogens {
-		puts [dict get [dict get $contacts_map_out $pair_name] "hbonds"] "${frame};[nome_legal::get_contact_data $donor_index $acceptor_index];${hydrogen_index}"
+		puts [dict get [dict get $contacts_map_out $pair_name] "hbonds"] "${frame};[pamda::get_contact_data $donor_index $acceptor_index];${hydrogen_index}"
 	}
 }
 
 
-proc nome_legal::get_salt_bridges_contacts {frame pair_name chain1_sel_text chain2_sel_text} {
+proc pamda::get_salt_bridges_contacts {frame pair_name chain1_sel_text chain2_sel_text} {
     variable contacts_cutoff
 
 	variable mol
@@ -166,12 +166,12 @@ proc nome_legal::get_salt_bridges_contacts {frame pair_name chain1_sel_text chai
 	puts [dict get [dict get $contacts_count_out $pair_name] "sbridges"] "${frame};${count}"
 
 	foreach acidic_index $acidic basic_index $basic {
-		puts [dict get [dict get $contacts_map_out $pair_name] "sbridges"] "${frame};[nome_legal::get_contact_data $acidic_index $basic_index]"
+		puts [dict get [dict get $contacts_map_out $pair_name] "sbridges"] "${frame};[pamda::get_contact_data $acidic_index $basic_index]"
 	}
 }
 
 
-proc nome_legal::get_contact_data {atom1_index atom2_index} {
+proc pamda::get_contact_data {atom1_index atom2_index} {
 	variable mol
 
 	set atom1 [atomselect $mol "index $atom1_index" frame last]
@@ -195,7 +195,7 @@ proc nome_legal::get_contact_data {atom1_index atom2_index} {
 }
 
 
-proc nome_legal::close_contacts_files {} {
+proc pamda::close_contacts_files {} {
     variable chain_interactions
 
     variable contacts_count_out

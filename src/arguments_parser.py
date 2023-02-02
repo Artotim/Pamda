@@ -32,7 +32,7 @@ def make_parser():
     idx_validator = IndexValidator()
 
     # noinspection PyTypeChecker
-    parser = argparse.ArgumentParser(description='Program written to facilitate molecular dynamic analysis.',
+    parser = argparse.ArgumentParser(description='Containerized software for Practical Analysis of Molecular Dynamics.',
                                      epilog="Made by artotim",
                                      usage='%(prog)s -md <md_file> -str <structure_file> -<analysis>',
                                      add_help=False,

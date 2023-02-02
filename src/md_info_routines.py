@@ -96,11 +96,11 @@ def get_molecule_chains(pdb_path, program_src_path, vmd):
     """Get chains list from generated pdb file"""
 
     get_chains_cmd = F"""
-    namespace eval nome_legal {{
+    namespace eval pamda {{
     variable str_path {pdb_path}
     variable str_type pdb }}
     source {program_src_path}tcl/create_mol.tcl
-    nome_legal::create_mol
+    pamda::create_mol
     quit
     """
 
