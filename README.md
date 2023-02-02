@@ -9,7 +9,7 @@ Pamda was created to facilitate the study and analysis of molecular dynamics wit
 
 Pamda is contained within a Docker container, and mostly uses VMD to perform the analysis. Both are not provided by us and must be obtained and installed separately. 
 
-With Pamda you will be able to perform analysis of **RMS**, **contacts between chains**, **distances**, **SASA**, **BSA** and **energies**. Currently it only supports Gromacs and NAMD dynamics. 
+With Pamda you will be able to perform analysis of **RMS**, **contacts between chains**, **distances**, **SASA**, **BSA** and **energies**. Currently it only supports Gromacs and NAMD trajectories. 
 
 
 ## Installation
