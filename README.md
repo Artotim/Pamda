@@ -2,8 +2,10 @@
 Visit our [home page](http://biodados.icb.ufmg.br/pamda/)!
 
 <p align="center" width="100%">
-<img alt="Pamda logo" src="http://biodados.icb.ufmg.br/pamda/assets/images/pamda_logo.png"  width="150" height="150"/>  
-</p>  
+    <a href="http://biodados.icb.ufmg.br/pamda">
+        <img alt="Pamda logo" src="http://biodados.icb.ufmg.br/pamda/assets/images/pamda_logo.png"  width="150" height="150"/>  
+    </a>
+</p> 
 
 Pamda was created to facilitate the study and analysis of molecular dynamics without the need for programming. It has the advantage of being able to analyze very large dynamics, which would not fit in memory for a traditional analysis.
 
