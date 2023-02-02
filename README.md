@@ -1,5 +1,5 @@
-# Nome Legal
-Visit our [home page](http://biodados.icb.ufmg.br/nome_legal/)!
+# Pamda
+Visit our [home page](http://biodados.icb.ufmg.br/pamda/)!
 
 This program was created to facilitate the study and analysis of molecular dynamics without the need for programming. It has the advantage of being able to analyze very large dynamics, which would not fit in memory for a traditional analysis.
 
@@ -12,12 +12,12 @@ With this program you will be able to perform analysis of **RMS**, **contacts be
 This program requires Docker and VMD installed to run. After you installed the dependencies you can run it with the following commands:
 
 ```shell
-wget http://biodados.icb.ufmg.br/nome_legal/nome_legal
-chmod -x nome_legal
-./nome_legal -h
+wget http://biodados.icb.ufmg.br/pamda/pamda
+chmod -x pamda
+./pamda -h
 ```
 
-A fully installation guide and **documentation** can be found on our home page [here](http://biodados.icb.ufmg.br/nome_legal/). 
+A fully installation guide and **documentation** can be found on our home page [here](http://biodados.icb.ufmg.br/pamda/). 
 
 
 ## Contributing
